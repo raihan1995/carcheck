@@ -13,16 +13,13 @@ Open [http://localhost:3000](http://localhost:3000).
 
 ## Real vehicle data
 
-The app uses the official **DVLA Vehicle Enquiry Service (VES)** API. Without an API key it shows demo data so you can try the UI.
+The app uses two APIs:
 
-1. Apply for a free API key: [register-for-ves.driver-vehicle-licensing.api.gov.uk](https://register-for-ves.driver-vehicle-licensing.api.gov.uk/)
-2. Copy `.env.example` to `.env` and set:
+- **DVLA Vehicle Enquiry Service (VES)** — vehicle details (make, colour, tax, MOT status). Set `DVLA_API_KEY` in `.env`.
+- **MOT History API** — full MOT test history (pass/fail, advisories, mileage). Set `MOT_CLIENT_ID`, `MOT_CLIENT_SECRET`, `MOT_API_KEY`, `MOT_TOKEN_URL` (and optionally `MOT_SCOPE_URL`) in `.env`.
 
-   ```
-   DVLA_API_KEY=your-api-key
-   ```
-
-3. Restart the dev server. Lookups will then use live DVLA data.
+1. Copy `.env.example` to `.env` and add your keys (from your DVLA/DVSA approval emails).
+2. Restart the dev server. Results appear on `/vehicle/[registration]`.
 
 ## Tech
 

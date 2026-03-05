@@ -1,49 +1,17 @@
 "use client";
 
 import { useState, FormEvent } from "react";
+import { useRouter } from "next/navigation";
 
-type VehicleData = {
-  registrationNumber: string;
-  make?: string;
-  colour?: string;
-  fuelType?: string;
-  co2Emissions?: number;
-  engineCapacity?: number;
-  yearOfManufacture?: number;
-  monthOfFirstRegistration?: string;
-  motStatus?: string;
-  taxStatus?: string;
-  taxDueDate?: string;
-  artEndDate?: string;
-  markedForExport?: boolean;
-  typeApproval?: string;
-  revenueWeight?: number;
-  wheelplan?: string;
-  euroStatus?: string;
-  realDrivingEmissions?: string;
-  dateOfLastV5CIssued?: string;
-};
-
-function formatLabel(key: string): string {
-  return key
-    .replace(/([A-Z])/g, " $1")
-    .replace(/^./, (s) => s.toUpperCase())
-    .trim();
-}
-
-function formatValue(value: unknown): string {
-  if (value === undefined || value === null) return "—";
-  if (typeof value === "boolean") return value ? "Yes" : "No";
-  if (typeof value === "number") return value.toLocaleString();
-  return String(value);
+function normalizeRegistration(vrn: string): string {
+  return vrn.replace(/\s+/g, "").toUpperCase().replace(/[^A-Z0-9]/g, "");
 }
 
 export default function Home() {
   const [plate, setPlate] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [vehicle, setVehicle] = useState<VehicleData | null>(null);
-  const [isDemo, setIsDemo] = useState(false);
+  const router = useRouter();
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -53,7 +21,6 @@ export default function Home() {
       return;
     }
     setError(null);
-    setVehicle(null);
     setLoading(true);
     try {
       const res = await fetch("/api/check", {
@@ -64,36 +31,22 @@ export default function Home() {
       const data = await res.json();
 
       if (!res.ok) {
-        if (data.mock && data.demo) {
-          setVehicle(data.mock);
-          setIsDemo(true);
-        } else {
-          setError(data.error || "Check failed");
+        if (data.demo && data.vehicle) {
+          const reg = normalizeRegistration(vrn);
+          router.push(`/vehicle/${encodeURIComponent(reg)}`);
+          return;
         }
+        setError(data.error || "Check failed");
         return;
       }
-      setVehicle(data);
-      setIsDemo(false);
+      const reg = data.vehicle?.registrationNumber ?? normalizeRegistration(vrn);
+      router.push(`/vehicle/${encodeURIComponent(reg)}`);
     } catch {
       setError("Network error. Please try again.");
     } finally {
       setLoading(false);
     }
   }
-
-  const displayFields: (keyof VehicleData)[] = [
-    "make",
-    "colour",
-    "fuelType",
-    "yearOfManufacture",
-    "monthOfFirstRegistration",
-    "engineCapacity",
-    "co2Emissions",
-    "motStatus",
-    "taxStatus",
-    "taxDueDate",
-    "markedForExport",
-  ];
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 text-slate-100 font-sans">
@@ -141,53 +94,9 @@ export default function Home() {
           )}
         </form>
 
-        {vehicle && (
-          <section
-            className="mt-8 rounded-2xl bg-slate-800/60 border border-slate-700/60 overflow-hidden shadow-xl"
-            aria-labelledby="vehicle-results"
-          >
-            {isDemo && (
-              <div className="bg-amber-500/15 border-b border-amber-500/30 px-6 py-3 text-amber-200 text-sm">
-                Demo data — add <code className="bg-slate-800 px-1.5 py-0.5 rounded">DVLA_API_KEY</code> to get real results from the DVLA.
-              </div>
-            )}
-            <h2 id="vehicle-results" className="sr-only">
-              Vehicle details
-            </h2>
-            <div className="p-6 sm:p-8">
-              <div className="mb-6 pb-4 border-b border-slate-600/60">
-                <p className="text-slate-400 text-sm uppercase tracking-wider mb-1">
-                  Registration
-                </p>
-                <p className="text-2xl font-mono font-bold tracking-widest text-white">
-                  {vehicle.registrationNumber.length <= 7
-                    ? vehicle.registrationNumber.replace(/(.{4})/g, "$1 ").trim()
-                    : vehicle.registrationNumber}
-                </p>
-              </div>
-              <dl className="grid gap-4 sm:grid-cols-2">
-                {displayFields.map((key) => {
-                  const value = vehicle[key];
-                  if (value === undefined && key !== "markedForExport") return null;
-                  return (
-                    <div key={key} className="flex flex-col gap-0.5">
-                      <dt className="text-xs uppercase tracking-wider text-slate-500">
-                        {formatLabel(key)}
-                      </dt>
-                      <dd className="text-slate-100 font-medium">
-                        {formatValue(value)}
-                      </dd>
-                    </div>
-                  );
-                })}
-              </dl>
-            </div>
-          </section>
-        )}
-
         <footer className="mt-16 text-center text-slate-500 text-sm">
           <p>
-            Data from the DVLA Vehicle Enquiry Service. For official use only.
+            Data from the DVLA Vehicle Enquiry Service and MOT History API. For official use only.
           </p>
         </footer>
       </div>

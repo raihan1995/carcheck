@@ -3,6 +3,8 @@ import { NextRequest, NextResponse } from "next/server";
 const DVLA_API_URL =
   "https://driver-vehicle-licensing.api.gov.uk/vehicle-enquiry/v1/vehicles";
 
+const MOT_API_BASE = "https://tapi.dvsa.gov.uk";
+
 export interface VehicleData {
   registrationNumber: string;
   make?: string;
@@ -25,13 +27,166 @@ export interface VehicleData {
   dateOfLastV5CIssued?: string;
 }
 
+export interface MotTestItem {
+  completedDate?: string;
+  testResult?: string;
+  expiryDate?: string;
+  odometerValue?: string;
+  odometerUnit?: string;
+  odometerResultType?: string;
+  motTestNumber?: string;
+  rfrAndComments?: Array<{ text: string; type: string; dangerous?: boolean }>;
+}
+
+export interface MotHistoryVehicle {
+  registration?: string;
+  make?: string;
+  model?: string;
+  firstUsedDate?: string;
+  fuelType?: string;
+  primaryColour?: string;
+  vehicleId?: string;
+  registrationDate?: string;
+  manufactureDate?: string;
+  engineSize?: string;
+  motTests?: MotTestItem[];
+}
+
 function normalizeRegistration(vrn: string): string {
   return vrn.replace(/\s+/g, "").toUpperCase().replace(/[^A-Z0-9]/g, "");
 }
 
+async function getMotAccessToken(): Promise<string | null> {
+  const clientId = process.env.MOT_CLIENT_ID;
+  const clientSecret = process.env.MOT_CLIENT_SECRET;
+  const scope = process.env.MOT_SCOPE_URL ?? "https://tapi.dvsa.gov.uk/.default";
+  const tokenUrl = process.env.MOT_TOKEN_URL;
+
+  if (!clientId || !clientSecret || !tokenUrl) return null;
+
+  const body = new URLSearchParams({
+    grant_type: "client_credentials",
+    client_id: clientId,
+    client_secret: clientSecret,
+    scope,
+  });
+
+  const res = await fetch(tokenUrl, {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: body.toString(),
+  });
+
+  if (!res.ok) return null;
+  const data = (await res.json()) as { access_token?: string };
+  return data.access_token ?? null;
+}
+
+async function fetchMotHistory(
+  registrationNumber: string,
+  accessToken: string
+): Promise<MotHistoryVehicle[] | null> {
+  const apiKey = process.env.MOT_API_KEY;
+  if (!apiKey) return null;
+
+  const url = `${MOT_API_BASE}/trade/vehicles/mot-tests?registration=${encodeURIComponent(registrationNumber)}`;
+  const res = await fetch(url, {
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      "X-API-Key": apiKey,
+      Accept: "application/json+v6",
+    },
+  });
+
+  if (!res.ok) return null;
+  const data = await res.json().catch(() => null);
+  return Array.isArray(data) ? data : null;
+}
+
+async function performVehicleCheck(registrationNumber: string): Promise<{
+  vehicle: VehicleData;
+  motHistory: MotHistoryVehicle[] | null;
+  demo?: boolean;
+}> {
+  const apiKey = process.env.DVLA_API_KEY;
+
+  if (!apiKey) {
+    return {
+      vehicle: getMockVehicleData(registrationNumber),
+      motHistory: null,
+      demo: true,
+    };
+  }
+
+  const res = await fetch(DVLA_API_URL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-api-key": apiKey,
+    },
+    body: JSON.stringify({ registrationNumber }),
+  });
+
+  const data = await res.json().catch(() => ({}));
+
+  if (!res.ok) {
+    if (res.status === 404) {
+      throw { status: 404, message: "Vehicle not found for this registration." };
+    }
+    if (res.status === 400 && data?.errors?.[0]) {
+      throw { status: 400, message: data.errors[0].detail || "Invalid request." };
+    }
+    throw {
+      status: res.status >= 500 ? 503 : 400,
+      message: "Unable to check vehicle. Please try again later.",
+    };
+  }
+
+  const vehicle = data as VehicleData;
+  let motHistory: MotHistoryVehicle[] | null = null;
+
+  const token = await getMotAccessToken();
+  if (token) {
+    motHistory = await fetchMotHistory(registrationNumber, token);
+  }
+
+  return { vehicle, motHistory };
+}
+
+export async function GET(request: NextRequest) {
+  const registration = request.nextUrl.searchParams.get("registration");
+  const vrn = registration?.trim() ?? "";
+
+  if (!vrn) {
+    return NextResponse.json(
+      { error: "Missing registration. Use ?registration=AB12CDE" },
+      { status: 400 }
+    );
+  }
+
+  const registrationNumber = normalizeRegistration(vrn);
+  if (registrationNumber.length < 2 || registrationNumber.length > 8) {
+    return NextResponse.json(
+      { error: "Invalid UK registration format." },
+      { status: 400 }
+    );
+  }
+
+  try {
+    const result = await performVehicleCheck(registrationNumber);
+    return NextResponse.json(result);
+  } catch (err: unknown) {
+    const e = err as { status?: number; message?: string };
+    return NextResponse.json(
+      { error: e.message ?? "Something went wrong." },
+      { status: e.status ?? 500 }
+    );
+  }
+}
+
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
+    const body = await request.json().catch(() => ({}));
     const rawVrn = body?.registrationNumber ?? body?.plate ?? "";
 
     if (!rawVrn || typeof rawVrn !== "string") {
@@ -50,56 +205,28 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const apiKey = process.env.DVLA_API_KEY;
+    const result = await performVehicleCheck(registrationNumber);
 
-    if (!apiKey) {
+    if (result.demo) {
       return NextResponse.json(
         {
           error: "Vehicle check is not configured.",
-          hint: "Add DVLA_API_KEY to your environment. Get a free key at https://register-for-ves.driver-vehicle-licensing.api.gov.uk/",
+          hint: "Add DVLA_API_KEY to your environment.",
           demo: true,
           registrationNumber,
-          mock: getMockVehicleData(registrationNumber),
+          vehicle: result.vehicle,
+          motHistory: result.motHistory,
         },
         { status: 503 }
       );
     }
 
-    const res = await fetch(DVLA_API_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-api-key": apiKey,
-      },
-      body: JSON.stringify({ registrationNumber }),
-    });
-
-    const data = await res.json().catch(() => ({}));
-
-    if (!res.ok) {
-      if (res.status === 404) {
-        return NextResponse.json(
-          { error: "Vehicle not found for this registration." },
-          { status: 404 }
-        );
-      }
-      if (res.status === 400 && data?.errors?.[0]) {
-        return NextResponse.json(
-          { error: data.errors[0].detail || "Invalid request." },
-          { status: 400 }
-        );
-      }
-      return NextResponse.json(
-        { error: "Unable to check vehicle. Please try again later." },
-        { status: res.status >= 500 ? 503 : 400 }
-      );
-    }
-
-    return NextResponse.json(data as VehicleData);
-  } catch {
+    return NextResponse.json(result);
+  } catch (err: unknown) {
+    const e = err as { status?: number; message?: string };
     return NextResponse.json(
-      { error: "Something went wrong. Please try again." },
-      { status: 500 }
+      { error: e.message ?? "Something went wrong. Please try again." },
+      { status: e.status ?? 500 }
     );
   }
 }
