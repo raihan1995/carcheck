@@ -56,6 +56,30 @@ function normalizeRegistration(vrn: string): string {
   return vrn.replace(/\s+/g, "").toUpperCase().replace(/[^A-Z0-9]/g, "");
 }
 
+const isDebug = () =>
+  process.env.API_CHECK_DEBUG === "1" || process.env.DEBUG === "1";
+
+function logApiCheckError(err: unknown, context?: string): void {
+  const prefix = "[api/check]";
+  const label = context ? `${prefix} ${context}` : prefix;
+  console.error(label, err);
+  if (err instanceof Error && err.stack) console.error(err.stack);
+}
+
+function getDiagnostic(err: unknown): { message: string; stack?: string } {
+  if (err instanceof Error) {
+    return {
+      message: err.message,
+      ...(isDebug() && err.stack && { stack: err.stack }),
+    };
+  }
+  const e = err as { message?: string; stack?: string };
+  return {
+    message: e?.message ?? String(err),
+    ...(isDebug() && e?.stack && { stack: e.stack }),
+  };
+}
+
 async function getMotAccessToken(): Promise<string | null> {
   const clientId = process.env.MOT_CLIENT_ID;
   const clientSecret = process.env.MOT_CLIENT_SECRET;
@@ -143,14 +167,8 @@ async function performVehicleCheck(registrationNumber: string): Promise<{
   }
 
   const vehicle = data as VehicleData;
-  let motHistory: MotHistoryVehicle[] | null = null;
-
-  const token = await getMotAccessToken();
-  if (token) {
-    motHistory = await fetchMotHistory(registrationNumber, token);
-  }
-
-  return { vehicle, motHistory };
+  // MOT History API disabled for now (tapi.dvsa.gov.uk unreachable).
+  return { vehicle, motHistory: null };
 }
 
 export async function GET(request: NextRequest) {
@@ -176,11 +194,13 @@ export async function GET(request: NextRequest) {
     const result = await performVehicleCheck(registrationNumber);
     return NextResponse.json(result);
   } catch (err: unknown) {
+    logApiCheckError(err, "GET");
     const e = err as { status?: number; message?: string };
-    return NextResponse.json(
-      { error: e.message ?? "Something went wrong." },
-      { status: e.status ?? 500 }
-    );
+    const payload: { error: string; diagnostic?: { message: string; stack?: string } } = {
+      error: e.message ?? "Something went wrong.",
+    };
+    if (isDebug()) payload.diagnostic = getDiagnostic(err);
+    return NextResponse.json(payload, { status: e.status ?? 500 });
   }
 }
 
@@ -223,11 +243,13 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(result);
   } catch (err: unknown) {
+    logApiCheckError(err, "POST");
     const e = err as { status?: number; message?: string };
-    return NextResponse.json(
-      { error: e.message ?? "Something went wrong. Please try again." },
-      { status: e.status ?? 500 }
-    );
+    const payload: { error: string; diagnostic?: { message: string; stack?: string } } = {
+      error: e.message ?? "Something went wrong. Please try again.",
+    };
+    if (isDebug()) payload.diagnostic = getDiagnostic(err);
+    return NextResponse.json(payload, { status: e.status ?? 500 });
   }
 }
 
