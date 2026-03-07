@@ -86,7 +86,26 @@ function formatLabel(key: string): string {
     .trim();
 }
 
-/** Parse Euro number from euroStatus string (e.g. "EURO 6 AD" → 6). Returns NaN if not found. */
+/** EU-style CO2 emission bands (g/km): range, label, colour, and coloured bar width % (rest is grey). */
+const CO2_BANDS = [
+  { min: 0, max: 101, label: "A", color: "bg-green-500", barWidth: 32 },
+  { min: 101, max: 120, label: "B-C", color: "bg-green-600", barWidth: 52 },
+  { min: 121, max: 140, label: "D-E", color: "bg-lime-500", barWidth: 67 },
+  { min: 141, max: 165, label: "F-G", color: "bg-yellow-500", barWidth: 77 },
+  { min: 166, max: 185, label: "H-I", color: "bg-amber-500", barWidth: 82 },
+  { min: 186, max: 225, label: "J-K", color: "bg-orange-500", barWidth: 92 },
+  { min: 225, max: Infinity, label: "L-M", color: "bg-red-500", barWidth: 99 },
+] as const;
+
+/** Get the band and display letter for a CO2 value (g/km). Returns null if no value. */
+function getCo2Band(co2: number | undefined): { band: (typeof CO2_BANDS)[number]; letter: string } | null {
+  if (co2 == null || typeof co2 !== "number" || co2 < 0) return null;
+  const band = CO2_BANDS.find((b) => co2 >= b.min && (b.max === Infinity || co2 <= b.max)) ?? CO2_BANDS[CO2_BANDS.length - 1];
+  const letters = band.label.split("-");
+  const mid = band.max === Infinity ? band.min + 50 : band.min + (band.max - band.min) / 2;
+  const letter = co2 < mid ? letters[0] : (letters[1] ?? letters[0]);
+  return { band, letter };
+}
 function parseEuroNumber(euroStatus: string | undefined): number {
   if (!euroStatus || typeof euroStatus !== "string") return NaN;
   const match = euroStatus.toUpperCase().match(/EURO\s*(\d+)/i);
@@ -321,6 +340,7 @@ export default function VehiclePage() {
   const motTests = primaryMot?.motTests ?? [];
   const mileageSummary = computeYearlyAverageMileage(vehicle.monthOfFirstRegistration, motTests);
   const ulezCompliant = getUlezCompliance(vehicle);
+  const co2Band = getCo2Band(vehicle.co2Emissions);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-slate-50 text-slate-800 overflow-x-hidden">
@@ -398,6 +418,44 @@ export default function VehiclePage() {
             })}
           </dl>
         </section>
+
+        {co2Band && (
+          <section className="rounded-3xl bg-white border border-slate-200/80 shadow-lg shadow-slate-200/30 ring-1 ring-slate-900/5 overflow-hidden mb-4 sm:mb-6">
+            <div className="px-4 sm:px-6 py-4 border-b border-slate-100 bg-slate-50/50">
+              <h2 className="text-base sm:text-lg font-bold text-slate-900">CO2 Emission Figures</h2>
+              <p className="mt-2 text-2xl sm:text-3xl font-bold text-slate-900">
+                {vehicle.co2Emissions} g/km <span className="text-slate-500 font-semibold">({co2Band.letter})</span>
+              </p>
+            </div>
+            <div className="p-4 sm:p-6 space-y-1">
+              {CO2_BANDS.map((b) => {
+                const isActive = b.min === co2Band.band.min && b.max === co2Band.band.max;
+                const rangeLabel = b.max === Infinity ? "225+" : b.min === 0 ? "0-101" : `${b.min}-${b.max}`;
+                return (
+                  <div
+                    key={b.label}
+                    className={`flex items-center gap-2 sm:gap-3 py-2 px-3 rounded-lg transition-colors ${
+                      isActive
+                        ? "bg-lime-100 border-l-4 border-lime-500 ring-2 ring-lime-400/80"
+                        : ""
+                    }`}
+                  >
+                    <span className="w-16 sm:w-20 text-xs sm:text-sm font-medium text-slate-600 shrink-0 tabular-nums">
+                      {rangeLabel}
+                    </span>
+                    <div className="flex-1 h-7 sm:h-8 rounded overflow-hidden bg-slate-200 flex">
+                      <div
+                        className={`h-full ${b.color} shrink-0`}
+                        style={{ width: `${b.barWidth}%` }}
+                      />
+                    </div>
+                    <span className="text-xs sm:text-sm font-bold text-slate-700 shrink-0 w-6 sm:w-8 text-center">{b.label}</span>
+                  </div>
+                );
+              })}
+            </div>
+          </section>
+        )}
 
         {primaryMot && (primaryMot.model ?? primaryMot.engineSize ?? primaryMot.primaryColour ?? primaryMot.firstUsedDate ?? primaryMot.registrationDate ?? primaryMot.manufactureDate ?? primaryMot.hasOutstandingRecall) && (
           <section className="rounded-3xl bg-white border border-slate-200/80 shadow-lg shadow-slate-200/30 ring-1 ring-slate-900/5 overflow-hidden mb-4 sm:mb-6">
