@@ -279,11 +279,16 @@ export default function VehiclePage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-white text-slate-800 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-slate-50 flex items-center justify-center px-4">
         <div className="text-center">
-          <p className="text-slate-500 text-lg">Loading vehicle details…</p>
-          <div className="mt-4 h-1 w-48 mx-auto bg-slate-200 rounded-full overflow-hidden">
-            <div className="h-full w-1/3 bg-amber-500 animate-pulse rounded-full" />
+          <div className="w-12 h-12 rounded-xl bg-amber-100 flex items-center justify-center mx-auto mb-4">
+            <svg className="w-6 h-6 text-amber-600 animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.75 15.75V18m-7.5-6.75h.008v.008H8.25v-.008Zm0 2.25h.008v.008H8.25V13.5Zm0-6.75h.008v.008H8.25V6.75Zm0 2.25h.008v.008H8.25V9Zm6-3h.008v.008H14.25V6.75Zm0 2.25h.008v.008H14.25V9Zm0 2.25h.008v.008H14.25v-.008Zm0 2.25h.008v.008H14.25V15Z" />
+            </svg>
+          </div>
+          <p className="text-slate-600 font-medium">Loading vehicle details…</p>
+          <div className="mt-4 h-1.5 w-40 mx-auto bg-slate-200 rounded-full overflow-hidden">
+            <div className="h-full w-1/3 bg-gradient-to-r from-amber-400 to-amber-500 rounded-full animate-pulse" />
           </div>
         </div>
       </div>
@@ -292,12 +297,17 @@ export default function VehiclePage() {
 
   if (error || !data?.vehicle) {
     return (
-      <div className="min-h-screen bg-white text-slate-800 flex items-center justify-center px-4 py-8">
-        <div className="max-w-md w-full rounded-2xl bg-slate-100 border border-slate-200 p-6 sm:p-8 text-center">
-          <p className="text-red-600 text-base sm:text-lg mb-6">{error || "Vehicle not found."}</p>
+      <div className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-slate-50 flex items-center justify-center px-4 py-8">
+        <div className="max-w-md w-full rounded-3xl bg-white border border-slate-200 p-6 sm:p-8 text-center shadow-xl shadow-slate-200/50 ring-1 ring-slate-900/5">
+          <div className="w-14 h-14 rounded-2xl bg-red-100 flex items-center justify-center mx-auto mb-4">
+            <svg className="w-7 h-7 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
+            </svg>
+          </div>
+          <p className="text-red-600 text-base sm:text-lg font-medium mb-6">{error || "Vehicle not found."}</p>
           <Link
             href="/"
-            className="inline-block min-h-[48px] px-6 py-3 rounded-xl bg-amber-500 text-slate-950 font-semibold hover:bg-amber-400 transition-colors touch-manipulation flex items-center justify-center"
+            className="inline-flex items-center justify-center min-h-[52px] px-8 py-3 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 text-white font-semibold shadow-lg shadow-amber-500/30 hover:from-amber-600 hover:to-amber-700 transition-all touch-manipulation"
           >
             Check another vehicle
           </Link>
@@ -313,69 +323,71 @@ export default function VehiclePage() {
   const ulezCompliant = getUlezCompliance(vehicle);
 
   return (
-    <div className="min-h-screen bg-white text-slate-800 font-sans overflow-x-hidden">
+    <div className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-slate-50 text-slate-800 overflow-x-hidden">
       <div className="mx-auto max-w-3xl px-4 py-6 sm:py-12 pb-12 sm:pb-16">
         <Link
           href="/"
-          className="inline-flex items-center gap-2 text-slate-500 hover:text-amber-600 text-sm mb-6 sm:mb-8 py-2 -mx-2 px-2 rounded-lg hover:bg-slate-100 transition-colors min-h-[44px] touch-manipulation"
+          className="inline-flex items-center gap-2 text-slate-500 hover:text-amber-600 text-sm mb-6 sm:mb-8 py-2.5 -mx-2 px-3 rounded-xl hover:bg-white/80 hover:shadow-sm transition-all min-h-[44px] touch-manipulation font-medium"
         >
-          ← Back to check another vehicle
+          <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
+          Back to check another vehicle
         </Link>
 
         {demo && (
-          <div className="mb-4 sm:mb-6 rounded-xl bg-amber-50 border border-amber-200 px-4 py-3 text-amber-800 text-sm">
-            Demo data — add <code className="bg-slate-200 px-1.5 py-0.5 rounded break-all">DVLA_API_KEY</code> and MOT credentials to your <code className="bg-slate-200 px-1.5 py-0.5 rounded break-all">.env</code> for real results.
+          <div className="mb-4 sm:mb-6 rounded-2xl bg-amber-50/90 border border-amber-200/80 px-4 py-3.5 text-amber-800 text-sm shadow-sm">
+            Demo data — add <code className="bg-amber-100/80 px-1.5 py-0.5 rounded font-mono text-xs break-all">DVLA_API_KEY</code> and MOT credentials to your <code className="bg-amber-100/80 px-1.5 py-0.5 rounded font-mono text-xs break-all">.env</code> for real results.
           </div>
         )}
 
-        <header className="rounded-2xl bg-slate-100 border border-slate-200 p-4 sm:p-8 mb-4 sm:mb-6">
-          <p className="text-slate-500 text-xs sm:text-sm uppercase tracking-wider mb-1">
+        <header className="relative rounded-3xl bg-white border border-slate-200/80 p-5 sm:p-8 mb-4 sm:mb-6 shadow-lg shadow-slate-200/30 ring-1 ring-slate-900/5 overflow-hidden">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-amber-100/50 to-transparent rounded-bl-3xl pointer-events-none" aria-hidden />
+          <p className="text-slate-500 text-xs sm:text-sm font-semibold uppercase tracking-wider mb-1.5">
             Registration
           </p>
-          <h1 className="text-2xl sm:text-3xl font-mono font-bold tracking-widest text-slate-900 break-all">
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-widest text-slate-900 break-all font-mono">
             {vehicle.registrationNumber.length <= 7
               ? vehicle.registrationNumber.replace(/(.{4})/g, "$1 ").trim()
               : vehicle.registrationNumber}
           </h1>
           {vehicle.make && (
-            <p className="mt-2 text-lg sm:text-xl text-slate-600 break-words">
+            <p className="mt-2 text-lg sm:text-xl text-slate-600 break-words font-medium">
               {vehicle.make}
-              {vehicle.colour && ` · ${vehicle.colour}`}
+              {vehicle.colour && <span className="text-slate-400 font-normal"> · {vehicle.colour}</span>}
             </p>
           )}
         </header>
 
         {ulezCompliant !== null && (
           <div
-            className={`rounded-2xl border px-4 sm:px-6 py-4 mb-4 sm:mb-6 ${
+            className={`rounded-2xl border-2 px-4 sm:px-6 py-4 mb-4 sm:mb-6 shadow-md ${
               ulezCompliant
-                ? "bg-emerald-50 border-emerald-200"
-                : "bg-red-50 border-red-200"
+                ? "bg-gradient-to-br from-emerald-50 to-emerald-50/80 border-emerald-300/80 shadow-emerald-200/20"
+                : "bg-gradient-to-br from-red-50 to-red-50/80 border-red-300/80 shadow-red-200/20"
             }`}
           >
             <p
-              className={`text-base sm:text-lg font-semibold ${
-                ulezCompliant ? "text-emerald-700" : "text-red-700"
+              className={`text-base sm:text-lg font-bold ${
+                ulezCompliant ? "text-emerald-800" : "text-red-800"
               }`}
             >
-              {ulezCompliant ? "ULEZ compliant" : "Not ULEZ compliant"}
+              {ulezCompliant ? "✓ ULEZ compliant" : "✗ Not ULEZ compliant"}
             </p>
-            <p className={`mt-0.5 text-xs sm:text-sm ${ulezCompliant ? "text-emerald-600" : "text-red-600"}`}>
+            <p className={`mt-0.5 text-xs sm:text-sm font-medium ${ulezCompliant ? "text-emerald-700" : "text-red-700"}`}>
               {vehicle.euroStatus ? `Euro status: ${vehicle.euroStatus}` : "Based on DVLA data"}
             </p>
           </div>
         )}
 
-        <section className="rounded-2xl bg-slate-100 border border-slate-200 overflow-hidden mb-4 sm:mb-6">
-          <h2 className="px-4 sm:px-6 py-3 sm:py-4 border-b border-slate-200 text-base sm:text-lg font-semibold text-slate-900">
+        <section className="rounded-3xl bg-white border border-slate-200/80 shadow-lg shadow-slate-200/30 ring-1 ring-slate-900/5 overflow-hidden mb-4 sm:mb-6">
+          <h2 className="px-4 sm:px-6 py-3.5 sm:py-4 border-b border-slate-100 text-base sm:text-lg font-bold text-slate-900 bg-slate-50/50">
             Vehicle details
           </h2>
           <dl className="p-4 sm:p-6 grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2">
             {displayFields.map((key) => {
               const value = vehicle[key];
               return (
-                <div key={key} className="flex flex-col gap-0.5">
-                  <dt className="text-xs uppercase tracking-wider text-slate-500">
+                <div key={key} className="flex flex-col gap-0.5 py-1">
+                  <dt className="text-xs uppercase tracking-wider text-slate-500 font-semibold">
                     {formatLabel(key)}
                   </dt>
                   <dd className="text-slate-900 font-medium break-words">
@@ -388,8 +400,8 @@ export default function VehiclePage() {
         </section>
 
         {primaryMot && (primaryMot.model ?? primaryMot.engineSize ?? primaryMot.primaryColour ?? primaryMot.firstUsedDate ?? primaryMot.registrationDate ?? primaryMot.manufactureDate ?? primaryMot.hasOutstandingRecall) && (
-          <section className="rounded-2xl bg-slate-100 border border-slate-200 overflow-hidden mb-4 sm:mb-6">
-            <h2 className="px-4 sm:px-6 py-3 sm:py-4 border-b border-slate-200 text-base sm:text-lg font-semibold text-slate-900">
+          <section className="rounded-3xl bg-white border border-slate-200/80 shadow-lg shadow-slate-200/30 ring-1 ring-slate-900/5 overflow-hidden mb-4 sm:mb-6">
+            <h2 className="px-4 sm:px-6 py-3.5 sm:py-4 border-b border-slate-100 text-base sm:text-lg font-bold text-slate-900 bg-slate-50/50">
               MOT vehicle info
             </h2>
             <dl className="p-4 sm:p-6 grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2">
@@ -445,35 +457,33 @@ export default function VehiclePage() {
           </section>
         )}
 
-        <section className="rounded-2xl bg-slate-100 border border-slate-200 overflow-hidden mb-4 sm:mb-6">
-          <h2 className="px-4 sm:px-6 py-3 sm:py-4 border-b border-slate-200 text-base sm:text-lg font-semibold text-slate-900">
+        <section className="rounded-3xl bg-white border border-slate-200/80 shadow-lg shadow-slate-200/30 ring-1 ring-slate-900/5 overflow-hidden mb-4 sm:mb-6">
+          <h2 className="px-4 sm:px-6 py-3.5 sm:py-4 border-b border-slate-100 text-base sm:text-lg font-bold text-slate-900 bg-slate-50/50">
             MOT history
           </h2>
           {motTests.length > 0 ? (
             <>
               {mileageSummary && (
-                <div className="px-4 sm:px-6 py-3 sm:py-4 bg-slate-50 border-b border-slate-200">
-                  <p className="text-xs sm:text-sm font-medium text-slate-700">Yearly average mileage</p>
-                  <p className="mt-1 text-xl sm:text-2xl font-semibold text-slate-900">
+                <div className="px-4 sm:px-6 py-4 sm:py-5 bg-gradient-to-r from-slate-50 to-amber-50/30 border-b border-slate-100">
+                  <p className="text-xs sm:text-sm font-semibold text-slate-600 uppercase tracking-wider">Yearly average mileage</p>
+                  <p className="mt-1 text-xl sm:text-2xl font-bold text-slate-900">
                     {mileageSummary.yearlyAverageMiles.toLocaleString()}{" "}
-                    <span className="text-sm sm:text-base font-normal text-slate-600">miles/year</span>
+                    <span className="text-sm sm:text-base font-semibold text-slate-500">miles/year</span>
                   </p>
                   <p className="mt-1 text-xs text-slate-500">
-                    From {mileageSummary.fromDate} to {mileageSummary.toDate} ·{" "}
-                    {mileageSummary.totalMiles.toLocaleString()} miles over{" "}
-                    {mileageSummary.totalYears.toFixed(1)} years
+                    From {mileageSummary.fromDate} to {mileageSummary.toDate} · {mileageSummary.totalMiles.toLocaleString()} miles over {mileageSummary.totalYears.toFixed(1)} years
                   </p>
                 </div>
               )}
-            <ul className="divide-y divide-slate-200">
+            <ul className="divide-y divide-slate-100">
               {motTests.map((test, i) => (
-                <li key={test.motTestNumber ?? i} className="p-4 sm:p-6">
+                <li key={test.motTestNumber ?? i} className="p-4 sm:p-6 hover:bg-slate-50/50 transition-colors">
                   <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-2">
                     <span
-                      className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${
+                      className={`inline-flex items-center px-3 py-1.5 rounded-full text-xs font-semibold shadow-sm ${
                         test.testResult === "PASSED"
-                          ? "bg-emerald-100 text-emerald-800"
-                          : "bg-red-100 text-red-800"
+                          ? "bg-emerald-100 text-emerald-800 ring-1 ring-emerald-200/60"
+                          : "bg-red-100 text-red-800 ring-1 ring-red-200/60"
                       }`}
                     >
                       {test.testResult ?? "—"}
@@ -526,7 +536,7 @@ export default function VehiclePage() {
           )}
         </section>
 
-        <footer className="mt-8 sm:mt-12 pb-8 text-center text-slate-500 text-xs sm:text-sm px-2">
+        <footer className="mt-8 sm:mt-12 pb-8 text-center text-slate-400 text-xs sm:text-sm px-2 font-medium">
           <p>Data from DVLA Vehicle Enquiry Service and MOT History API.</p>
         </footer>
       </div>

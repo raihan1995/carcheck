@@ -1,5 +1,11 @@
 import type { Metadata, Viewport } from "next";
+import { Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
+
+const plusJakarta = Plus_Jakarta_Sans({
+  subsets: ["latin"],
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   title: "UK Car Check | Number Plate Lookup",
@@ -19,7 +25,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="overflow-x-hidden">
-      <body className="antialiased overflow-x-hidden min-h-screen">
+      <body className={`${plusJakarta.className} antialiased overflow-x-hidden min-h-screen`}>
         {children}
       </body>
     </html>
