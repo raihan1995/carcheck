@@ -26,3 +26,4 @@ The app uses two APIs:
 - Next.js 16 (App Router)
 - Tailwind CSS
 - TypeScript
+- **UI v2** — Plus Jakarta Sans, gradient backgrounds, elevated cards, amber accents

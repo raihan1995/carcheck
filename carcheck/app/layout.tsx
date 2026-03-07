@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 
+/** UI v2: Plus Jakarta Sans, gradient backgrounds, elevated white cards, amber accents, ULEZ ✓/✗ block. */
 const plusJakarta = Plus_Jakarta_Sans({
   subsets: ["latin"],
   display: "swap",
