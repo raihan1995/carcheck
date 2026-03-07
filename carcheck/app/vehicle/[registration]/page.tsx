@@ -71,6 +71,71 @@ function formatLabel(key: string): string {
     .trim();
 }
 
+/** Parse date string (ISO or YYYY-MM) to timestamp; returns NaN if invalid */
+function parseDate(str: string | undefined): number {
+  if (!str) return NaN;
+  const part = str.includes("T") ? str.split("T")[0] : str.split(" ")[0]?.replace(/\./g, "-") ?? str;
+  const d = new Date(part);
+  return isNaN(d.getTime()) ? NaN : d.getTime();
+}
+
+/** Years between two timestamps */
+function yearsBetween(msStart: number, msEnd: number): number {
+  return (msEnd - msStart) / (365.25 * 24 * 60 * 60 * 1000);
+}
+
+type MileageSummary = {
+  yearlyAverageMiles: number;
+  totalMiles: number;
+  totalYears: number;
+  fromDate: string;
+  toDate: string;
+} | null;
+
+/**
+ * Compute yearly average mileage from first registration to last MOT.
+ * Uses 0 miles at first registration; first MOT might be years after registration (new car).
+ */
+function computeYearlyAverageMileage(
+  monthOfFirstRegistration: string | undefined,
+  motTests: MotTestItem[]
+): MileageSummary {
+  const testsWithOdometer = motTests
+    .filter((t) => t.completedDate != null && t.odometerValue != null)
+    .map((t) => ({
+      dateMs: parseDate(t.completedDate),
+      miles: Number(t.odometerValue),
+    }))
+    .filter((t) => !Number.isNaN(t.dateMs) && !Number.isNaN(t.miles));
+  if (testsWithOdometer.length === 0) return null;
+
+  testsWithOdometer.sort((a, b) => a.dateMs - b.dateMs);
+  const firstMot = testsWithOdometer[0];
+  const lastMot = testsWithOdometer[testsWithOdometer.length - 1];
+
+  // Start date: first registration (DVLA) or, if missing, first MOT date
+  let startMs = parseDate(monthOfFirstRegistration);
+  if (Number.isNaN(startMs)) startMs = firstMot.dateMs;
+  else {
+    // monthOfFirstRegistration is "2018-06" – use first day of month
+    const [y, m] = String(monthOfFirstRegistration).split("-").map(Number);
+    if (!Number.isNaN(y) && !Number.isNaN(m)) startMs = new Date(y, m - 1, 1).getTime();
+  }
+
+  const totalMiles = lastMot.miles;
+  const totalYears = yearsBetween(startMs, lastMot.dateMs);
+  if (totalYears <= 0) return null;
+
+  const yearlyAverageMiles = Math.round(totalMiles / totalYears);
+  return {
+    yearlyAverageMiles,
+    totalMiles,
+    totalYears,
+    fromDate: new Date(startMs).toLocaleDateString("en-GB", { month: "short", year: "numeric" }),
+    toDate: new Date(lastMot.dateMs).toLocaleDateString("en-GB", { month: "short", year: "numeric" }),
+  };
+}
+
 export default function VehiclePage() {
   const params = useParams();
   const router = useRouter();
@@ -175,6 +240,7 @@ export default function VehiclePage() {
   const { vehicle, motHistory, demo } = data;
   const primaryMot = motHistory?.[0];
   const motTests = primaryMot?.motTests ?? [];
+  const mileageSummary = computeYearlyAverageMileage(vehicle.monthOfFirstRegistration, motTests);
 
   return (
     <div className="min-h-screen bg-white text-slate-800 font-sans">
@@ -236,6 +302,21 @@ export default function VehiclePage() {
             MOT history
           </h2>
           {motTests.length > 0 ? (
+            <>
+              {mileageSummary && (
+                <div className="px-6 py-4 bg-slate-50 border-b border-slate-200">
+                  <p className="text-sm font-medium text-slate-700">Yearly average mileage</p>
+                  <p className="mt-1 text-2xl font-semibold text-slate-900">
+                    {mileageSummary.yearlyAverageMiles.toLocaleString()}{" "}
+                    <span className="text-base font-normal text-slate-600">miles/year</span>
+                  </p>
+                  <p className="mt-1 text-xs text-slate-500">
+                    From {mileageSummary.fromDate} to {mileageSummary.toDate} ·{" "}
+                    {mileageSummary.totalMiles.toLocaleString()} miles over{" "}
+                    {mileageSummary.totalYears.toFixed(1)} years
+                  </p>
+                </div>
+              )}
             <ul className="divide-y divide-slate-200">
               {motTests.map((test, i) => (
                 <li key={test.motTestNumber ?? i} className="p-6">
@@ -289,6 +370,7 @@ export default function VehiclePage() {
                 </li>
               ))}
             </ul>
+            </>
           ) : (
             <p className="p-6 text-slate-500">
               MOT info failed to retrieve.
