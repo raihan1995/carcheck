@@ -49,22 +49,22 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 text-slate-100 font-sans">
+    <div className="min-h-screen bg-white text-slate-800 font-sans">
       <div className="mx-auto max-w-2xl px-4 py-12 sm:py-20">
         <header className="text-center mb-12">
-          <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-white">
+          <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-slate-900">
             UK Car Check
           </h1>
-          <p className="mt-2 text-slate-400 text-lg">
+          <p className="mt-2 text-slate-500 text-lg">
             Enter a UK number plate to view vehicle details
           </p>
         </header>
 
         <form
           onSubmit={handleSubmit}
-          className="rounded-2xl bg-slate-800/60 border border-slate-700/60 p-6 sm:p-8 shadow-xl"
+          className="rounded-2xl bg-slate-100 border border-slate-200 p-6 sm:p-8 shadow-sm"
         >
-          <label htmlFor="plate" className="block text-sm font-medium text-slate-300 mb-2">
+          <label htmlFor="plate" className="block text-sm font-medium text-slate-600 mb-2">
             Registration number
           </label>
           <div className="flex gap-3">
@@ -74,7 +74,7 @@ export default function Home() {
               value={plate}
               onChange={(e) => setPlate(e.target.value.toUpperCase())}
               placeholder="e.g. AB12 CDE"
-              className="flex-1 rounded-xl bg-slate-900/80 border border-slate-600 text-white placeholder-slate-500 px-4 py-3.5 text-lg font-mono tracking-[0.2em] focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500/50"
+              className="flex-1 rounded-xl bg-white border border-slate-300 text-slate-900 placeholder-slate-400 px-4 py-3.5 text-lg font-mono tracking-[0.2em] focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500/50"
               disabled={loading}
               autoComplete="off"
               autoFocus
@@ -82,13 +82,13 @@ export default function Home() {
             <button
               type="submit"
               disabled={loading}
-              className="shrink-0 px-6 py-3.5 rounded-xl bg-amber-500 text-slate-950 font-semibold hover:bg-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:ring-offset-2 focus:ring-offset-slate-900 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
+              className="shrink-0 px-6 py-3.5 rounded-xl bg-amber-500 text-slate-950 font-semibold hover:bg-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:ring-offset-2 focus:ring-offset-white disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
             >
               {loading ? "Checking…" : "Check"}
             </button>
           </div>
           {error && (
-            <p className="mt-3 text-sm text-red-400" role="alert">
+            <p className="mt-3 text-sm text-red-600" role="alert">
               {error}
             </p>
           )}

@@ -28,6 +28,7 @@ type MotTestItem = {
   odometerUnit?: string;
   motTestNumber?: string;
   rfrAndComments?: Array<{ text: string; type: string; dangerous?: boolean }>;
+  defects?: Array<{ text: string; type: string; dangerous?: boolean }>;
 };
 
 type MotHistoryVehicle = {
@@ -49,10 +50,11 @@ type ApiResponse = {
 
 function formatDate(str: string | undefined): string {
   if (!str) return "—";
-  const d = str.split(" ")[0]?.replace(/\./g, "-");
-  if (!d) return str;
+  // Handle ISO (e.g. 2025-04-24T14:00:32.000Z) or legacy (e.g. 2013.11.03 09:33:08)
+  const datePart = str.includes("T") ? str.split("T")[0] : str.split(" ")[0]?.replace(/\./g, "-");
+  if (!datePart) return str;
   try {
-    return new Date(d).toLocaleDateString("en-GB", {
+    return new Date(datePart).toLocaleDateString("en-GB", {
       day: "numeric",
       month: "short",
       year: "numeric",
@@ -143,10 +145,10 @@ export default function VehiclePage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 text-slate-100 flex items-center justify-center">
+      <div className="min-h-screen bg-white text-slate-800 flex items-center justify-center">
         <div className="text-center">
-          <p className="text-slate-400 text-lg">Loading vehicle details…</p>
-          <div className="mt-4 h-1 w-48 mx-auto bg-slate-700 rounded-full overflow-hidden">
+          <p className="text-slate-500 text-lg">Loading vehicle details…</p>
+          <div className="mt-4 h-1 w-48 mx-auto bg-slate-200 rounded-full overflow-hidden">
             <div className="h-full w-1/3 bg-amber-500 animate-pulse rounded-full" />
           </div>
         </div>
@@ -156,9 +158,9 @@ export default function VehiclePage() {
 
   if (error || !data?.vehicle) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 text-slate-100 flex items-center justify-center px-4">
-        <div className="max-w-md w-full rounded-2xl bg-slate-800/60 border border-slate-700/60 p-8 text-center">
-          <p className="text-red-400 text-lg mb-6">{error || "Vehicle not found."}</p>
+      <div className="min-h-screen bg-white text-slate-800 flex items-center justify-center px-4">
+        <div className="max-w-md w-full rounded-2xl bg-slate-100 border border-slate-200 p-8 text-center">
+          <p className="text-red-600 text-lg mb-6">{error || "Vehicle not found."}</p>
           <Link
             href="/"
             className="inline-block px-6 py-3 rounded-xl bg-amber-500 text-slate-950 font-semibold hover:bg-amber-400 transition-colors"
@@ -175,40 +177,40 @@ export default function VehiclePage() {
   const motTests = primaryMot?.motTests ?? [];
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 text-slate-100 font-sans">
+    <div className="min-h-screen bg-white text-slate-800 font-sans">
       <div className="mx-auto max-w-3xl px-4 py-8 sm:py-12">
         <Link
           href="/"
-          className="inline-flex items-center gap-2 text-slate-400 hover:text-amber-400 text-sm mb-8 transition-colors"
+          className="inline-flex items-center gap-2 text-slate-500 hover:text-amber-600 text-sm mb-8 transition-colors"
         >
           ← Back to check another vehicle
         </Link>
 
         {demo && (
-          <div className="mb-6 rounded-xl bg-amber-500/15 border border-amber-500/30 px-4 py-3 text-amber-200 text-sm">
-            Demo data — add <code className="bg-slate-800 px-1.5 py-0.5 rounded">DVLA_API_KEY</code> and MOT credentials to your <code className="bg-slate-800 px-1.5 py-0.5 rounded">.env</code> for real results.
+          <div className="mb-6 rounded-xl bg-amber-50 border border-amber-200 px-4 py-3 text-amber-800 text-sm">
+            Demo data — add <code className="bg-slate-200 px-1.5 py-0.5 rounded">DVLA_API_KEY</code> and MOT credentials to your <code className="bg-slate-200 px-1.5 py-0.5 rounded">.env</code> for real results.
           </div>
         )}
 
-        <header className="rounded-2xl bg-slate-800/60 border border-slate-700/60 p-6 sm:p-8 mb-6">
+        <header className="rounded-2xl bg-slate-100 border border-slate-200 p-6 sm:p-8 mb-6">
           <p className="text-slate-500 text-sm uppercase tracking-wider mb-1">
             Registration
           </p>
-          <h1 className="text-3xl font-mono font-bold tracking-widest text-white">
+          <h1 className="text-3xl font-mono font-bold tracking-widest text-slate-900">
             {vehicle.registrationNumber.length <= 7
               ? vehicle.registrationNumber.replace(/(.{4})/g, "$1 ").trim()
               : vehicle.registrationNumber}
           </h1>
           {vehicle.make && (
-            <p className="mt-2 text-xl text-slate-300">
+            <p className="mt-2 text-xl text-slate-600">
               {vehicle.make}
               {vehicle.colour && ` · ${vehicle.colour}`}
             </p>
           )}
         </header>
 
-        <section className="rounded-2xl bg-slate-800/60 border border-slate-700/60 overflow-hidden mb-6">
-          <h2 className="px-6 py-4 border-b border-slate-700/60 text-lg font-semibold text-white">
+        <section className="rounded-2xl bg-slate-100 border border-slate-200 overflow-hidden mb-6">
+          <h2 className="px-6 py-4 border-b border-slate-200 text-lg font-semibold text-slate-900">
             Vehicle details
           </h2>
           <dl className="p-6 grid gap-4 sm:grid-cols-2">
@@ -220,7 +222,7 @@ export default function VehiclePage() {
                   <dt className="text-xs uppercase tracking-wider text-slate-500">
                     {formatLabel(key)}
                   </dt>
-                  <dd className="text-slate-100 font-medium">
+                  <dd className="text-slate-900 font-medium">
                     {formatValue(value)}
                   </dd>
                 </div>
@@ -229,25 +231,25 @@ export default function VehiclePage() {
           </dl>
         </section>
 
-        {motTests.length > 0 && (
-          <section className="rounded-2xl bg-slate-800/60 border border-slate-700/60 overflow-hidden">
-            <h2 className="px-6 py-4 border-b border-slate-700/60 text-lg font-semibold text-white">
-              MOT history
-            </h2>
-            <ul className="divide-y divide-slate-700/60">
+        <section className="rounded-2xl bg-slate-100 border border-slate-200 overflow-hidden mb-6">
+          <h2 className="px-6 py-4 border-b border-slate-200 text-lg font-semibold text-slate-900">
+            MOT history
+          </h2>
+          {motTests.length > 0 ? (
+            <ul className="divide-y divide-slate-200">
               {motTests.map((test, i) => (
                 <li key={test.motTestNumber ?? i} className="p-6">
                   <div className="flex flex-wrap items-center gap-3 mb-2">
                     <span
                       className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${
                         test.testResult === "PASSED"
-                          ? "bg-emerald-500/20 text-emerald-300"
-                          : "bg-red-500/20 text-red-300"
+                          ? "bg-emerald-100 text-emerald-800"
+                          : "bg-red-100 text-red-800"
                       }`}
                     >
                       {test.testResult ?? "—"}
                     </span>
-                    <span className="text-slate-400 text-sm">
+                    <span className="text-slate-500 text-sm">
                       {formatDate(test.completedDate)}
                     </span>
                     {test.odometerValue && (
@@ -257,21 +259,23 @@ export default function VehiclePage() {
                     )}
                   </div>
                   {test.expiryDate && test.testResult === "PASSED" && (
-                    <p className="text-slate-400 text-sm mb-2">
+                    <p className="text-slate-500 text-sm mb-2">
                       Expires {formatDate(test.expiryDate)}
                     </p>
                   )}
-                  {test.rfrAndComments && test.rfrAndComments.length > 0 && (
+                  {((test.rfrAndComments ?? test.defects) ?? []).length > 0 && (
                     <ul className="mt-2 space-y-1.5">
-                      {test.rfrAndComments.map((rfr, j) => (
+                      {(test.rfrAndComments ?? test.defects ?? []).map((rfr, j) => (
                         <li
                           key={j}
                           className={`text-sm ${
                             rfr.type === "FAIL" || rfr.type === "DANGEROUS"
-                              ? "text-red-300"
+                              ? "text-red-700"
                               : rfr.type === "ADVISORY"
-                                ? "text-amber-300"
-                                : "text-slate-400"
+                                ? "text-amber-700"
+                                : rfr.type === "MINOR"
+                                  ? "text-amber-600"
+                                  : "text-slate-600"
                           }`}
                         >
                           <span className="font-medium uppercase text-slate-500 mr-2">
@@ -285,14 +289,12 @@ export default function VehiclePage() {
                 </li>
               ))}
             </ul>
-          </section>
-        )}
-
-        {(!motHistory || motHistory.length === 0) && (
-          <p className="mt-6 text-center text-slate-500 text-sm">
-            MOT history is available when MOT API credentials are configured.
-          </p>
-        )}
+          ) : (
+            <p className="p-6 text-slate-500">
+              MOT info failed to retrieve.
+            </p>
+          )}
+        </section>
 
         <footer className="mt-12 text-center text-slate-500 text-sm">
           <p>Data from DVLA Vehicle Enquiry Service and MOT History API.</p>

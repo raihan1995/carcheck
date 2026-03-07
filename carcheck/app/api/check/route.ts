@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 const DVLA_API_URL =
   "https://driver-vehicle-licensing.api.gov.uk/vehicle-enquiry/v1/vehicles";
 
-const MOT_API_BASE = "https://tapi.dvsa.gov.uk";
+const MOT_API_BASE = "https://history.mot.api.gov.uk";
 
 export interface VehicleData {
   registrationNumber: string;
@@ -36,6 +36,8 @@ export interface MotTestItem {
   odometerResultType?: string;
   motTestNumber?: string;
   rfrAndComments?: Array<{ text: string; type: string; dangerous?: boolean }>;
+  /** New API uses defects; mapped to rfrAndComments in fetch */
+  defects?: Array<{ text: string; type: string; dangerous?: boolean }>;
 }
 
 export interface MotHistoryVehicle {
@@ -113,18 +115,53 @@ async function fetchMotHistory(
   const apiKey = process.env.MOT_API_KEY;
   if (!apiKey) return null;
 
-  const url = `${MOT_API_BASE}/trade/vehicles/mot-tests?registration=${encodeURIComponent(registrationNumber)}`;
+  const url = `${MOT_API_BASE}/v1/trade/vehicles/registration/${encodeURIComponent(registrationNumber)}`;
   const res = await fetch(url, {
+    method: "GET",
     headers: {
       Authorization: `Bearer ${accessToken}`,
       "X-API-Key": apiKey,
-      Accept: "application/json+v6",
+      Accept: "application/json",
     },
   });
 
   if (!res.ok) return null;
-  const data = await res.json().catch(() => null);
-  return Array.isArray(data) ? data : null;
+  const raw = await res.json().catch(() => null);
+  if (!raw || typeof raw !== "object") return null;
+
+  // New API returns a single vehicle object with motTests; map to MotHistoryVehicle[] shape
+  const motTests = Array.isArray(raw.motTests) ? raw.motTests : [];
+  const mappedTests: MotTestItem[] = motTests.map((t: Record<string, unknown>) => {
+    const defects = (t.defects as Array<{ text?: string; type?: string; dangerous?: boolean }>) ?? [];
+    return {
+      completedDate: t.completedDate as string | undefined,
+      testResult: t.testResult as string | undefined,
+      expiryDate: t.expiryDate as string | undefined,
+      odometerValue: t.odometerValue as string | undefined,
+      odometerUnit: t.odometerUnit as string | undefined,
+      odometerResultType: t.odometerResultType as string | undefined,
+      motTestNumber: t.motTestNumber as string | undefined,
+      rfrAndComments: defects.map((d) => ({
+        text: d.text ?? "",
+        type: d.type ?? "ADVISORY",
+        dangerous: d.dangerous,
+      })),
+    };
+  });
+
+  const vehicle: MotHistoryVehicle = {
+    registration: raw.registration as string | undefined,
+    make: raw.make as string | undefined,
+    model: raw.model as string | undefined,
+    firstUsedDate: raw.firstUsedDate as string | undefined,
+    fuelType: raw.fuelType as string | undefined,
+    primaryColour: raw.primaryColour as string | undefined,
+    registrationDate: raw.registrationDate as string | undefined,
+    manufactureDate: raw.manufactureDate as string | undefined,
+    engineSize: raw.engineSize as string | undefined,
+    motTests: mappedTests,
+  };
+  return [vehicle];
 }
 
 async function performVehicleCheck(registrationNumber: string): Promise<{
@@ -167,8 +204,16 @@ async function performVehicleCheck(registrationNumber: string): Promise<{
   }
 
   const vehicle = data as VehicleData;
-  // MOT History API disabled for now (tapi.dvsa.gov.uk unreachable).
-  return { vehicle, motHistory: null };
+  let motHistory: MotHistoryVehicle[] | null = null;
+  try {
+    const token = await getMotAccessToken();
+    if (token) {
+      motHistory = await fetchMotHistory(registrationNumber, token);
+    }
+  } catch (motErr) {
+    logApiCheckError(motErr, "MOT");
+  }
+  return { vehicle, motHistory };
 }
 
 export async function GET(request: NextRequest) {
