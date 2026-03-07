@@ -86,6 +86,16 @@ function formatLabel(key: string): string {
     .trim();
 }
 
+/** ULEZ: Euro 6+ compliant, Euro 5 and below not. Returns null if unknown (no euro status). */
+function isUlezCompliant(euroStatus: string | undefined): boolean | null {
+  if (!euroStatus || typeof euroStatus !== "string") return null;
+  const upper = euroStatus.toUpperCase();
+  const match = upper.match(/EURO\s*(\d+)/i) ?? upper.match(/\b(\d)\b/);
+  const num = match ? parseInt(match[1], 10) : NaN;
+  if (Number.isNaN(num)) return null;
+  return num >= 6;
+}
+
 /** Parse date string (ISO or YYYY-MM) to timestamp; returns NaN if invalid */
 function parseDate(str: string | undefined): number {
   if (!str) return NaN;
@@ -265,6 +275,7 @@ export default function VehiclePage() {
   const primaryMot = motHistory?.[0];
   const motTests = primaryMot?.motTests ?? [];
   const mileageSummary = computeYearlyAverageMileage(vehicle.monthOfFirstRegistration, motTests);
+  const ulezCompliant = isUlezCompliant(vehicle.euroStatus);
 
   return (
     <div className="min-h-screen bg-white text-slate-800 font-sans">
@@ -299,6 +310,29 @@ export default function VehiclePage() {
           )}
         </header>
 
+        {ulezCompliant !== null && (
+          <div
+            className={`rounded-2xl border px-6 py-4 mb-6 ${
+              ulezCompliant
+                ? "bg-emerald-50 border-emerald-200"
+                : "bg-red-50 border-red-200"
+            }`}
+          >
+            <p
+              className={`text-lg font-semibold ${
+                ulezCompliant ? "text-emerald-700" : "text-red-700"
+              }`}
+            >
+              {ulezCompliant ? "ULEZ compliant" : "Not ULEZ compliant"}
+            </p>
+            {vehicle.euroStatus && (
+              <p className={`mt-0.5 text-sm ${ulezCompliant ? "text-emerald-600" : "text-red-600"}`}>
+                {vehicle.euroStatus}
+              </p>
+            )}
+          </div>
+        )}
+
         <section className="rounded-2xl bg-slate-100 border border-slate-200 overflow-hidden mb-6">
           <h2 className="px-6 py-4 border-b border-slate-200 text-lg font-semibold text-slate-900">
             Vehicle details
@@ -306,7 +340,6 @@ export default function VehiclePage() {
           <dl className="p-6 grid gap-4 sm:grid-cols-2">
             {displayFields.map((key) => {
               const value = vehicle[key];
-              if (value === undefined && key !== "markedForExport") return null;
               return (
                 <div key={key} className="flex flex-col gap-0.5">
                   <dt className="text-xs uppercase tracking-wider text-slate-500">
