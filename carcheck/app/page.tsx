@@ -50,31 +50,31 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-white text-slate-800 font-sans">
-      <div className="mx-auto max-w-2xl px-4 py-12 sm:py-20">
-        <header className="text-center mb-12">
-          <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-slate-900">
+      <div className="mx-auto max-w-2xl px-4 py-8 sm:py-12 sm:px-6">
+        <header className="text-center mb-8 sm:mb-12">
+          <h1 className="text-2xl sm:text-4xl font-bold tracking-tight text-slate-900">
             UK Car Check
           </h1>
-          <p className="mt-2 text-slate-500 text-lg">
+          <p className="mt-2 text-slate-500 text-base sm:text-lg">
             Enter a UK number plate to view vehicle details
           </p>
         </header>
 
         <form
           onSubmit={handleSubmit}
-          className="rounded-2xl bg-slate-100 border border-slate-200 p-6 sm:p-8 shadow-sm"
+          className="rounded-2xl bg-slate-100 border border-slate-200 p-4 sm:p-8 shadow-sm"
         >
           <label htmlFor="plate" className="block text-sm font-medium text-slate-600 mb-2">
             Registration number
           </label>
-          <div className="flex gap-3">
+          <div className="flex flex-col sm:flex-row gap-3">
             <input
               id="plate"
               type="text"
               value={plate}
               onChange={(e) => setPlate(e.target.value.toUpperCase())}
               placeholder="e.g. AB12 CDE"
-              className="flex-1 rounded-xl bg-white border border-slate-300 text-slate-900 placeholder-slate-400 px-4 py-3.5 text-lg font-mono tracking-[0.2em] focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500/50"
+              className="flex-1 min-h-[48px] rounded-xl bg-white border border-slate-300 text-slate-900 placeholder-slate-400 px-4 py-3.5 text-base sm:text-lg font-mono tracking-widest sm:tracking-[0.2em] focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500/50"
               disabled={loading}
               autoComplete="off"
               autoFocus
@@ -82,7 +82,7 @@ export default function Home() {
             <button
               type="submit"
               disabled={loading}
-              className="shrink-0 px-6 py-3.5 rounded-xl bg-amber-500 text-slate-950 font-semibold hover:bg-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:ring-offset-2 focus:ring-offset-white disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
+              className="w-full sm:w-auto sm:shrink-0 min-h-[48px] px-6 py-3.5 rounded-xl bg-amber-500 text-slate-950 font-semibold hover:bg-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:ring-offset-2 focus:ring-offset-white disabled:opacity-60 disabled:cursor-not-allowed transition-colors touch-manipulation"
             >
               {loading ? "Checking…" : "Check"}
             </button>
@@ -94,7 +94,7 @@ export default function Home() {
           )}
         </form>
 
-        <footer className="mt-16 text-center text-slate-500 text-sm">
+        <footer className="mt-12 pb-8 sm:pb-0 text-center text-slate-500 text-sm px-2">
           <p>
             Data from the DVLA Vehicle Enquiry Service and MOT History API. For official use only.
           </p>

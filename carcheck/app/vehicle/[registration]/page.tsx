@@ -292,12 +292,12 @@ export default function VehiclePage() {
 
   if (error || !data?.vehicle) {
     return (
-      <div className="min-h-screen bg-white text-slate-800 flex items-center justify-center px-4">
-        <div className="max-w-md w-full rounded-2xl bg-slate-100 border border-slate-200 p-8 text-center">
-          <p className="text-red-600 text-lg mb-6">{error || "Vehicle not found."}</p>
+      <div className="min-h-screen bg-white text-slate-800 flex items-center justify-center px-4 py-8">
+        <div className="max-w-md w-full rounded-2xl bg-slate-100 border border-slate-200 p-6 sm:p-8 text-center">
+          <p className="text-red-600 text-base sm:text-lg mb-6">{error || "Vehicle not found."}</p>
           <Link
             href="/"
-            className="inline-block px-6 py-3 rounded-xl bg-amber-500 text-slate-950 font-semibold hover:bg-amber-400 transition-colors"
+            className="inline-block min-h-[48px] px-6 py-3 rounded-xl bg-amber-500 text-slate-950 font-semibold hover:bg-amber-400 transition-colors touch-manipulation flex items-center justify-center"
           >
             Check another vehicle
           </Link>
@@ -313,32 +313,32 @@ export default function VehiclePage() {
   const ulezCompliant = getUlezCompliance(vehicle);
 
   return (
-    <div className="min-h-screen bg-white text-slate-800 font-sans">
-      <div className="mx-auto max-w-3xl px-4 py-8 sm:py-12">
+    <div className="min-h-screen bg-white text-slate-800 font-sans overflow-x-hidden">
+      <div className="mx-auto max-w-3xl px-4 py-6 sm:py-12 pb-12 sm:pb-16">
         <Link
           href="/"
-          className="inline-flex items-center gap-2 text-slate-500 hover:text-amber-600 text-sm mb-8 transition-colors"
+          className="inline-flex items-center gap-2 text-slate-500 hover:text-amber-600 text-sm mb-6 sm:mb-8 py-2 -mx-2 px-2 rounded-lg hover:bg-slate-100 transition-colors min-h-[44px] touch-manipulation"
         >
           ← Back to check another vehicle
         </Link>
 
         {demo && (
-          <div className="mb-6 rounded-xl bg-amber-50 border border-amber-200 px-4 py-3 text-amber-800 text-sm">
-            Demo data — add <code className="bg-slate-200 px-1.5 py-0.5 rounded">DVLA_API_KEY</code> and MOT credentials to your <code className="bg-slate-200 px-1.5 py-0.5 rounded">.env</code> for real results.
+          <div className="mb-4 sm:mb-6 rounded-xl bg-amber-50 border border-amber-200 px-4 py-3 text-amber-800 text-sm">
+            Demo data — add <code className="bg-slate-200 px-1.5 py-0.5 rounded break-all">DVLA_API_KEY</code> and MOT credentials to your <code className="bg-slate-200 px-1.5 py-0.5 rounded break-all">.env</code> for real results.
           </div>
         )}
 
-        <header className="rounded-2xl bg-slate-100 border border-slate-200 p-6 sm:p-8 mb-6">
-          <p className="text-slate-500 text-sm uppercase tracking-wider mb-1">
+        <header className="rounded-2xl bg-slate-100 border border-slate-200 p-4 sm:p-8 mb-4 sm:mb-6">
+          <p className="text-slate-500 text-xs sm:text-sm uppercase tracking-wider mb-1">
             Registration
           </p>
-          <h1 className="text-3xl font-mono font-bold tracking-widest text-slate-900">
+          <h1 className="text-2xl sm:text-3xl font-mono font-bold tracking-widest text-slate-900 break-all">
             {vehicle.registrationNumber.length <= 7
               ? vehicle.registrationNumber.replace(/(.{4})/g, "$1 ").trim()
               : vehicle.registrationNumber}
           </h1>
           {vehicle.make && (
-            <p className="mt-2 text-xl text-slate-600">
+            <p className="mt-2 text-lg sm:text-xl text-slate-600 break-words">
               {vehicle.make}
               {vehicle.colour && ` · ${vehicle.colour}`}
             </p>
@@ -347,30 +347,30 @@ export default function VehiclePage() {
 
         {ulezCompliant !== null && (
           <div
-            className={`rounded-2xl border px-6 py-4 mb-6 ${
+            className={`rounded-2xl border px-4 sm:px-6 py-4 mb-4 sm:mb-6 ${
               ulezCompliant
                 ? "bg-emerald-50 border-emerald-200"
                 : "bg-red-50 border-red-200"
             }`}
           >
             <p
-              className={`text-lg font-semibold ${
+              className={`text-base sm:text-lg font-semibold ${
                 ulezCompliant ? "text-emerald-700" : "text-red-700"
               }`}
             >
               {ulezCompliant ? "ULEZ compliant" : "Not ULEZ compliant"}
             </p>
-            <p className={`mt-0.5 text-sm ${ulezCompliant ? "text-emerald-600" : "text-red-600"}`}>
+            <p className={`mt-0.5 text-xs sm:text-sm ${ulezCompliant ? "text-emerald-600" : "text-red-600"}`}>
               {vehicle.euroStatus ? `Euro status: ${vehicle.euroStatus}` : "Based on DVLA data"}
             </p>
           </div>
         )}
 
-        <section className="rounded-2xl bg-slate-100 border border-slate-200 overflow-hidden mb-6">
-          <h2 className="px-6 py-4 border-b border-slate-200 text-lg font-semibold text-slate-900">
+        <section className="rounded-2xl bg-slate-100 border border-slate-200 overflow-hidden mb-4 sm:mb-6">
+          <h2 className="px-4 sm:px-6 py-3 sm:py-4 border-b border-slate-200 text-base sm:text-lg font-semibold text-slate-900">
             Vehicle details
           </h2>
-          <dl className="p-6 grid gap-4 sm:grid-cols-2">
+          <dl className="p-4 sm:p-6 grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2">
             {displayFields.map((key) => {
               const value = vehicle[key];
               return (
@@ -378,7 +378,7 @@ export default function VehiclePage() {
                   <dt className="text-xs uppercase tracking-wider text-slate-500">
                     {formatLabel(key)}
                   </dt>
-                  <dd className="text-slate-900 font-medium">
+                  <dd className="text-slate-900 font-medium break-words">
                     {formatValue(value)}
                   </dd>
                 </div>
@@ -388,11 +388,11 @@ export default function VehiclePage() {
         </section>
 
         {primaryMot && (primaryMot.model ?? primaryMot.engineSize ?? primaryMot.primaryColour ?? primaryMot.firstUsedDate ?? primaryMot.registrationDate ?? primaryMot.manufactureDate ?? primaryMot.hasOutstandingRecall) && (
-          <section className="rounded-2xl bg-slate-100 border border-slate-200 overflow-hidden mb-6">
-            <h2 className="px-6 py-4 border-b border-slate-200 text-lg font-semibold text-slate-900">
+          <section className="rounded-2xl bg-slate-100 border border-slate-200 overflow-hidden mb-4 sm:mb-6">
+            <h2 className="px-4 sm:px-6 py-3 sm:py-4 border-b border-slate-200 text-base sm:text-lg font-semibold text-slate-900">
               MOT vehicle info
             </h2>
-            <dl className="p-6 grid gap-4 sm:grid-cols-2">
+            <dl className="p-4 sm:p-6 grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2">
               {primaryMot.model && (
                 <div className="flex flex-col gap-0.5">
                   <dt className="text-xs uppercase tracking-wider text-slate-500">Model</dt>
@@ -445,18 +445,18 @@ export default function VehiclePage() {
           </section>
         )}
 
-        <section className="rounded-2xl bg-slate-100 border border-slate-200 overflow-hidden mb-6">
-          <h2 className="px-6 py-4 border-b border-slate-200 text-lg font-semibold text-slate-900">
+        <section className="rounded-2xl bg-slate-100 border border-slate-200 overflow-hidden mb-4 sm:mb-6">
+          <h2 className="px-4 sm:px-6 py-3 sm:py-4 border-b border-slate-200 text-base sm:text-lg font-semibold text-slate-900">
             MOT history
           </h2>
           {motTests.length > 0 ? (
             <>
               {mileageSummary && (
-                <div className="px-6 py-4 bg-slate-50 border-b border-slate-200">
-                  <p className="text-sm font-medium text-slate-700">Yearly average mileage</p>
-                  <p className="mt-1 text-2xl font-semibold text-slate-900">
+                <div className="px-4 sm:px-6 py-3 sm:py-4 bg-slate-50 border-b border-slate-200">
+                  <p className="text-xs sm:text-sm font-medium text-slate-700">Yearly average mileage</p>
+                  <p className="mt-1 text-xl sm:text-2xl font-semibold text-slate-900">
                     {mileageSummary.yearlyAverageMiles.toLocaleString()}{" "}
-                    <span className="text-base font-normal text-slate-600">miles/year</span>
+                    <span className="text-sm sm:text-base font-normal text-slate-600">miles/year</span>
                   </p>
                   <p className="mt-1 text-xs text-slate-500">
                     From {mileageSummary.fromDate} to {mileageSummary.toDate} ·{" "}
@@ -467,8 +467,8 @@ export default function VehiclePage() {
               )}
             <ul className="divide-y divide-slate-200">
               {motTests.map((test, i) => (
-                <li key={test.motTestNumber ?? i} className="p-6">
-                  <div className="flex flex-wrap items-center gap-3 mb-2">
+                <li key={test.motTestNumber ?? i} className="p-4 sm:p-6">
+                  <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-2">
                     <span
                       className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${
                         test.testResult === "PASSED"
@@ -493,7 +493,7 @@ export default function VehiclePage() {
                     </p>
                   )}
                   {((test.rfrAndComments ?? test.defects) ?? []).length > 0 && (
-                    <ul className="mt-2 space-y-1.5">
+                    <ul className="mt-2 space-y-1.5 text-sm break-words">
                       {(test.rfrAndComments ?? test.defects ?? []).map((rfr, j) => (
                         <li
                           key={j}
@@ -520,13 +520,13 @@ export default function VehiclePage() {
             </ul>
             </>
           ) : (
-            <p className="p-6 text-slate-500">
+            <p className="p-4 sm:p-6 text-slate-500 text-sm">
               MOT info failed to retrieve.
             </p>
           )}
         </section>
 
-        <footer className="mt-12 text-center text-slate-500 text-sm">
+        <footer className="mt-8 sm:mt-12 pb-8 text-center text-slate-500 text-xs sm:text-sm px-2">
           <p>Data from DVLA Vehicle Enquiry Service and MOT History API.</p>
         </footer>
       </div>
