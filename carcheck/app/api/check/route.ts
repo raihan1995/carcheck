@@ -14,7 +14,9 @@ export interface VehicleData {
   engineCapacity?: number;
   yearOfManufacture?: number;
   monthOfFirstRegistration?: string;
+  monthOfFirstDvlaRegistration?: string;
   motStatus?: string;
+  motExpiryDate?: string;
   taxStatus?: string;
   taxDueDate?: string;
   artEndDate?: string;
@@ -35,6 +37,7 @@ export interface MotTestItem {
   odometerUnit?: string;
   odometerResultType?: string;
   motTestNumber?: string;
+  dataSource?: string;
   rfrAndComments?: Array<{ text: string; type: string; dangerous?: boolean }>;
   /** New API uses defects; mapped to rfrAndComments in fetch */
   defects?: Array<{ text: string; type: string; dangerous?: boolean }>;
@@ -51,6 +54,7 @@ export interface MotHistoryVehicle {
   registrationDate?: string;
   manufactureDate?: string;
   engineSize?: string;
+  hasOutstandingRecall?: string;
   motTests?: MotTestItem[];
 }
 
@@ -141,6 +145,7 @@ async function fetchMotHistory(
       odometerUnit: t.odometerUnit as string | undefined,
       odometerResultType: t.odometerResultType as string | undefined,
       motTestNumber: t.motTestNumber as string | undefined,
+      dataSource: t.dataSource as string | undefined,
       rfrAndComments: defects.map((d) => ({
         text: d.text ?? "",
         type: d.type ?? "ADVISORY",
@@ -156,9 +161,11 @@ async function fetchMotHistory(
     firstUsedDate: raw.firstUsedDate as string | undefined,
     fuelType: raw.fuelType as string | undefined,
     primaryColour: raw.primaryColour as string | undefined,
+    vehicleId: raw.vehicleId as string | undefined,
     registrationDate: raw.registrationDate as string | undefined,
     manufactureDate: raw.manufactureDate as string | undefined,
     engineSize: raw.engineSize as string | undefined,
+    hasOutstandingRecall: raw.hasOutstandingRecall as string | undefined,
     motTests: mappedTests,
   };
   return [vehicle];

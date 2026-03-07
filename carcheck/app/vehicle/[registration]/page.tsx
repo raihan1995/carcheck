@@ -13,11 +13,19 @@ type VehicleData = {
   engineCapacity?: number;
   yearOfManufacture?: number;
   monthOfFirstRegistration?: string;
+  monthOfFirstDvlaRegistration?: string;
   motStatus?: string;
+  motExpiryDate?: string;
   taxStatus?: string;
   taxDueDate?: string;
   artEndDate?: string;
   markedForExport?: boolean;
+  typeApproval?: string;
+  revenueWeight?: number;
+  wheelplan?: string;
+  euroStatus?: string;
+  realDrivingEmissions?: string;
+  dateOfLastV5CIssued?: string;
 };
 
 type MotTestItem = {
@@ -26,7 +34,9 @@ type MotTestItem = {
   expiryDate?: string;
   odometerValue?: string;
   odometerUnit?: string;
+  odometerResultType?: string;
   motTestNumber?: string;
+  dataSource?: string;
   rfrAndComments?: Array<{ text: string; type: string; dangerous?: boolean }>;
   defects?: Array<{ text: string; type: string; dangerous?: boolean }>;
 };
@@ -35,9 +45,14 @@ type MotHistoryVehicle = {
   registration?: string;
   make?: string;
   model?: string;
+  firstUsedDate?: string;
   fuelType?: string;
   primaryColour?: string;
+  vehicleId?: string;
+  registrationDate?: string;
+  manufactureDate?: string;
   engineSize?: string;
+  hasOutstandingRecall?: string;
   motTests?: MotTestItem[];
 };
 
@@ -193,12 +208,21 @@ export default function VehiclePage() {
     "fuelType",
     "yearOfManufacture",
     "monthOfFirstRegistration",
+    "monthOfFirstDvlaRegistration",
     "engineCapacity",
     "co2Emissions",
     "motStatus",
+    "motExpiryDate",
     "taxStatus",
     "taxDueDate",
+    "artEndDate",
     "markedForExport",
+    "typeApproval",
+    "revenueWeight",
+    "wheelplan",
+    "euroStatus",
+    "realDrivingEmissions",
+    "dateOfLastV5CIssued",
   ];
 
   function formatValue(value: unknown): string {
@@ -297,6 +321,64 @@ export default function VehiclePage() {
           </dl>
         </section>
 
+        {primaryMot && (primaryMot.model ?? primaryMot.engineSize ?? primaryMot.primaryColour ?? primaryMot.firstUsedDate ?? primaryMot.registrationDate ?? primaryMot.manufactureDate ?? primaryMot.hasOutstandingRecall) && (
+          <section className="rounded-2xl bg-slate-100 border border-slate-200 overflow-hidden mb-6">
+            <h2 className="px-6 py-4 border-b border-slate-200 text-lg font-semibold text-slate-900">
+              MOT vehicle info
+            </h2>
+            <dl className="p-6 grid gap-4 sm:grid-cols-2">
+              {primaryMot.model && (
+                <div className="flex flex-col gap-0.5">
+                  <dt className="text-xs uppercase tracking-wider text-slate-500">Model</dt>
+                  <dd className="text-slate-900 font-medium">{primaryMot.model}</dd>
+                </div>
+              )}
+              {primaryMot.engineSize && (
+                <div className="flex flex-col gap-0.5">
+                  <dt className="text-xs uppercase tracking-wider text-slate-500">Engine size (MOT)</dt>
+                  <dd className="text-slate-900 font-medium">{primaryMot.engineSize} cc</dd>
+                </div>
+              )}
+              {primaryMot.primaryColour && (
+                <div className="flex flex-col gap-0.5">
+                  <dt className="text-xs uppercase tracking-wider text-slate-500">Primary colour (MOT)</dt>
+                  <dd className="text-slate-900 font-medium">{primaryMot.primaryColour}</dd>
+                </div>
+              )}
+              {primaryMot.firstUsedDate && (
+                <div className="flex flex-col gap-0.5">
+                  <dt className="text-xs uppercase tracking-wider text-slate-500">First used date</dt>
+                  <dd className="text-slate-900 font-medium">{formatDate(primaryMot.firstUsedDate)}</dd>
+                </div>
+              )}
+              {primaryMot.registrationDate && (
+                <div className="flex flex-col gap-0.5">
+                  <dt className="text-xs uppercase tracking-wider text-slate-500">Registration date (MOT)</dt>
+                  <dd className="text-slate-900 font-medium">{formatDate(primaryMot.registrationDate)}</dd>
+                </div>
+              )}
+              {primaryMot.manufactureDate && (
+                <div className="flex flex-col gap-0.5">
+                  <dt className="text-xs uppercase tracking-wider text-slate-500">Manufacture date (MOT)</dt>
+                  <dd className="text-slate-900 font-medium">{formatDate(primaryMot.manufactureDate)}</dd>
+                </div>
+              )}
+              {primaryMot.hasOutstandingRecall && (
+                <div className="flex flex-col gap-0.5 sm:col-span-2">
+                  <dt className="text-xs uppercase tracking-wider text-slate-500">Outstanding recall</dt>
+                  <dd className="text-slate-900 font-medium">{primaryMot.hasOutstandingRecall}</dd>
+                </div>
+              )}
+              {primaryMot.vehicleId && (
+                <div className="flex flex-col gap-0.5 sm:col-span-2">
+                  <dt className="text-xs uppercase tracking-wider text-slate-500">Vehicle ID (MOT)</dt>
+                  <dd className="text-slate-900 font-mono text-sm">{primaryMot.vehicleId}</dd>
+                </div>
+              )}
+            </dl>
+          </section>
+        )}
+
         <section className="rounded-2xl bg-slate-100 border border-slate-200 overflow-hidden mb-6">
           <h2 className="px-6 py-4 border-b border-slate-200 text-lg font-semibold text-slate-900">
             MOT history
@@ -336,7 +418,13 @@ export default function VehiclePage() {
                     {test.odometerValue && (
                       <span className="text-slate-500 text-sm">
                         {Number(test.odometerValue).toLocaleString()} {test.odometerUnit ?? "mi"}
+                        {test.odometerResultType && (
+                          <span className="text-slate-400 ml-1">({test.odometerResultType})</span>
+                        )}
                       </span>
+                    )}
+                    {test.dataSource && (
+                      <span className="text-slate-400 text-xs">Source: {test.dataSource}</span>
                     )}
                   </div>
                   {test.expiryDate && test.testResult === "PASSED" && (
