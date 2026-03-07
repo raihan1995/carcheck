@@ -86,14 +86,49 @@ function formatLabel(key: string): string {
     .trim();
 }
 
-/** ULEZ: Euro 6+ compliant, Euro 5 and below not. Returns null if unknown (no euro status). */
-function isUlezCompliant(euroStatus: string | undefined): boolean | null {
-  if (!euroStatus || typeof euroStatus !== "string") return null;
-  const upper = euroStatus.toUpperCase();
-  const match = upper.match(/EURO\s*(\d+)/i) ?? upper.match(/\b(\d)\b/);
-  const num = match ? parseInt(match[1], 10) : NaN;
-  if (Number.isNaN(num)) return null;
-  return num >= 6;
+/** Parse Euro number from euroStatus string (e.g. "EURO 6 AD" → 6). Returns NaN if not found. */
+function parseEuroNumber(euroStatus: string | undefined): number {
+  if (!euroStatus || typeof euroStatus !== "string") return NaN;
+  const match = euroStatus.toUpperCase().match(/EURO\s*(\d+)/i);
+  return match ? parseInt(match[1], 10) : NaN;
+}
+
+/** TfL-style ULEZ compliance using DVLA VES data. Returns null when unknown. */
+function getUlezCompliance(vehicle: {
+  fuelType?: string;
+  euroStatus?: string;
+  monthOfFirstRegistration?: string;
+  typeApproval?: string;
+}): boolean | null {
+  const fuel = (vehicle.fuelType ?? "").toUpperCase();
+  const euro = parseEuroNumber(vehicle.euroStatus);
+  const reg = vehicle.monthOfFirstRegistration ?? ""; // YYYY-MM
+
+  // Electric: always compliant
+  if (fuel.includes("ELECTRIC")) return true;
+
+  // Motorcycles / mopeds (type approval L1e, L2e, L3e, L4e, L5e)
+  const isMotorcycle = /^L[1-5]/.test((vehicle.typeApproval ?? "").toUpperCase());
+  if (isMotorcycle) {
+    if (!Number.isNaN(euro)) return euro >= 3;
+    return reg >= "2007-07" ? true : reg ? false : null;
+  }
+
+  // Petrol: Euro 4+ or registered on or after 1 Jan 2006
+  if (fuel.includes("PETROL")) {
+    if (!Number.isNaN(euro)) return euro >= 4;
+    return reg >= "2006-01" ? true : reg ? false : null;
+  }
+
+  // Diesel: Euro 6+ or registered on or after 1 Sep 2015
+  if (fuel.includes("DIESEL")) {
+    if (!Number.isNaN(euro)) return euro >= 6;
+    return reg >= "2015-09" ? true : reg ? false : null;
+  }
+
+  // Other fuel (e.g. hybrid without electric): use Euro 6 if known, else unknown
+  if (!Number.isNaN(euro)) return euro >= 6;
+  return null;
 }
 
 /** Parse date string (ISO or YYYY-MM) to timestamp; returns NaN if invalid */
@@ -275,7 +310,7 @@ export default function VehiclePage() {
   const primaryMot = motHistory?.[0];
   const motTests = primaryMot?.motTests ?? [];
   const mileageSummary = computeYearlyAverageMileage(vehicle.monthOfFirstRegistration, motTests);
-  const ulezCompliant = isUlezCompliant(vehicle.euroStatus);
+  const ulezCompliant = getUlezCompliance(vehicle);
 
   return (
     <div className="min-h-screen bg-white text-slate-800 font-sans">
@@ -325,11 +360,9 @@ export default function VehiclePage() {
             >
               {ulezCompliant ? "ULEZ compliant" : "Not ULEZ compliant"}
             </p>
-            {vehicle.euroStatus && (
-              <p className={`mt-0.5 text-sm ${ulezCompliant ? "text-emerald-600" : "text-red-600"}`}>
-                {vehicle.euroStatus}
-              </p>
-            )}
+            <p className={`mt-0.5 text-sm ${ulezCompliant ? "text-emerald-600" : "text-red-600"}`}>
+              {vehicle.euroStatus ? `Euro status: ${vehicle.euroStatus}` : "Based on DVLA data"}
+            </p>
           </div>
         )}
 
@@ -451,13 +484,7 @@ export default function VehiclePage() {
                     {test.odometerValue && (
                       <span className="text-slate-500 text-sm">
                         {Number(test.odometerValue).toLocaleString()} {test.odometerUnit ?? "mi"}
-                        {test.odometerResultType && (
-                          <span className="text-slate-400 ml-1">({test.odometerResultType})</span>
-                        )}
                       </span>
-                    )}
-                    {test.dataSource && (
-                      <span className="text-slate-400 text-xs">Source: {test.dataSource}</span>
                     )}
                   </div>
                   {test.expiryDate && test.testResult === "PASSED" && (
