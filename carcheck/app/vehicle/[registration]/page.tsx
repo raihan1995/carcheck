@@ -86,15 +86,15 @@ function formatLabel(key: string): string {
     .trim();
 }
 
-/** EU-style CO2 emission bands (g/km): range, label, colour, and coloured bar width % (rest is grey). */
+/** EU-style CO2 emission bands (g/km): range, label, and colour. Bar width is computed (A=25%, L-M=100%, rest evenly spread). */
 const CO2_BANDS = [
-  { min: 0, max: 101, label: "A", color: "bg-green-500", barWidth: 32 },
-  { min: 101, max: 120, label: "B-C", color: "bg-green-600", barWidth: 52 },
-  { min: 121, max: 140, label: "D-E", color: "bg-lime-500", barWidth: 67 },
-  { min: 141, max: 165, label: "F-G", color: "bg-yellow-500", barWidth: 77 },
-  { min: 166, max: 185, label: "H-I", color: "bg-amber-500", barWidth: 82 },
-  { min: 186, max: 225, label: "J-K", color: "bg-orange-500", barWidth: 92 },
-  { min: 225, max: Infinity, label: "L-M", color: "bg-red-500", barWidth: 99 },
+  { min: 0, max: 101, label: "A", color: "bg-green-500" },
+  { min: 101, max: 120, label: "B-C", color: "bg-green-600" },
+  { min: 121, max: 140, label: "D-E", color: "bg-lime-500" },
+  { min: 141, max: 165, label: "F-G", color: "bg-yellow-500" },
+  { min: 166, max: 185, label: "H-I", color: "bg-amber-500" },
+  { min: 186, max: 225, label: "J-K", color: "bg-orange-500" },
+  { min: 225, max: Infinity, label: "L-M", color: "bg-red-500" },
 ] as const;
 
 /** Get the band and display letter for a CO2 value (g/km). Returns null if no value. */
@@ -428,9 +428,10 @@ export default function VehiclePage() {
               </p>
             </div>
             <div className="p-4 sm:p-6 space-y-1">
-              {CO2_BANDS.map((b) => {
+              {CO2_BANDS.map((b, i) => {
                 const isActive = b.min === co2Band.band.min && b.max === co2Band.band.max;
                 const rangeLabel = b.max === Infinity ? "225+" : b.min === 0 ? "0-101" : `${b.min}-${b.max}`;
+                const barWidth = i === 0 ? 25 : i === CO2_BANDS.length - 1 ? 100 : 25 + (i / (CO2_BANDS.length - 1)) * 75;
                 return (
                   <div
                     key={b.label}
@@ -446,7 +447,7 @@ export default function VehiclePage() {
                     <div className="flex-1 h-7 sm:h-8 rounded overflow-hidden bg-slate-200 flex">
                       <div
                         className={`h-full ${b.color} shrink-0`}
-                        style={{ width: `${b.barWidth}%` }}
+                        style={{ width: `${barWidth}%` }}
                       />
                     </div>
                     <span className="text-xs sm:text-sm font-bold text-slate-700 shrink-0 w-6 sm:w-8 text-center">{b.label}</span>
