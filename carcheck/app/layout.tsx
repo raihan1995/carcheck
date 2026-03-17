@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Plus_Jakarta_Sans } from "next/font/google";
 import { SiteHeader } from "./components/SiteHeader";
+import { UmamiAnalytics } from "./components/UmamiAnalytics";
 import "./globals.css";
 
 /** UI v2: Plus Jakarta Sans, gradient backgrounds, elevated white cards, amber accents, ULEZ ✓/✗ block. */
@@ -30,6 +31,7 @@ export default function RootLayout({
       <body className={`${plusJakarta.className} antialiased overflow-x-hidden min-h-screen flex flex-col`}>
         <SiteHeader />
         <main className="flex-1">{children}</main>
+        <UmamiAnalytics />
       </body>
     </html>
   );
