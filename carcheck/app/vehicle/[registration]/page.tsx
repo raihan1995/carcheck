@@ -499,8 +499,10 @@ export default function VehiclePage() {
   const motTotal = motTests.length;
   const motPassed = motTests.filter((t) => (t.testResult ?? "").toUpperCase() === "PASSED").length;
   const motFailed = motTests.filter((t) => (t.testResult ?? "").toUpperCase() === "FAILED").length;
+  const motPassRate = motTotal > 0 ? motPassed / motTotal : 0;
 
   let lastMotMileage: number | null = null;
+  let lastYearMileage: number | null = null;
   let hasMileageIssue = false;
 
   if (motTests.length > 0) {
@@ -509,13 +511,42 @@ export default function VehiclePage() {
       .map((t) => ({
         dateMs: parseDate(t.completedDate),
         miles: Number(t.odometerValue),
+        result: (t.testResult ?? "").toUpperCase(),
       }))
       .filter((t) => !Number.isNaN(t.dateMs) && !Number.isNaN(t.miles))
       .sort((a, b) => a.dateMs - b.dateMs);
 
-    if (testsWithMileage.length > 0) {
-      lastMotMileage = testsWithMileage[testsWithMileage.length - 1].miles;
-      for (let i = 1; i < testsWithMileage.length; i += 1) {
+    const count = testsWithMileage.length;
+    if (count > 0) {
+      const latest = testsWithMileage[count - 1];
+      lastMotMileage = latest.miles;
+
+      if (count > 1) {
+        let previousForYear: { miles: number } | null = null;
+
+        // Walk backwards to find the best previous reading for "last year" mileage:
+        // prefer the most recent PASSED test, otherwise fall back to the latest earlier reading.
+        for (let i = count - 2; i >= 0; i -= 1) {
+          const candidate = testsWithMileage[i];
+          if (candidate.miles > latest.miles) continue;
+
+          if (candidate.result === "PASSED") {
+            previousForYear = { miles: candidate.miles };
+            break;
+          }
+
+          if (!previousForYear) {
+            previousForYear = { miles: candidate.miles };
+          }
+        }
+
+        if (previousForYear) {
+          const diff = latest.miles - previousForYear.miles;
+          lastYearMileage = diff > 0 ? diff : null;
+        }
+      }
+
+      for (let i = 1; i < count; i += 1) {
         if (testsWithMileage[i].miles < testsWithMileage[i - 1].miles) {
           hasMileageIssue = true;
           break;
@@ -691,7 +722,7 @@ export default function VehiclePage() {
               <h2 className="px-4 sm:px-6 py-3.5 sm:py-4 border-b border-slate-100 text-base sm:text-lg font-bold text-slate-900 bg-slate-50/50">
                 Mileage information
               </h2>
-              {lastMotMileage != null || mileageSummary ? (
+              {lastMotMileage != null || lastYearMileage != null || mileageSummary ? (
                 <dl className="p-4 sm:p-6 grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2">
                   <div className="flex flex-col gap-0.5 py-1">
                     <dt className="text-xs uppercase tracking-wider text-slate-500 font-semibold">Last MOT mileage</dt>
@@ -710,7 +741,7 @@ export default function VehiclePage() {
                     </dd>
                   </div>
                   {mileageSummary && (
-                    <div className="flex flex-col gap-0.5 py-1 sm:col-span-2">
+                    <div className="flex flex-col gap-0.5 py-1">
                       <dt className="text-xs uppercase tracking-wider text-slate-500 font-semibold">
                         Average yearly mileage
                       </dt>
@@ -719,6 +750,12 @@ export default function VehiclePage() {
                       </dd>
                     </div>
                   )}
+                  <div className="flex flex-col gap-0.5 py-1">
+                    <dt className="text-xs uppercase tracking-wider text-slate-500 font-semibold">Mileage last year</dt>
+                    <dd className="text-slate-900 font-semibold text-lg">
+                      {lastYearMileage != null ? `${lastYearMileage.toLocaleString()} miles` : "—"}
+                    </dd>
+                  </div>
                 </dl>
               ) : (
                 <p className="p-4 sm:p-6 text-slate-500 text-sm">
@@ -747,6 +784,28 @@ export default function VehiclePage() {
                   <dd className="text-red-700 font-semibold text-base sm:text-lg tabular-nums">{motFailed}</dd>
                 </div>
               </dl>
+              {motTotal > 0 && (
+                <div className="px-4 sm:px-6 pb-4 sm:pb-5">
+                  <div className="h-2 w-full rounded-full bg-slate-200/80 overflow-hidden flex">
+                    <div
+                      className="h-full bg-emerald-500"
+                      style={{ width: `${motPassRate * 100}%` }}
+                      aria-hidden="true"
+                    />
+                    <div
+                      className="h-full bg-red-400"
+                      style={{ width: `${(1 - motPassRate) * 100}%` }}
+                      aria-hidden="true"
+                    />
+                  </div>
+                  <div className="mt-1.5 flex flex-col items-center justify-center gap-0.5 text-[10px] text-slate-500">
+                    <span>{Math.round(motPassRate * 100)}% passed</span>
+                    <span>
+                      {motPassed}/{motTotal} tests
+                    </span>
+                  </div>
+                </div>
+              )}
               {motTotal === 0 && (
                 <p className="px-4 sm:px-6 pb-4 sm:pb-6 text-slate-500 text-sm">No MOT history retrieved.</p>
               )}
@@ -980,25 +1039,26 @@ export default function VehiclePage() {
                   )}
                   {((test.rfrAndComments ?? test.defects) ?? []).length > 0 && (
                     <ul className="mt-2 space-y-1.5 text-sm break-words">
-                      {(test.rfrAndComments ?? test.defects ?? []).map((rfr, j) => (
-                        <li
-                          key={j}
-                          className={`text-sm ${
-                            rfr.type === "FAIL" || rfr.type === "DANGEROUS"
-                              ? "text-red-700"
-                              : rfr.type === "ADVISORY"
-                                ? "text-amber-700"
-                                : rfr.type === "MINOR"
-                                  ? "text-amber-600"
-                                  : "text-slate-600"
-                          }`}
-                        >
-                          <span className="font-medium uppercase text-slate-500 mr-2">
-                            {rfr.type}
-                          </span>
-                          {rfr.text}
-                        </li>
-                      ))}
+                      {(test.rfrAndComments ?? test.defects ?? []).map((rfr, j) => {
+                        const type = (rfr.type ?? "").toUpperCase();
+                        const colourClass =
+                          type === "FAIL" || type === "DANGEROUS" || type === "MAJOR"
+                            ? "text-red-700"
+                            : type === "MINOR"
+                              ? "text-amber-600"
+                              : type === "ADVISORY"
+                                ? "text-slate-800"
+                                : "text-slate-600";
+
+                        return (
+                          <li key={j} className={`text-sm ${colourClass}`}>
+                            <span className="font-semibold uppercase mr-2">
+                              {type}
+                            </span>
+                            {rfr.text}
+                          </li>
+                        );
+                      })}
                     </ul>
                   )}
                 </li>
