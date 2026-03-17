@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, FormEvent } from "react";
+import { useState, useEffect, FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { RevVealLogo } from "./components/RevVealLogo";
 
@@ -13,6 +13,49 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
+
+  const [recentRegs, setRecentRegs] = useState<string[]>([]);
+  const RECENT_KEY = "revveal_recent_regs";
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      const stored = window.localStorage.getItem(RECENT_KEY);
+      if (!stored) return;
+      const parsed = JSON.parse(stored);
+      if (Array.isArray(parsed)) {
+        const cleaned = parsed
+          .map((v) => (typeof v === "string" ? normalizeRegistration(v) : ""))
+          .filter(Boolean);
+        setRecentRegs(cleaned.slice(0, 5));
+      }
+    } catch {
+      // Ignore malformed localStorage
+    }
+  }, []);
+
+  function updateRecentRegs(reg: string) {
+    const normalized = normalizeRegistration(reg);
+    if (!normalized) return;
+    setRecentRegs((prev) => {
+      const next = [normalized, ...prev.filter((r) => r !== normalized)].slice(0, 5);
+      if (typeof window !== "undefined") {
+        try {
+          window.localStorage.setItem(RECENT_KEY, JSON.stringify(next));
+        } catch {
+          // Ignore quota / privacy errors
+        }
+      }
+      return next;
+    });
+  }
+
+  function handleRecentClick(reg: string) {
+    const normalized = normalizeRegistration(reg);
+    if (!normalized) return;
+    setPlate(normalized);
+    router.push(`/vehicle/${encodeURIComponent(normalized)}`);
+  }
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -34,6 +77,7 @@ export default function Home() {
       if (!res.ok) {
         if (data.demo && data.vehicle) {
           const reg = normalizeRegistration(vrn);
+          updateRecentRegs(reg);
           router.push(`/vehicle/${encodeURIComponent(reg)}`);
           return;
         }
@@ -41,6 +85,7 @@ export default function Home() {
         return;
       }
       const reg = data.vehicle?.registrationNumber ?? normalizeRegistration(vrn);
+      updateRecentRegs(reg);
       router.push(`/vehicle/${encodeURIComponent(reg)}`);
     } catch {
       setError("Network error. Please try again.");
@@ -94,6 +139,26 @@ export default function Home() {
             </p>
           )}
         </form>
+
+        {recentRegs.length > 0 && (
+          <section className="mt-6 rounded-2xl border border-slate-200/80 bg-white/70 px-4 py-3.5 sm:px-5 sm:py-4 shadow-sm shadow-slate-200/60">
+            <p className="text-[11px] sm:text-xs font-semibold uppercase tracking-wider text-slate-500">
+              Recent checks
+            </p>
+            <div className="mt-2 flex flex-wrap gap-2">
+              {recentRegs.map((reg) => (
+                <button
+                  key={reg}
+                  type="button"
+                  onClick={() => handleRecentClick(reg)}
+                  className="inline-flex items-center px-3 py-1.5 rounded-full border border-slate-200 bg-slate-50/80 text-xs sm:text-sm font-mono tracking-widest sm:tracking-[0.18em] text-slate-800 hover:bg-amber-50 hover:border-amber-300 hover:text-amber-900 transition-colors"
+                >
+                  {reg}
+                </button>
+              ))}
+            </div>
+          </section>
+        )}
 
         <footer className="mt-14 pb-8 sm:pb-0 text-center text-slate-400 text-sm px-2">
           <p>
