@@ -426,16 +426,13 @@ export default function VehiclePage() {
     "fuelType",
     "yearOfManufacture",
     "monthOfFirstRegistration",
-    "monthOfFirstDvlaRegistration",
     "engineCapacity",
     "co2Emissions",
-    "artEndDate",
     "markedForExport",
     "typeApproval",
     "revenueWeight",
     "wheelplan",
     "euroStatus",
-    "realDrivingEmissions",
     "dateOfLastV5CIssued",
   ];
 
