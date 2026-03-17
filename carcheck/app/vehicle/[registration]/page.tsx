@@ -500,6 +500,30 @@ export default function VehiclePage() {
   const motPassed = motTests.filter((t) => (t.testResult ?? "").toUpperCase() === "PASSED").length;
   const motFailed = motTests.filter((t) => (t.testResult ?? "").toUpperCase() === "FAILED").length;
 
+  let lastMotMileage: number | null = null;
+  let hasMileageIssue = false;
+
+  if (motTests.length > 0) {
+    const testsWithMileage = motTests
+      .filter((t) => t.completedDate != null && t.odometerValue != null)
+      .map((t) => ({
+        dateMs: parseDate(t.completedDate),
+        miles: Number(t.odometerValue),
+      }))
+      .filter((t) => !Number.isNaN(t.dateMs) && !Number.isNaN(t.miles))
+      .sort((a, b) => a.dateMs - b.dateMs);
+
+    if (testsWithMileage.length > 0) {
+      lastMotMileage = testsWithMileage[testsWithMileage.length - 1].miles;
+      for (let i = 1; i < testsWithMileage.length; i += 1) {
+        if (testsWithMileage[i].miles < testsWithMileage[i - 1].miles) {
+          hasMileageIssue = true;
+          break;
+        }
+      }
+    }
+  }
+
   const taxDaysLeft = daysFromToday(vehicle.taxDueDate);
   const motDaysLeft = daysFromToday(vehicle.motExpiryDate);
   const taxValid = taxDaysLeft !== null && taxDaysLeft > 0;
@@ -531,10 +555,8 @@ export default function VehiclePage() {
               className="inline-block rounded-lg border-2 border-slate-800 bg-[#FFD132] px-5 sm:px-8 py-3 sm:py-4 shadow-md"
               aria-label="Registration number"
             >
-              <span className="text-2xl sm:text-4xl font-bold tracking-[0.25em] text-black font-mono uppercase">
-                {vehicle.registrationNumber.length <= 7
-                  ? vehicle.registrationNumber.replace(/(.{4})/g, "$1 ").trim()
-                  : vehicle.registrationNumber}
+              <span className="text-3xl sm:text-5xl font-extrabold tracking-[0.18em] text-black font-mono uppercase">
+                {vehicle.registrationNumber}
               </span>
             </div>
           </div>
@@ -637,67 +659,73 @@ export default function VehiclePage() {
                   );
                 })}
               </dl>
-              <div className="px-4 sm:px-6 pb-4 sm:pb-6 pt-0 border-t border-slate-100">
-                <p className="text-xs uppercase tracking-wider text-slate-500 font-semibold mb-3">Vehicle performance</p>
-                <dl className="grid gap-3 sm:gap-4 grid-cols-2 sm:grid-cols-4">
-                  <div className="flex flex-col gap-0.5 py-1">
-                    <dt className="text-xs uppercase tracking-wider text-slate-400 font-medium">BHP</dt>
-                    <dd className="text-slate-900 font-semibold">{specs?.bhp != null ? specs.bhp : "—"}</dd>
-                  </div>
-                  <div className="flex flex-col gap-0.5 py-1">
-                    <dt className="text-xs uppercase tracking-wider text-slate-400 font-medium">Torque</dt>
-                    <dd className="text-slate-900 font-semibold">{specs?.torque != null ? `${specs.torque} Nm` : "—"}</dd>
-                  </div>
-                  <div className="flex flex-col gap-0.5 py-1">
-                    <dt className="text-xs uppercase tracking-wider text-slate-400 font-medium">Gearbox</dt>
-                    <dd className="text-slate-900 font-semibold capitalize">{specs?.gearbox || "—"}</dd>
-                  </div>
-                  <div className="flex flex-col gap-0.5 py-1">
-                    <dt className="text-xs uppercase tracking-wider text-slate-400 font-medium">Drivetrain</dt>
-                    <dd className="text-slate-900 font-semibold">{specs?.drivetrain || "—"}</dd>
-                  </div>
-                </dl>
-              </div>
             </section>
 
-            {co2Band && (
-              <section className="rounded-3xl bg-white border border-slate-200/80 shadow-lg shadow-slate-200/30 ring-1 ring-slate-900/5 overflow-hidden">
-                <div className="px-4 sm:px-6 py-4 border-b border-slate-100 bg-slate-50/50">
-                  <h2 className="text-base sm:text-lg font-bold text-slate-900">CO2 Emission Figures</h2>
-                  <p className="mt-2 text-2xl sm:text-3xl font-bold text-slate-900">
-                    {vehicle.co2Emissions} g/km <span className="text-slate-500 font-semibold">({co2Band.letter})</span>
-                  </p>
+            <section className="rounded-3xl bg-white border border-slate-200/80 shadow-lg shadow-slate-200/30 ring-1 ring-slate-900/5 overflow-hidden">
+              <h2 className="px-4 sm:px-6 py-3.5 sm:py-4 border-b border-slate-100 text-base sm:text-lg font-bold text-slate-900 bg-slate-50/50">
+                Vehicle performance
+              </h2>
+              <dl className="p-4 sm:p-6 grid gap-3 sm:gap-4 grid-cols-2 sm:grid-cols-4">
+                <div className="flex flex-col gap-0.5 py-1">
+                  <dt className="text-xs uppercase tracking-wider text-slate-500 font-semibold">BHP</dt>
+                  <dd className="text-slate-900 font-semibold">{specs?.bhp != null ? specs.bhp : "—"}</dd>
                 </div>
-                <div className="p-4 sm:p-6 space-y-1">
-                  {CO2_BANDS.map((b, i) => {
-                    const isActive = b.min === co2Band.band.min && b.max === co2Band.band.max;
-                    const rangeLabel = b.max === Infinity ? "225+" : b.min === 0 ? "0-101" : `${b.min}-${b.max}`;
-                    const barWidth = i === 0 ? 25 : i === CO2_BANDS.length - 1 ? 100 : 25 + (i / (CO2_BANDS.length - 1)) * 75;
-                    return (
-                      <div
-                        key={b.label}
-                        className={`flex items-center gap-2 sm:gap-3 py-2 px-3 rounded-lg transition-colors ${
-                          isActive
-                            ? "bg-lime-100 border-l-4 border-lime-500 ring-2 ring-lime-400/80"
-                            : ""
-                        }`}
-                      >
-                        <span className="w-16 sm:w-20 text-xs sm:text-sm font-medium text-slate-600 shrink-0 tabular-nums">
-                          {rangeLabel}
-                        </span>
-                        <div className="flex-1 h-7 sm:h-8 rounded overflow-hidden bg-slate-200 flex">
-                          <div
-                            className={`h-full ${b.color} shrink-0`}
-                            style={{ width: `${barWidth}%` }}
-                          />
-                        </div>
-                        <span className="text-xs sm:text-sm font-bold text-slate-700 shrink-0 w-6 sm:w-8 text-center">{b.label}</span>
-                      </div>
-                    );
-                  })}
+                <div className="flex flex-col gap-0.5 py-1">
+                  <dt className="text-xs uppercase tracking-wider text-slate-500 font-semibold">Torque</dt>
+                  <dd className="text-slate-900 font-semibold">
+                    {specs?.torque != null ? `${specs.torque} Nm` : "—"}
+                  </dd>
                 </div>
-              </section>
-            )}
+                <div className="flex flex-col gap-0.5 py-1">
+                  <dt className="text-xs uppercase tracking-wider text-slate-500 font-semibold">Gearbox</dt>
+                  <dd className="text-slate-900 font-semibold capitalize">{specs?.gearbox || "—"}</dd>
+                </div>
+                <div className="flex flex-col gap-0.5 py-1">
+                  <dt className="text-xs uppercase tracking-wider text-slate-500 font-semibold">Drivetrain</dt>
+                  <dd className="text-slate-900 font-semibold">{specs?.drivetrain || "—"}</dd>
+                </div>
+              </dl>
+            </section>
+
+            <section className="rounded-3xl bg-white border border-slate-200/80 shadow-lg shadow-slate-200/30 ring-1 ring-slate-900/5 overflow-hidden">
+              <h2 className="px-4 sm:px-6 py-3.5 sm:py-4 border-b border-slate-100 text-base sm:text-lg font-bold text-slate-900 bg-slate-50/50">
+                Mileage information
+              </h2>
+              {lastMotMileage != null || mileageSummary ? (
+                <dl className="p-4 sm:p-6 grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2">
+                  <div className="flex flex-col gap-0.5 py-1">
+                    <dt className="text-xs uppercase tracking-wider text-slate-500 font-semibold">Last MOT mileage</dt>
+                    <dd className="text-slate-900 font-semibold text-lg">
+                      {lastMotMileage != null ? `${lastMotMileage.toLocaleString()} miles` : "—"}
+                    </dd>
+                  </div>
+                  <div className="flex flex-col gap-0.5 py-1">
+                    <dt className="text-xs uppercase tracking-wider text-slate-500 font-semibold">Mileage issues</dt>
+                    <dd
+                      className={`font-semibold text-lg ${
+                        hasMileageIssue ? "text-red-700" : "text-emerald-700"
+                      }`}
+                    >
+                      {hasMileageIssue ? "Yes" : "No"}
+                    </dd>
+                  </div>
+                  {mileageSummary && (
+                    <div className="flex flex-col gap-0.5 py-1 sm:col-span-2">
+                      <dt className="text-xs uppercase tracking-wider text-slate-500 font-semibold">
+                        Average yearly mileage
+                      </dt>
+                      <dd className="text-slate-900 font-semibold text-lg">
+                        {mileageSummary.yearlyAverageMiles.toLocaleString()} miles/year
+                      </dd>
+                    </div>
+                  )}
+                </dl>
+              ) : (
+                <p className="p-4 sm:p-6 text-slate-500 text-sm">
+                  Mileage information not available from MOT history.
+                </p>
+              )}
+            </section>
           </div>
 
           <div className="flex flex-col gap-4 sm:gap-6">
@@ -705,18 +733,18 @@ export default function VehiclePage() {
               <h2 className="px-4 sm:px-6 py-3.5 sm:py-4 border-b border-slate-100 text-base sm:text-lg font-bold text-slate-900 bg-slate-50/50">
                 MOT summary
               </h2>
-              <dl className="p-4 sm:p-6 grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2">
-                <div className="flex flex-col gap-0.5 py-1">
-                  <dt className="text-xs uppercase tracking-wider text-slate-500 font-semibold">Total MOT tests</dt>
-                  <dd className="text-slate-900 font-semibold text-lg">{motTotal}</dd>
+              <dl className="p-4 sm:p-6 grid grid-cols-3 gap-2 sm:gap-4 divide-x divide-slate-100">
+                <div className="flex flex-col gap-0.5 py-1 px-1 sm:px-2 text-center min-w-0">
+                  <dt className="text-[10px] sm:text-xs uppercase tracking-wider text-slate-500 font-semibold leading-tight">Total MOT tests</dt>
+                  <dd className="text-slate-900 font-semibold text-base sm:text-lg tabular-nums">{motTotal}</dd>
                 </div>
-                <div className="flex flex-col gap-0.5 py-1">
-                  <dt className="text-xs uppercase tracking-wider text-slate-500 font-semibold">Passed</dt>
-                  <dd className="text-emerald-700 font-semibold text-lg">{motPassed}</dd>
+                <div className="flex flex-col gap-0.5 py-1 px-1 sm:px-2 text-center min-w-0">
+                  <dt className="text-[10px] sm:text-xs uppercase tracking-wider text-slate-500 font-semibold leading-tight">Passed</dt>
+                  <dd className="text-emerald-700 font-semibold text-base sm:text-lg tabular-nums">{motPassed}</dd>
                 </div>
-                <div className="flex flex-col gap-0.5 py-1">
-                  <dt className="text-xs uppercase tracking-wider text-slate-500 font-semibold">Failed</dt>
-                  <dd className="text-red-700 font-semibold text-lg">{motFailed}</dd>
+                <div className="flex flex-col gap-0.5 py-1 px-1 sm:px-2 text-center min-w-0">
+                  <dt className="text-[10px] sm:text-xs uppercase tracking-wider text-slate-500 font-semibold leading-tight">Failed</dt>
+                  <dd className="text-red-700 font-semibold text-base sm:text-lg tabular-nums">{motFailed}</dd>
                 </div>
               </dl>
               {motTotal === 0 && (
@@ -864,6 +892,44 @@ export default function VehiclePage() {
                 </p>
               )}
             </section>
+
+            {co2Band && (
+              <section className="rounded-3xl bg-white border border-slate-200/80 shadow-lg shadow-slate-200/30 ring-1 ring-slate-900/5 overflow-hidden">
+                <div className="px-4 sm:px-6 py-4 border-b border-slate-100 bg-slate-50/50">
+                  <h2 className="text-base sm:text-lg font-bold text-slate-900">CO2 emission figures</h2>
+                  <p className="mt-2 text-2xl sm:text-3xl font-bold text-slate-900">
+                    {vehicle.co2Emissions} g/km{" "}
+                    <span className="text-slate-500 font-semibold">({co2Band.letter})</span>
+                  </p>
+                </div>
+                <div className="p-4 sm:p-6 space-y-1">
+                  {CO2_BANDS.map((b, i) => {
+                    const isActive = b.min === co2Band.band.min && b.max === co2Band.band.max;
+                    const rangeLabel = b.max === Infinity ? "225+" : b.min === 0 ? "0-101" : `${b.min}-${b.max}`;
+                    const barWidth =
+                      i === 0 ? 25 : i === CO2_BANDS.length - 1 ? 100 : 25 + (i / (CO2_BANDS.length - 1)) * 75;
+                    return (
+                      <div
+                        key={b.label}
+                        className={`flex items-center gap-2 sm:gap-3 py-2 px-3 rounded-lg transition-colors ${
+                          isActive ? "bg-lime-100 border-l-4 border-lime-500 ring-2 ring-lime-400/80" : ""
+                        }`}
+                      >
+                        <span className="w-16 sm:w-20 text-xs sm:text-sm font-medium text-slate-600 shrink-0 tabular-nums">
+                          {rangeLabel}
+                        </span>
+                        <div className="flex-1 h-7 sm:h-8 rounded overflow-hidden bg-slate-200 flex">
+                          <div className={`h-full ${b.color} shrink-0`} style={{ width: `${barWidth}%` }} />
+                        </div>
+                        <span className="text-xs sm:text-sm font-bold text-slate-700 shrink-0 w-6 sm:w-8 text-center">
+                          {b.label}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </section>
+            )}
           </div>
         </div>
 
