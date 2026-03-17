@@ -612,10 +612,22 @@ export default function VehiclePage() {
                 ulezCompliant ? "text-emerald-800" : "text-red-800"
               }`}
             >
-              {ulezCompliant ? "✓ ULEZ compliant" : "✗ Not ULEZ compliant"}
+              {ulezCompliant ? "✓ ULEZ compliant" : "⚠ Not ULEZ compliant"}
             </p>
             <p className={`mt-0.5 text-xs sm:text-sm font-medium ${ulezCompliant ? "text-emerald-700" : "text-red-700"}`}>
               {vehicle.euroStatus ? `Euro status: ${vehicle.euroStatus}` : "Based on DVLA data"}
+            </p>
+            <p className="mt-1.5 text-xs sm:text-sm text-slate-600">
+              Check your vehicle on{" "}
+              <a
+                href="https://tfl.gov.uk/modes/driving/check-your-vehicle/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-amber-700 font-medium hover:underline"
+              >
+                TfL&apos;s ULEZ checker
+              </a>
+              .
             </p>
           </div>
         )}
@@ -875,10 +887,6 @@ export default function VehiclePage() {
               </h2>
               {roadTax ? (
                 <>
-                  <p className="px-4 sm:px-6 pt-4 text-xs text-slate-500">
-                    Source:{" "}
-                    <a href="https://www.gov.uk/vehicle-tax-rate-tables" target="_blank" rel="noopener noreferrer" className="text-amber-600 hover:underline">GOV.UK</a>.
-                  </p>
                   {roadTax.period === "post2017" && (
                     <>
                       <dl className="p-4 sm:p-6 grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2">
@@ -907,24 +915,16 @@ export default function VehiclePage() {
                         <dd className="text-slate-900 font-semibold text-lg">{roadTax.band}: {roadTax.co2Range}</dd>
                       </div>
                       <div className="flex flex-col gap-0.5 py-1">
-                        <dt className="text-xs uppercase tracking-wider text-slate-500 font-semibold">Single 12 month</dt>
+                        <dt className="text-xs uppercase tracking-wider text-slate-500 font-semibold">Single 12 month payment</dt>
                         <dd className="text-slate-900 font-semibold text-lg">£{roadTax.rate12Month.toLocaleString()}</dd>
-                      </div>
-                      <div className="flex flex-col gap-0.5 py-1">
-                        <dt className="text-xs uppercase tracking-wider text-slate-500 font-semibold">12 month by Direct Debit</dt>
-                        <dd className="text-slate-900 font-semibold text-lg">£{roadTax.rate12MonthDD.toLocaleString()}</dd>
                       </div>
                       <div className="flex flex-col gap-0.5 py-1">
                         <dt className="text-xs uppercase tracking-wider text-slate-500 font-semibold">12 monthly instalments (DD)</dt>
                         <dd className="text-slate-900 font-semibold text-lg">£{roadTax.rate12MonthlyInstalments.toLocaleString()}</dd>
                       </div>
                       <div className="flex flex-col gap-0.5 py-1">
-                        <dt className="text-xs uppercase tracking-wider text-slate-500 font-semibold">Single 6 month</dt>
+                        <dt className="text-xs uppercase tracking-wider text-slate-500 font-semibold">Single 6 month payment</dt>
                         <dd className="text-slate-900 font-semibold text-lg">{roadTax.rate6Month != null ? `£${roadTax.rate6Month.toFixed(2)}` : "N/A"}</dd>
-                      </div>
-                      <div className="flex flex-col gap-0.5 py-1">
-                        <dt className="text-xs uppercase tracking-wider text-slate-500 font-semibold">6 month by Direct Debit</dt>
-                        <dd className="text-slate-900 font-semibold text-lg">{roadTax.rate6MonthDD != null ? `£${roadTax.rate6MonthDD.toFixed(2)}` : "N/A"}</dd>
                       </div>
                     </dl>
                   )}
@@ -938,12 +938,20 @@ export default function VehiclePage() {
                         <dt className="text-xs uppercase tracking-wider text-slate-500 font-semibold">12 month payment</dt>
                         <dd className="text-slate-900 font-semibold text-lg">£{roadTax.rate12Month.toLocaleString()}</dd>
                       </div>
-                      <div className="flex flex-col gap-0.5 py-1">
-                        <dt className="text-xs uppercase tracking-wider text-slate-500 font-semibold">12 monthly (Direct Debit)</dt>
-                        <dd className="text-slate-900 font-semibold text-lg">£{roadTax.rate12MonthlyDD.toLocaleString()}</dd>
-                      </div>
                     </dl>
                   )}
+                  <p className="px-4 sm:px-6 pb-4 sm:pb-6 text-xs text-slate-500">
+                    Source:{" "}
+                    <a
+                      href="https://www.gov.uk/vehicle-tax-rate-tables"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-amber-600 hover:underline"
+                    >
+                      GOV.UK
+                    </a>
+                    .
+                  </p>
                 </>
               ) : (
                 <p className="p-4 sm:p-6 text-slate-500 text-sm">
