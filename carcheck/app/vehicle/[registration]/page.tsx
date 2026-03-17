@@ -59,6 +59,12 @@ type MotHistoryVehicle = {
 type ApiResponse = {
   vehicle: VehicleData;
   motHistory: MotHistoryVehicle[] | null;
+  specs?: {
+    bhp: number | null;
+    torque: number | null;
+    gearbox: string | null;
+    drivetrain: string | null;
+  } | null;
   demo?: boolean;
   error?: string;
 };
@@ -106,6 +112,144 @@ function getCo2Band(co2: number | undefined): { band: (typeof CO2_BANDS)[number]
   const letter = co2 < mid ? letters[0] : (letters[1] ?? letters[0]);
   return { band, letter };
 }
+
+/** GOV.UK first-year vehicle tax bands for cars registered on or after 1 April 2017. [lowCO2Rate, otherDieselRate] */
+const ROAD_TAX_FIRST_YEAR_BANDS: { maxCo2: number; rates: [number, number] }[] = [
+  { maxCo2: 0, rates: [10, 10] },
+  { maxCo2: 50, rates: [110, 130] },
+  { maxCo2: 75, rates: [130, 270] },
+  { maxCo2: 90, rates: [270, 350] },
+  { maxCo2: 100, rates: [350, 390] },
+  { maxCo2: 110, rates: [390, 440] },
+  { maxCo2: 130, rates: [440, 540] },
+  { maxCo2: 150, rates: [540, 1360] },
+  { maxCo2: 170, rates: [1360, 2190] },
+  { maxCo2: 190, rates: [2190, 3300] },
+  { maxCo2: 225, rates: [3300, 4680] },
+  { maxCo2: 255, rates: [4680, 5490] },
+  { maxCo2: Infinity, rates: [5490, 5490] },
+];
+
+/** Standard rates for second tax payment onwards (12 month, 6 month) in pounds. Cars registered on or after 1 April 2017. */
+const ROAD_TAX_STANDARD_12_MONTH = 195;
+const ROAD_TAX_STANDARD_6_MONTH = 107.25;
+
+/** Bands for cars registered between 1 March 2001 and 31 March 2017. Petrol (TC48), diesel (TC49), alternative fuel (59), zero emission. */
+const ROAD_TAX_BANDS_2001_2017: {
+  band: string;
+  minCo2: number;
+  maxCo2: number;
+  rate12Month: number;
+  rate12MonthDD: number;
+  rate12MonthlyInstalments: number;
+  rate6Month: number | null;
+  rate6MonthDD: number | null;
+}[] = [
+  { band: "A", minCo2: 0, maxCo2: 100, rate12Month: 20, rate12MonthDD: 20, rate12MonthlyInstalments: 21, rate6Month: null, rate6MonthDD: null },
+  { band: "B", minCo2: 101, maxCo2: 110, rate12Month: 20, rate12MonthDD: 20, rate12MonthlyInstalments: 21, rate6Month: null, rate6MonthDD: null },
+  { band: "C", minCo2: 111, maxCo2: 120, rate12Month: 35, rate12MonthDD: 35, rate12MonthlyInstalments: 36.75, rate6Month: null, rate6MonthDD: null },
+  { band: "D", minCo2: 121, maxCo2: 130, rate12Month: 165, rate12MonthDD: 165, rate12MonthlyInstalments: 173.25, rate6Month: 90.75, rate6MonthDD: 86.63 },
+  { band: "E", minCo2: 131, maxCo2: 140, rate12Month: 195, rate12MonthDD: 195, rate12MonthlyInstalments: 204.75, rate6Month: 107.25, rate6MonthDD: 102.38 },
+  { band: "F", minCo2: 141, maxCo2: 150, rate12Month: 215, rate12MonthDD: 215, rate12MonthlyInstalments: 225.75, rate6Month: 118.25, rate6MonthDD: 112.88 },
+  { band: "G", minCo2: 151, maxCo2: 165, rate12Month: 265, rate12MonthDD: 265, rate12MonthlyInstalments: 278.25, rate6Month: 145.75, rate6MonthDD: 139.13 },
+  { band: "H", minCo2: 166, maxCo2: 175, rate12Month: 315, rate12MonthDD: 315, rate12MonthlyInstalments: 330.75, rate6Month: 173.25, rate6MonthDD: 165.38 },
+  { band: "I", minCo2: 176, maxCo2: 185, rate12Month: 345, rate12MonthDD: 345, rate12MonthlyInstalments: 362.25, rate6Month: 189.75, rate6MonthDD: 181.13 },
+  { band: "J", minCo2: 186, maxCo2: 200, rate12Month: 395, rate12MonthDD: 395, rate12MonthlyInstalments: 414.75, rate6Month: 217.25, rate6MonthDD: 207.38 },
+  { band: "K", minCo2: 201, maxCo2: 225, rate12Month: 430, rate12MonthDD: 430, rate12MonthlyInstalments: 451.5, rate6Month: 236.5, rate6MonthDD: 225.75 },
+  { band: "L", minCo2: 226, maxCo2: 255, rate12Month: 735, rate12MonthDD: 735, rate12MonthlyInstalments: 771.75, rate6Month: 404.25, rate6MonthDD: 385.88 },
+  { band: "M", minCo2: 256, maxCo2: Infinity, rate12Month: 760, rate12MonthDD: 760, rate12MonthlyInstalments: 798, rate6Month: 418, rate6MonthDD: 399 },
+];
+
+/** Pre-1 March 2001: tax by engine size only. Not over 1549cc / Over 1549cc. */
+const ROAD_TAX_PRE_2001_MAX_CC = 1549;
+const ROAD_TAX_PRE_2001_LOW = { rate12Month: 220, rate12MonthlyDD: 231 };
+const ROAD_TAX_PRE_2001_HIGH = { rate12Month: 360, rate12MonthlyDD: 378 };
+
+type RoadTaxResult =
+  | { period: "post2017"; firstYear: number; standard12Month: number; standard6Month: number; isOtherDiesel: boolean }
+  | {
+      period: "2001_2017";
+      band: string;
+      co2Range: string;
+      rate12Month: number;
+      rate12MonthDD: number;
+      rate12MonthlyInstalments: number;
+      rate6Month: number | null;
+      rate6MonthDD: number | null;
+    }
+  | { period: "pre2001"; engineBand: string; rate12Month: number; rate12MonthlyDD: number };
+
+/**
+ * Get road tax figures based on registration date, CO2, fuel type, and engine size.
+ * Covers: pre-Mar 2001 (engine size), Mar 2001–Mar 2017 (CO2 bands A–M), Apr 2017+ (first year + standard).
+ */
+function getRoadTax(
+  co2: number | undefined,
+  fuelType: string | undefined,
+  monthOfFirstRegistration: string | undefined,
+  realDrivingEmissions: string | undefined,
+  engineCapacityCc: number | undefined
+): RoadTaxResult | null {
+  const reg = monthOfFirstRegistration ?? "";
+
+  // Pre-1 March 2001: engine size only
+  if (reg && reg < "2001-03") {
+    const cc = engineCapacityCc != null && Number.isFinite(engineCapacityCc) ? engineCapacityCc : 0;
+    const low = cc <= ROAD_TAX_PRE_2001_MAX_CC;
+    const rates = low ? ROAD_TAX_PRE_2001_LOW : ROAD_TAX_PRE_2001_HIGH;
+    return {
+      period: "pre2001",
+      engineBand: low ? `Not over ${ROAD_TAX_PRE_2001_MAX_CC}cc` : `Over ${ROAD_TAX_PRE_2001_MAX_CC}cc`,
+      rate12Month: rates.rate12Month,
+      rate12MonthlyDD: rates.rate12MonthlyDD,
+    };
+  }
+
+  // 1 March 2001 – 31 March 2017: CO2 bands A–M (Band K includes >225g/km if registered before 23 March 2006)
+  if (reg && reg >= "2001-03" && reg < "2017-04") {
+    const co2Val = co2 != null && Number.isFinite(co2) ? co2 : 0;
+    const beforeBandKExemption = reg < "2006-03-23";
+    let bandDef = ROAD_TAX_BANDS_2001_2017.find(
+      (b) => co2Val >= b.minCo2 && (b.maxCo2 === Infinity || co2Val <= b.maxCo2)
+    );
+    if (beforeBandKExemption && co2Val > 225) bandDef = ROAD_TAX_BANDS_2001_2017.find((b) => b.band === "K");
+    if (!bandDef) bandDef = ROAD_TAX_BANDS_2001_2017[ROAD_TAX_BANDS_2001_2017.length - 1];
+    const co2Range =
+      bandDef.maxCo2 === Infinity ? `${bandDef.minCo2}+ g/km` : `${bandDef.minCo2}–${bandDef.maxCo2} g/km`;
+    return {
+      period: "2001_2017",
+      band: bandDef.band,
+      co2Range,
+      rate12Month: bandDef.rate12Month,
+      rate12MonthDD: bandDef.rate12MonthDD,
+      rate12MonthlyInstalments: bandDef.rate12MonthlyInstalments,
+      rate6Month: bandDef.rate6Month,
+      rate6MonthDD: bandDef.rate6MonthDD,
+    };
+  }
+
+  // On or after 1 April 2017
+  if (!reg || reg < "2017-04") return null;
+  if (co2 == null || typeof co2 !== "number" || co2 < 0) return null;
+
+  const fuel = (fuelType ?? "").toUpperCase();
+  const isDiesel = fuel.includes("DIESEL");
+  const rde2 = (realDrivingEmissions ?? "").toUpperCase().includes("RDE2");
+  const isOtherDiesel = isDiesel && !rde2;
+  const colIndex = isOtherDiesel ? 1 : 0;
+
+  const band = ROAD_TAX_FIRST_YEAR_BANDS.find((b) => co2 <= b.maxCo2);
+  const firstYear = band ? band.rates[colIndex] : 5490;
+
+  return {
+    period: "post2017",
+    firstYear,
+    standard12Month: ROAD_TAX_STANDARD_12_MONTH,
+    standard6Month: ROAD_TAX_STANDARD_6_MONTH,
+    isOtherDiesel,
+  };
+}
+
 function parseEuroNumber(euroStatus: string | undefined): number {
   if (!euroStatus || typeof euroStatus !== "string") return NaN;
   const match = euroStatus.toUpperCase().match(/EURO\s*(\d+)/i);
@@ -156,6 +300,16 @@ function parseDate(str: string | undefined): number {
   const part = str.includes("T") ? str.split("T")[0] : str.split(" ")[0]?.replace(/\./g, "-") ?? str;
   const d = new Date(part);
   return isNaN(d.getTime()) ? NaN : d.getTime();
+}
+
+/** Days from today to the given date (positive = in future, negative = in past). Returns null if date invalid or missing. */
+function daysFromToday(dateStr: string | undefined): number | null {
+  const ms = parseDate(dateStr);
+  if (Number.isNaN(ms)) return null;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const dayMs = 24 * 60 * 60 * 1000;
+  return Math.floor((ms - today.getTime()) / dayMs);
 }
 
 /** Years between two timestamps */
@@ -275,10 +429,6 @@ export default function VehiclePage() {
     "monthOfFirstDvlaRegistration",
     "engineCapacity",
     "co2Emissions",
-    "motStatus",
-    "motExpiryDate",
-    "taxStatus",
-    "taxDueDate",
     "artEndDate",
     "markedForExport",
     "typeApproval",
@@ -335,16 +485,32 @@ export default function VehiclePage() {
     );
   }
 
-  const { vehicle, motHistory, demo } = data;
+  const { vehicle, motHistory, specs, demo } = data;
   const primaryMot = motHistory?.[0];
   const motTests = primaryMot?.motTests ?? [];
   const mileageSummary = computeYearlyAverageMileage(vehicle.monthOfFirstRegistration, motTests);
   const ulezCompliant = getUlezCompliance(vehicle);
   const co2Band = getCo2Band(vehicle.co2Emissions);
+  const roadTax = getRoadTax(
+    vehicle.co2Emissions,
+    vehicle.fuelType,
+    vehicle.monthOfFirstRegistration,
+    vehicle.realDrivingEmissions,
+    vehicle.engineCapacity
+  );
+
+  const motTotal = motTests.length;
+  const motPassed = motTests.filter((t) => (t.testResult ?? "").toUpperCase() === "PASSED").length;
+  const motFailed = motTests.filter((t) => (t.testResult ?? "").toUpperCase() === "FAILED").length;
+
+  const taxDaysLeft = daysFromToday(vehicle.taxDueDate);
+  const motDaysLeft = daysFromToday(vehicle.motExpiryDate);
+  const taxValid = taxDaysLeft !== null && taxDaysLeft > 0;
+  const motValid = motDaysLeft !== null && motDaysLeft > 0;
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-slate-50 text-slate-800 overflow-x-hidden">
-      <div className="mx-auto max-w-3xl px-4 py-6 sm:py-12 pb-12 sm:pb-16">
+      <div className="mx-auto max-w-3xl lg:max-w-6xl px-4 py-6 sm:py-12 pb-12 sm:pb-16">
         <Link
           href="/"
           className="inline-flex items-center gap-2 text-slate-500 hover:text-amber-600 text-sm mb-6 sm:mb-8 py-2.5 -mx-2 px-3 rounded-xl hover:bg-white/80 hover:shadow-sm transition-all min-h-[44px] touch-manipulation font-medium"
@@ -360,17 +526,23 @@ export default function VehiclePage() {
         )}
 
         <header className="relative rounded-3xl bg-white border border-slate-200/80 p-5 sm:p-8 mb-4 sm:mb-6 shadow-lg shadow-slate-200/30 ring-1 ring-slate-900/5 overflow-hidden">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-amber-100/50 to-transparent rounded-bl-3xl pointer-events-none" aria-hidden />
-          <p className="text-slate-500 text-xs sm:text-sm font-semibold uppercase tracking-wider mb-1.5">
+          <p className="text-slate-500 text-xs sm:text-sm font-semibold uppercase tracking-wider mb-3 text-center">
             Registration
           </p>
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-widest text-slate-900 break-all font-mono">
-            {vehicle.registrationNumber.length <= 7
-              ? vehicle.registrationNumber.replace(/(.{4})/g, "$1 ").trim()
-              : vehicle.registrationNumber}
-          </h1>
+          <div className="flex justify-center">
+            <div
+              className="inline-block rounded-lg border-2 border-slate-800 bg-[#FFD132] px-5 sm:px-8 py-3 sm:py-4 shadow-md"
+              aria-label="Registration number"
+            >
+              <span className="text-2xl sm:text-4xl font-bold tracking-[0.25em] text-black font-mono uppercase">
+                {vehicle.registrationNumber.length <= 7
+                  ? vehicle.registrationNumber.replace(/(.{4})/g, "$1 ").trim()
+                  : vehicle.registrationNumber}
+              </span>
+            </div>
+          </div>
           {vehicle.make && (
-            <p className="mt-2 text-lg sm:text-xl text-slate-600 break-words font-medium">
+            <p className="mt-4 text-lg sm:text-xl text-slate-600 break-words font-medium text-center">
               {vehicle.make}
               {vehicle.colour && <span className="text-slate-400 font-normal"> · {vehicle.colour}</span>}
             </p>
@@ -398,123 +570,305 @@ export default function VehiclePage() {
           </div>
         )}
 
-        <section className="rounded-3xl bg-white border border-slate-200/80 shadow-lg shadow-slate-200/30 ring-1 ring-slate-900/5 overflow-hidden mb-4 sm:mb-6">
-          <h2 className="px-4 sm:px-6 py-3.5 sm:py-4 border-b border-slate-100 text-base sm:text-lg font-bold text-slate-900 bg-slate-50/50">
-            Vehicle details
-          </h2>
-          <dl className="p-4 sm:p-6 grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2">
-            {displayFields.map((key) => {
-              const value = vehicle[key];
-              return (
-                <div key={key} className="flex flex-col gap-0.5 py-1">
-                  <dt className="text-xs uppercase tracking-wider text-slate-500 font-semibold">
-                    {formatLabel(key)}
-                  </dt>
-                  <dd className="text-slate-900 font-medium break-words">
-                    {formatValue(value)}
-                  </dd>
-                </div>
-              );
-            })}
-          </dl>
-        </section>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 mb-4 sm:mb-6">
+          <div
+            className={`rounded-2xl border-2 px-4 sm:px-6 py-4 shadow-md ${
+              taxValid
+                ? "bg-gradient-to-br from-emerald-50 to-emerald-50/80 border-emerald-300/80 shadow-emerald-200/20"
+                : "bg-gradient-to-br from-red-50 to-red-50/80 border-red-300/80 shadow-red-200/20"
+            }`}
+          >
+            <p className={`text-sm font-semibold uppercase tracking-wider ${taxValid ? "text-emerald-700" : "text-red-700"}`}>
+              Tax
+            </p>
+            <p className={`mt-1 text-base sm:text-lg font-bold ${taxValid ? "text-emerald-800" : "text-red-800"}`}>
+              Expires: {vehicle.taxDueDate ? formatDate(vehicle.taxDueDate) : "—"}
+            </p>
+            <p className={`mt-0.5 text-sm font-medium ${taxValid ? "text-emerald-700" : "text-red-700"}`}>
+              {taxDaysLeft !== null
+                ? taxDaysLeft > 0
+                  ? `${taxDaysLeft} day${taxDaysLeft === 1 ? "" : "s"} left`
+                  : taxDaysLeft < 0
+                    ? `${Math.abs(taxDaysLeft)} day${Math.abs(taxDaysLeft) === 1 ? "" : "s"} overdue`
+                    : "Expires today"
+                : "—"}
+            </p>
+          </div>
+          <div
+            className={`rounded-2xl border-2 px-4 sm:px-6 py-4 shadow-md ${
+              motValid
+                ? "bg-gradient-to-br from-emerald-50 to-emerald-50/80 border-emerald-300/80 shadow-emerald-200/20"
+                : "bg-gradient-to-br from-red-50 to-red-50/80 border-red-300/80 shadow-red-200/20"
+            }`}
+          >
+            <p className={`text-sm font-semibold uppercase tracking-wider ${motValid ? "text-emerald-700" : "text-red-700"}`}>
+              MOT
+            </p>
+            <p className={`mt-1 text-base sm:text-lg font-bold ${motValid ? "text-emerald-800" : "text-red-800"}`}>
+              Expires: {vehicle.motExpiryDate ? formatDate(vehicle.motExpiryDate) : "—"}
+            </p>
+            <p className={`mt-0.5 text-sm font-medium ${motValid ? "text-emerald-700" : "text-red-700"}`}>
+              {motDaysLeft !== null
+                ? motDaysLeft > 0
+                  ? `${motDaysLeft} day${motDaysLeft === 1 ? "" : "s"} left`
+                  : motDaysLeft < 0
+                    ? `${Math.abs(motDaysLeft)} day${Math.abs(motDaysLeft) === 1 ? "" : "s"} overdue`
+                    : "Expires today"
+                : "—"}
+            </p>
+          </div>
+        </div>
 
-        {co2Band && (
-          <section className="rounded-3xl bg-white border border-slate-200/80 shadow-lg shadow-slate-200/30 ring-1 ring-slate-900/5 overflow-hidden mb-4 sm:mb-6">
-            <div className="px-4 sm:px-6 py-4 border-b border-slate-100 bg-slate-50/50">
-              <h2 className="text-base sm:text-lg font-bold text-slate-900">CO2 Emission Figures</h2>
-              <p className="mt-2 text-2xl sm:text-3xl font-bold text-slate-900">
-                {vehicle.co2Emissions} g/km <span className="text-slate-500 font-semibold">({co2Band.letter})</span>
-              </p>
-            </div>
-            <div className="p-4 sm:p-6 space-y-1">
-              {CO2_BANDS.map((b, i) => {
-                const isActive = b.min === co2Band.band.min && b.max === co2Band.band.max;
-                const rangeLabel = b.max === Infinity ? "225+" : b.min === 0 ? "0-101" : `${b.min}-${b.max}`;
-                const barWidth = i === 0 ? 25 : i === CO2_BANDS.length - 1 ? 100 : 25 + (i / (CO2_BANDS.length - 1)) * 75;
-                return (
-                  <div
-                    key={b.label}
-                    className={`flex items-center gap-2 sm:gap-3 py-2 px-3 rounded-lg transition-colors ${
-                      isActive
-                        ? "bg-lime-100 border-l-4 border-lime-500 ring-2 ring-lime-400/80"
-                        : ""
-                    }`}
-                  >
-                    <span className="w-16 sm:w-20 text-xs sm:text-sm font-medium text-slate-600 shrink-0 tabular-nums">
-                      {rangeLabel}
-                    </span>
-                    <div className="flex-1 h-7 sm:h-8 rounded overflow-hidden bg-slate-200 flex">
-                      <div
-                        className={`h-full ${b.color} shrink-0`}
-                        style={{ width: `${barWidth}%` }}
-                      />
+        <div className="grid grid-cols-1 lg:grid-cols-2 lg:gap-x-6 lg:gap-y-6 mb-4 sm:mb-6">
+          <div className="flex flex-col gap-4 sm:gap-6">
+            <section className="rounded-3xl bg-white border border-slate-200/80 shadow-lg shadow-slate-200/30 ring-1 ring-slate-900/5 overflow-hidden">
+              <h2 className="px-4 sm:px-6 py-3.5 sm:py-4 border-b border-slate-100 text-base sm:text-lg font-bold text-slate-900 bg-slate-50/50">
+                Vehicle details
+              </h2>
+              <dl className="p-4 sm:p-6 grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2">
+                {displayFields.map((key) => {
+                  const value = vehicle[key];
+                  return (
+                    <div key={key} className="flex flex-col gap-0.5 py-1">
+                      <dt className="text-xs uppercase tracking-wider text-slate-500 font-semibold">
+                        {formatLabel(key)}
+                      </dt>
+                      <dd className="text-slate-900 font-medium break-words">
+                        {formatValue(value)}
+                      </dd>
                     </div>
-                    <span className="text-xs sm:text-sm font-bold text-slate-700 shrink-0 w-6 sm:w-8 text-center">{b.label}</span>
+                  );
+                })}
+              </dl>
+              <div className="px-4 sm:px-6 pb-4 sm:pb-6 pt-0 border-t border-slate-100">
+                <p className="text-xs uppercase tracking-wider text-slate-500 font-semibold mb-3">Vehicle performance</p>
+                <dl className="grid gap-3 sm:gap-4 grid-cols-2 sm:grid-cols-4">
+                  <div className="flex flex-col gap-0.5 py-1">
+                    <dt className="text-xs uppercase tracking-wider text-slate-400 font-medium">BHP</dt>
+                    <dd className="text-slate-900 font-semibold">{specs?.bhp != null ? specs.bhp : "—"}</dd>
                   </div>
-                );
-              })}
-            </div>
-          </section>
-        )}
+                  <div className="flex flex-col gap-0.5 py-1">
+                    <dt className="text-xs uppercase tracking-wider text-slate-400 font-medium">Torque</dt>
+                    <dd className="text-slate-900 font-semibold">{specs?.torque != null ? `${specs.torque} Nm` : "—"}</dd>
+                  </div>
+                  <div className="flex flex-col gap-0.5 py-1">
+                    <dt className="text-xs uppercase tracking-wider text-slate-400 font-medium">Gearbox</dt>
+                    <dd className="text-slate-900 font-semibold capitalize">{specs?.gearbox || "—"}</dd>
+                  </div>
+                  <div className="flex flex-col gap-0.5 py-1">
+                    <dt className="text-xs uppercase tracking-wider text-slate-400 font-medium">Drivetrain</dt>
+                    <dd className="text-slate-900 font-semibold">{specs?.drivetrain || "—"}</dd>
+                  </div>
+                </dl>
+              </div>
+            </section>
 
-        {primaryMot && (primaryMot.model ?? primaryMot.engineSize ?? primaryMot.primaryColour ?? primaryMot.firstUsedDate ?? primaryMot.registrationDate ?? primaryMot.manufactureDate ?? primaryMot.hasOutstandingRecall) && (
-          <section className="rounded-3xl bg-white border border-slate-200/80 shadow-lg shadow-slate-200/30 ring-1 ring-slate-900/5 overflow-hidden mb-4 sm:mb-6">
-            <h2 className="px-4 sm:px-6 py-3.5 sm:py-4 border-b border-slate-100 text-base sm:text-lg font-bold text-slate-900 bg-slate-50/50">
-              MOT vehicle info
-            </h2>
-            <dl className="p-4 sm:p-6 grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2">
-              {primaryMot.model && (
-                <div className="flex flex-col gap-0.5">
-                  <dt className="text-xs uppercase tracking-wider text-slate-500">Model</dt>
-                  <dd className="text-slate-900 font-medium">{primaryMot.model}</dd>
+            {co2Band && (
+              <section className="rounded-3xl bg-white border border-slate-200/80 shadow-lg shadow-slate-200/30 ring-1 ring-slate-900/5 overflow-hidden">
+                <div className="px-4 sm:px-6 py-4 border-b border-slate-100 bg-slate-50/50">
+                  <h2 className="text-base sm:text-lg font-bold text-slate-900">CO2 Emission Figures</h2>
+                  <p className="mt-2 text-2xl sm:text-3xl font-bold text-slate-900">
+                    {vehicle.co2Emissions} g/km <span className="text-slate-500 font-semibold">({co2Band.letter})</span>
+                  </p>
                 </div>
-              )}
-              {primaryMot.engineSize && (
-                <div className="flex flex-col gap-0.5">
-                  <dt className="text-xs uppercase tracking-wider text-slate-500">Engine size (MOT)</dt>
-                  <dd className="text-slate-900 font-medium">{primaryMot.engineSize} cc</dd>
+                <div className="p-4 sm:p-6 space-y-1">
+                  {CO2_BANDS.map((b, i) => {
+                    const isActive = b.min === co2Band.band.min && b.max === co2Band.band.max;
+                    const rangeLabel = b.max === Infinity ? "225+" : b.min === 0 ? "0-101" : `${b.min}-${b.max}`;
+                    const barWidth = i === 0 ? 25 : i === CO2_BANDS.length - 1 ? 100 : 25 + (i / (CO2_BANDS.length - 1)) * 75;
+                    return (
+                      <div
+                        key={b.label}
+                        className={`flex items-center gap-2 sm:gap-3 py-2 px-3 rounded-lg transition-colors ${
+                          isActive
+                            ? "bg-lime-100 border-l-4 border-lime-500 ring-2 ring-lime-400/80"
+                            : ""
+                        }`}
+                      >
+                        <span className="w-16 sm:w-20 text-xs sm:text-sm font-medium text-slate-600 shrink-0 tabular-nums">
+                          {rangeLabel}
+                        </span>
+                        <div className="flex-1 h-7 sm:h-8 rounded overflow-hidden bg-slate-200 flex">
+                          <div
+                            className={`h-full ${b.color} shrink-0`}
+                            style={{ width: `${barWidth}%` }}
+                          />
+                        </div>
+                        <span className="text-xs sm:text-sm font-bold text-slate-700 shrink-0 w-6 sm:w-8 text-center">{b.label}</span>
+                      </div>
+                    );
+                  })}
                 </div>
-              )}
-              {primaryMot.primaryColour && (
-                <div className="flex flex-col gap-0.5">
-                  <dt className="text-xs uppercase tracking-wider text-slate-500">Primary colour (MOT)</dt>
-                  <dd className="text-slate-900 font-medium">{primaryMot.primaryColour}</dd>
+              </section>
+            )}
+          </div>
+
+          <div className="flex flex-col gap-4 sm:gap-6">
+            <section className="rounded-3xl bg-white border border-slate-200/80 shadow-lg shadow-slate-200/30 ring-1 ring-slate-900/5 overflow-hidden">
+              <h2 className="px-4 sm:px-6 py-3.5 sm:py-4 border-b border-slate-100 text-base sm:text-lg font-bold text-slate-900 bg-slate-50/50">
+                MOT summary
+              </h2>
+              <dl className="p-4 sm:p-6 grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2">
+                <div className="flex flex-col gap-0.5 py-1">
+                  <dt className="text-xs uppercase tracking-wider text-slate-500 font-semibold">Total MOT tests</dt>
+                  <dd className="text-slate-900 font-semibold text-lg">{motTotal}</dd>
                 </div>
-              )}
-              {primaryMot.firstUsedDate && (
-                <div className="flex flex-col gap-0.5">
-                  <dt className="text-xs uppercase tracking-wider text-slate-500">First used date</dt>
-                  <dd className="text-slate-900 font-medium">{formatDate(primaryMot.firstUsedDate)}</dd>
+                <div className="flex flex-col gap-0.5 py-1">
+                  <dt className="text-xs uppercase tracking-wider text-slate-500 font-semibold">Passed</dt>
+                  <dd className="text-emerald-700 font-semibold text-lg">{motPassed}</dd>
                 </div>
-              )}
-              {primaryMot.registrationDate && (
-                <div className="flex flex-col gap-0.5">
-                  <dt className="text-xs uppercase tracking-wider text-slate-500">Registration date (MOT)</dt>
-                  <dd className="text-slate-900 font-medium">{formatDate(primaryMot.registrationDate)}</dd>
+                <div className="flex flex-col gap-0.5 py-1">
+                  <dt className="text-xs uppercase tracking-wider text-slate-500 font-semibold">Failed</dt>
+                  <dd className="text-red-700 font-semibold text-lg">{motFailed}</dd>
                 </div>
+              </dl>
+              {motTotal === 0 && (
+                <p className="px-4 sm:px-6 pb-4 sm:pb-6 text-slate-500 text-sm">No MOT history retrieved.</p>
               )}
-              {primaryMot.manufactureDate && (
-                <div className="flex flex-col gap-0.5">
-                  <dt className="text-xs uppercase tracking-wider text-slate-500">Manufacture date (MOT)</dt>
-                  <dd className="text-slate-900 font-medium">{formatDate(primaryMot.manufactureDate)}</dd>
-                </div>
+            </section>
+
+            {primaryMot && (primaryMot.model ?? primaryMot.engineSize ?? primaryMot.primaryColour ?? primaryMot.firstUsedDate ?? primaryMot.registrationDate ?? primaryMot.manufactureDate ?? primaryMot.hasOutstandingRecall) && (
+              <section className="rounded-3xl bg-white border border-slate-200/80 shadow-lg shadow-slate-200/30 ring-1 ring-slate-900/5 overflow-hidden">
+                <h2 className="px-4 sm:px-6 py-3.5 sm:py-4 border-b border-slate-100 text-base sm:text-lg font-bold text-slate-900 bg-slate-50/50">
+                  MOT vehicle info
+                </h2>
+                <dl className="p-4 sm:p-6 grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2">
+                  {primaryMot.model && (
+                    <div className="flex flex-col gap-0.5">
+                      <dt className="text-xs uppercase tracking-wider text-slate-500">Model</dt>
+                      <dd className="text-slate-900 font-medium">{primaryMot.model}</dd>
+                    </div>
+                  )}
+                  {primaryMot.engineSize && (
+                    <div className="flex flex-col gap-0.5">
+                      <dt className="text-xs uppercase tracking-wider text-slate-500">Engine size (MOT)</dt>
+                      <dd className="text-slate-900 font-medium">{primaryMot.engineSize} cc</dd>
+                    </div>
+                  )}
+                  {primaryMot.primaryColour && (
+                    <div className="flex flex-col gap-0.5">
+                      <dt className="text-xs uppercase tracking-wider text-slate-500">Primary colour (MOT)</dt>
+                      <dd className="text-slate-900 font-medium">{primaryMot.primaryColour}</dd>
+                    </div>
+                  )}
+                  {primaryMot.firstUsedDate && (
+                    <div className="flex flex-col gap-0.5">
+                      <dt className="text-xs uppercase tracking-wider text-slate-500">First used date</dt>
+                      <dd className="text-slate-900 font-medium">{formatDate(primaryMot.firstUsedDate)}</dd>
+                    </div>
+                  )}
+                  {primaryMot.registrationDate && (
+                    <div className="flex flex-col gap-0.5">
+                      <dt className="text-xs uppercase tracking-wider text-slate-500">Registration date (MOT)</dt>
+                      <dd className="text-slate-900 font-medium">{formatDate(primaryMot.registrationDate)}</dd>
+                    </div>
+                  )}
+                  {primaryMot.manufactureDate && (
+                    <div className="flex flex-col gap-0.5">
+                      <dt className="text-xs uppercase tracking-wider text-slate-500">Manufacture date (MOT)</dt>
+                      <dd className="text-slate-900 font-medium">{formatDate(primaryMot.manufactureDate)}</dd>
+                    </div>
+                  )}
+                  {primaryMot.hasOutstandingRecall && (
+                    <div className="flex flex-col gap-0.5 sm:col-span-2">
+                      <dt className="text-xs uppercase tracking-wider text-slate-500">Outstanding recall</dt>
+                      <dd className="text-slate-900 font-medium">{primaryMot.hasOutstandingRecall}</dd>
+                    </div>
+                  )}
+                  {primaryMot.vehicleId && (
+                    <div className="flex flex-col gap-0.5 sm:col-span-2">
+                      <dt className="text-xs uppercase tracking-wider text-slate-500">Vehicle ID (MOT)</dt>
+                      <dd className="text-slate-900 font-mono text-sm">{primaryMot.vehicleId}</dd>
+                    </div>
+                  )}
+                </dl>
+              </section>
+            )}
+
+            <section className="rounded-3xl bg-white border border-slate-200/80 shadow-lg shadow-slate-200/30 ring-1 ring-slate-900/5 overflow-hidden">
+              <h2 className="px-4 sm:px-6 py-3.5 sm:py-4 border-b border-slate-100 text-base sm:text-lg font-bold text-slate-900 bg-slate-50/50">
+                Road tax
+              </h2>
+              {roadTax ? (
+                <>
+                  <p className="px-4 sm:px-6 pt-4 text-xs text-slate-500">
+                    Source:{" "}
+                    <a href="https://www.gov.uk/vehicle-tax-rate-tables" target="_blank" rel="noopener noreferrer" className="text-amber-600 hover:underline">GOV.UK</a>.
+                  </p>
+                  {roadTax.period === "post2017" && (
+                    <>
+                      <dl className="p-4 sm:p-6 grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2">
+                        <div className="flex flex-col gap-0.5 py-1">
+                          <dt className="text-xs uppercase tracking-wider text-slate-500 font-semibold">First year (12 months)</dt>
+                          <dd className="text-slate-900 font-semibold text-lg">£{roadTax.firstYear.toLocaleString()}</dd>
+                        </div>
+                        <div className="flex flex-col gap-0.5 py-1">
+                          <dt className="text-xs uppercase tracking-wider text-slate-500 font-semibold">12 month payment</dt>
+                          <dd className="text-slate-900 font-semibold text-lg">£{roadTax.standard12Month.toLocaleString()}</dd>
+                        </div>
+                        <div className="flex flex-col gap-0.5 py-1">
+                          <dt className="text-xs uppercase tracking-wider text-slate-500 font-semibold">6 month payment</dt>
+                          <dd className="text-slate-900 font-semibold text-lg">£{roadTax.standard6Month.toFixed(2)}</dd>
+                        </div>
+                      </dl>
+                      <p className="px-4 sm:px-6 pb-4 sm:pb-6 text-xs text-slate-500">
+                        Cars with a list price over £40,000 may pay an extra £425/year for 5 years.
+                      </p>
+                    </>
+                  )}
+                  {roadTax.period === "2001_2017" && (
+                    <dl className="p-4 sm:p-6 grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2">
+                      <div className="flex flex-col gap-0.5 py-1 sm:col-span-2">
+                        <dt className="text-xs uppercase tracking-wider text-slate-500 font-semibold">Band</dt>
+                        <dd className="text-slate-900 font-semibold text-lg">{roadTax.band}: {roadTax.co2Range}</dd>
+                      </div>
+                      <div className="flex flex-col gap-0.5 py-1">
+                        <dt className="text-xs uppercase tracking-wider text-slate-500 font-semibold">Single 12 month</dt>
+                        <dd className="text-slate-900 font-semibold text-lg">£{roadTax.rate12Month.toLocaleString()}</dd>
+                      </div>
+                      <div className="flex flex-col gap-0.5 py-1">
+                        <dt className="text-xs uppercase tracking-wider text-slate-500 font-semibold">12 month by Direct Debit</dt>
+                        <dd className="text-slate-900 font-semibold text-lg">£{roadTax.rate12MonthDD.toLocaleString()}</dd>
+                      </div>
+                      <div className="flex flex-col gap-0.5 py-1">
+                        <dt className="text-xs uppercase tracking-wider text-slate-500 font-semibold">12 monthly instalments (DD)</dt>
+                        <dd className="text-slate-900 font-semibold text-lg">£{roadTax.rate12MonthlyInstalments.toLocaleString()}</dd>
+                      </div>
+                      <div className="flex flex-col gap-0.5 py-1">
+                        <dt className="text-xs uppercase tracking-wider text-slate-500 font-semibold">Single 6 month</dt>
+                        <dd className="text-slate-900 font-semibold text-lg">{roadTax.rate6Month != null ? `£${roadTax.rate6Month.toFixed(2)}` : "N/A"}</dd>
+                      </div>
+                      <div className="flex flex-col gap-0.5 py-1">
+                        <dt className="text-xs uppercase tracking-wider text-slate-500 font-semibold">6 month by Direct Debit</dt>
+                        <dd className="text-slate-900 font-semibold text-lg">{roadTax.rate6MonthDD != null ? `£${roadTax.rate6MonthDD.toFixed(2)}` : "N/A"}</dd>
+                      </div>
+                    </dl>
+                  )}
+                  {roadTax.period === "pre2001" && (
+                    <dl className="p-4 sm:p-6 grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2">
+                      <div className="flex flex-col gap-0.5 py-1">
+                        <dt className="text-xs uppercase tracking-wider text-slate-500 font-semibold">Engine size</dt>
+                        <dd className="text-slate-900 font-semibold text-lg">{roadTax.engineBand}</dd>
+                      </div>
+                      <div className="flex flex-col gap-0.5 py-1">
+                        <dt className="text-xs uppercase tracking-wider text-slate-500 font-semibold">12 month payment</dt>
+                        <dd className="text-slate-900 font-semibold text-lg">£{roadTax.rate12Month.toLocaleString()}</dd>
+                      </div>
+                      <div className="flex flex-col gap-0.5 py-1">
+                        <dt className="text-xs uppercase tracking-wider text-slate-500 font-semibold">12 monthly (Direct Debit)</dt>
+                        <dd className="text-slate-900 font-semibold text-lg">£{roadTax.rate12MonthlyDD.toLocaleString()}</dd>
+                      </div>
+                    </dl>
+                  )}
+                </>
+              ) : (
+                <p className="p-4 sm:p-6 text-slate-500 text-sm">
+                  Road tax rates not available (e.g. missing registration date or CO2/engine data).
+                </p>
               )}
-              {primaryMot.hasOutstandingRecall && (
-                <div className="flex flex-col gap-0.5 sm:col-span-2">
-                  <dt className="text-xs uppercase tracking-wider text-slate-500">Outstanding recall</dt>
-                  <dd className="text-slate-900 font-medium">{primaryMot.hasOutstandingRecall}</dd>
-                </div>
-              )}
-              {primaryMot.vehicleId && (
-                <div className="flex flex-col gap-0.5 sm:col-span-2">
-                  <dt className="text-xs uppercase tracking-wider text-slate-500">Vehicle ID (MOT)</dt>
-                  <dd className="text-slate-900 font-mono text-sm">{primaryMot.vehicleId}</dd>
-                </div>
-              )}
-            </dl>
-          </section>
-        )}
+            </section>
+          </div>
+        </div>
 
         <section className="rounded-3xl bg-white border border-slate-200/80 shadow-lg shadow-slate-200/30 ring-1 ring-slate-900/5 overflow-hidden mb-4 sm:mb-6">
           <h2 className="px-4 sm:px-6 py-3.5 sm:py-4 border-b border-slate-100 text-base sm:text-lg font-bold text-slate-900 bg-slate-50/50">

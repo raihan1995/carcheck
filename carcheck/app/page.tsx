@@ -2,6 +2,7 @@
 
 import { useState, FormEvent } from "react";
 import { useRouter } from "next/navigation";
+import { RevVealLogo } from "./components/RevVealLogo";
 
 function normalizeRegistration(vrn: string): string {
   return vrn.replace(/\s+/g, "").toUpperCase().replace(/[^A-Z0-9]/g, "");
@@ -52,14 +53,9 @@ export default function Home() {
     <div className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-slate-50 text-slate-800">
       <div className="mx-auto max-w-2xl px-4 py-8 sm:py-16 sm:px-6">
         <header className="text-center mb-10 sm:mb-14">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-400 to-amber-600 text-white shadow-lg shadow-amber-500/25 mb-6">
-            <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 15.75V18m-7.5-6.75h.008v.008H8.25v-.008Zm0 2.25h.008v.008H8.25V13.5Zm0-6.75h.008v.008H8.25V6.75Zm0 2.25h.008v.008H8.25V9Zm6-3h.008v.008H14.25V6.75Zm0 2.25h.008v.008H14.25V9Zm0 2.25h.008v.008H14.25v-.008Zm0 2.25h.008v.008H14.25V15Z" />
-            </svg>
+          <div className="flex justify-center mb-6">
+            <RevVealLogo variant="full" className="h-20 w-auto sm:h-24" />
           </div>
-          <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-slate-900">
-            UK Car Check
-          </h1>
           <p className="mt-3 text-slate-500 text-base sm:text-lg max-w-sm mx-auto">
             Enter a UK number plate to view vehicle details, MOT history and ULEZ status
           </p>

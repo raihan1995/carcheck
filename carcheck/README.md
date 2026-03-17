@@ -21,6 +21,19 @@ The app uses two APIs:
 1. Copy `.env.example` to `.env` and add your keys (from your DVLA/DVSA approval emails).
 2. Restart the dev server. Results appear on `/vehicle/[registration]`.
 
+## Car specs lookup (optional)
+
+To enrich results with BHP, transmission, and road tax from a Kaggle-style CSV (e.g. UK car adverts):
+
+1. Place the CSV somewhere (e.g. `C:\Users\Raihan\Downloads\kaggle\all_car_adverts.csv`).
+2. Install deps and run the preprocess script:
+   ```bash
+   npm install
+   npm run preprocess-cars
+   ```
+   Or with a custom path: `INPUT_CSV="C:\path\to\all_car_adverts.csv" npm run preprocess-cars`
+3. This writes `data/car-specs-lookup.json` (keyed by make|model|year|engine_vol|fuel). Use it in your API or server code to look up specs from DVLA make/model/year/engine/fuel.
+
 ## Tech
 
 - Next.js 16 (App Router)

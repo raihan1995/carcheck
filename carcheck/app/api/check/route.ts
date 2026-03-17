@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getCarSpecs, type CarSpecs } from "@/lib/car-specs-lookup";
 
 const DVLA_API_URL =
   "https://driver-vehicle-licensing.api.gov.uk/vehicle-enquiry/v1/vehicles";
@@ -174,6 +175,7 @@ async function fetchMotHistory(
 async function performVehicleCheck(registrationNumber: string): Promise<{
   vehicle: VehicleData;
   motHistory: MotHistoryVehicle[] | null;
+  specs: CarSpecs | null;
   demo?: boolean;
 }> {
   const apiKey = process.env.DVLA_API_KEY;
@@ -182,6 +184,7 @@ async function performVehicleCheck(registrationNumber: string): Promise<{
     return {
       vehicle: getMockVehicleData(registrationNumber),
       motHistory: null,
+      specs: null,
       demo: true,
     };
   }
@@ -220,7 +223,16 @@ async function performVehicleCheck(registrationNumber: string): Promise<{
   } catch (motErr) {
     logApiCheckError(motErr, "MOT");
   }
-  return { vehicle, motHistory };
+
+  const specs = getCarSpecs(
+    vehicle.make,
+    motHistory?.[0]?.model,
+    vehicle.yearOfManufacture,
+    vehicle.engineCapacity,
+    vehicle.fuelType
+  );
+
+  return { vehicle, motHistory, specs };
 }
 
 export async function GET(request: NextRequest) {
@@ -288,6 +300,7 @@ export async function POST(request: NextRequest) {
           registrationNumber,
           vehicle: result.vehicle,
           motHistory: result.motHistory,
+          specs: result.specs,
         },
         { status: 503 }
       );
