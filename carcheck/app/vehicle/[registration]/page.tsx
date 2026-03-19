@@ -501,6 +501,44 @@ export default function VehiclePage() {
   const motFailed = motTests.filter((t) => (t.testResult ?? "").toUpperCase() === "FAILED").length;
   const motPassRate = motTotal > 0 ? motPassed / motTotal : 0;
 
+  function parseMonthToMs(month: string | undefined): number | null {
+    if (!month) return null;
+    const parts = month.split("-");
+    if (parts.length !== 2) return null;
+    const year = Number(parts[0]);
+    const m = Number(parts[1]);
+    if (!Number.isFinite(year) || !Number.isFinite(m) || m < 1 || m > 12) return null;
+    return new Date(year, m - 1, 1).getTime();
+  }
+
+  const nowMs = Date.now();
+  const regMs =
+    parseMonthToMs(vehicle.monthOfFirstRegistration) ??
+    (vehicle.yearOfManufacture != null ? new Date(vehicle.yearOfManufacture, 0, 1).getTime() : null);
+  const ageYears = regMs != null ? (nowMs - regMs) / (365.25 * 24 * 60 * 60 * 1000) : null;
+
+  // Option 1 + 3:
+  // - Don't flag "likely imported" for fairly new cars with limited MOT history (false positives).
+  // - Treat `co2Emissions === 0` as missing/unknown, only using it inside the age guard.
+  const isFairlyNew = ageYears != null && ageYears < 4;
+  const likelyImported = motTotal === 1 && vehicle.co2Emissions === 0 && !isFairlyNew;
+
+  const motRegistrationDateMs = primaryMot?.registrationDate ? parseDate(primaryMot.registrationDate) : NaN;
+  const motFirstUsedDateMs = primaryMot?.firstUsedDate ? parseDate(primaryMot.firstUsedDate) : NaN;
+  const motManufactureDateMs = primaryMot?.manufactureDate ? parseDate(primaryMot.manufactureDate) : NaN;
+
+  const hideFirstUsedDate =
+    primaryMot?.firstUsedDate != null &&
+    primaryMot?.registrationDate != null &&
+    !Number.isNaN(motFirstUsedDateMs) &&
+    motFirstUsedDateMs === motRegistrationDateMs;
+
+  const hideManufactureDate =
+    primaryMot?.manufactureDate != null &&
+    primaryMot?.registrationDate != null &&
+    !Number.isNaN(motManufactureDateMs) &&
+    motManufactureDateMs === motRegistrationDateMs;
+
   let lastMotMileage: number | null = null;
   let lastYearMileage: number | null = null;
   let hasMileageIssue = false;
@@ -745,6 +783,11 @@ export default function VehiclePage() {
                   );
                 })}
               </dl>
+              {likelyImported && (
+                <p className="px-4 sm:px-6 pb-4 sm:pb-6 text-amber-700 font-semibold text-sm">
+                  Vehicle likely imported
+                </p>
+              )}
             </section>
 
             <section className="rounded-3xl bg-white border border-slate-200/80 shadow-lg shadow-slate-200/30 ring-1 ring-slate-900/5 overflow-hidden">
@@ -923,7 +966,7 @@ export default function VehiclePage() {
                       <dd className="text-slate-900 font-medium">{primaryMot.primaryColour}</dd>
                     </div>
                   )}
-                  {primaryMot.firstUsedDate && (
+                  {primaryMot.firstUsedDate && !hideFirstUsedDate && (
                     <div className="flex flex-col gap-0.5">
                       <dt className="text-xs uppercase tracking-wider text-slate-500">First used date</dt>
                       <dd className="text-slate-900 font-medium">{formatDate(primaryMot.firstUsedDate)}</dd>
@@ -935,7 +978,7 @@ export default function VehiclePage() {
                       <dd className="text-slate-900 font-medium">{formatDate(primaryMot.registrationDate)}</dd>
                     </div>
                   )}
-                  {primaryMot.manufactureDate && (
+                  {primaryMot.manufactureDate && !hideManufactureDate && (
                     <div className="flex flex-col gap-0.5">
                       <dt className="text-xs uppercase tracking-wider text-slate-500">Manufacture date (MOT)</dt>
                       <dd className="text-slate-900 font-medium">{formatDate(primaryMot.manufactureDate)}</dd>
