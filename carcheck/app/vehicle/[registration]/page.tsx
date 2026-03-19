@@ -546,8 +546,39 @@ export default function VehiclePage() {
         }
       }
 
-      for (let i = 1; i < count; i += 1) {
-        if (testsWithMileage[i].miles < testsWithMileage[i - 1].miles) {
+      // Mileage-issues check:
+      // If there are multiple MOT tests on the same calendar day, and at least one is PASSED,
+      // then use the LAST PASSED mileage from that day (ignore FAILED/PRS for that day).
+      // Tie-break (Option B): last PASSED/last entry based on the order after sorting.
+      const dailyEffectiveMileages: { dateMs: number; miles: number }[] = [];
+      let cursor = 0;
+      while (cursor < count) {
+        const dayKey = testsWithMileage[cursor].dateMs;
+        let nextCursor = cursor + 1;
+        while (nextCursor < count && testsWithMileage[nextCursor].dateMs === dayKey) {
+          nextCursor += 1;
+        }
+
+        const daySlice = testsWithMileage.slice(cursor, nextCursor);
+
+        let chosenMiles: number | null = null;
+        for (const entry of daySlice) {
+          if (entry.result === "PASSED") chosenMiles = entry.miles;
+        }
+        if (chosenMiles == null) {
+          // No PASSED for that day: take the last entry's mileage for that day.
+          chosenMiles = daySlice[daySlice.length - 1]?.miles ?? null;
+        }
+
+        if (chosenMiles != null) {
+          dailyEffectiveMileages.push({ dateMs: dayKey, miles: chosenMiles });
+        }
+
+        cursor = nextCursor;
+      }
+
+      for (let i = 1; i < dailyEffectiveMileages.length; i += 1) {
+        if (dailyEffectiveMileages[i].miles < dailyEffectiveMileages[i - 1].miles) {
           hasMileageIssue = true;
           break;
         }
