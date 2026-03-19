@@ -512,20 +512,33 @@ export default function VehiclePage() {
   }
 
   const nowMs = Date.now();
-  const regMs =
-    parseMonthToMs(vehicle.monthOfFirstRegistration) ??
-    (vehicle.yearOfManufacture != null ? new Date(vehicle.yearOfManufacture, 0, 1).getTime() : null);
-  const ageYears = regMs != null ? (nowMs - regMs) / (365.25 * 24 * 60 * 60 * 1000) : null;
-
-  // Option 1 + 3:
-  // - Don't flag "likely imported" for fairly new cars with limited MOT history (false positives).
-  // - Treat `co2Emissions === 0` as missing/unknown, only using it inside the age guard.
-  const isFairlyNew = ageYears != null && ageYears < 4;
-  const likelyImported = motTotal === 1 && vehicle.co2Emissions === 0 && !isFairlyNew;
 
   const motRegistrationDateMs = primaryMot?.registrationDate ? parseDate(primaryMot.registrationDate) : NaN;
   const motFirstUsedDateMs = primaryMot?.firstUsedDate ? parseDate(primaryMot.firstUsedDate) : NaN;
   const motManufactureDateMs = primaryMot?.manufactureDate ? parseDate(primaryMot.manufactureDate) : NaN;
+
+  function monthStartFromMs(ms: number): number | null {
+    if (!Number.isFinite(ms)) return null;
+    const d = new Date(ms);
+    if (Number.isNaN(d.getTime())) return null;
+    return new Date(d.getFullYear(), d.getMonth(), 1).getTime();
+  }
+
+  const dvlaFirstRegMonthMs = parseMonthToMs(vehicle.monthOfFirstRegistration);
+  const motRegMonthMs = monthStartFromMs(motRegistrationDateMs);
+
+  // "for this instance we should ignore the DD on MOT registration date (month-level) and
+  // only apply the fairly-new suppression if DVLA month and MOT month match".
+  const monthMatch =
+    dvlaFirstRegMonthMs != null && motRegMonthMs != null && dvlaFirstRegMonthMs === motRegMonthMs;
+
+  const ageYears = monthMatch && dvlaFirstRegMonthMs != null
+    ? (nowMs - dvlaFirstRegMonthMs) / (365.25 * 24 * 60 * 60 * 1000)
+    : null;
+  const isFairlyNew = ageYears != null && ageYears < 4;
+
+  // Don't fall back: if the months don't match, don't apply the "fairly new" suppression.
+  const likelyImported = motTotal === 1 && vehicle.co2Emissions === 0 && (!monthMatch || !isFairlyNew);
 
   const hideFirstUsedDate =
     primaryMot?.firstUsedDate != null &&
