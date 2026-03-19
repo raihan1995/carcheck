@@ -504,6 +504,7 @@ export default function VehiclePage() {
   let lastMotMileage: number | null = null;
   let lastYearMileage: number | null = null;
   let hasMileageIssue = false;
+  let yearlyLatestOdometer: Array<{ year: number; miles: number }> = [];
 
   if (motTests.length > 0) {
     const testsWithMileage = motTests
@@ -576,6 +577,17 @@ export default function VehiclePage() {
 
         cursor = nextCursor;
       }
+
+      // Build a "latest mileage per year" dataset for the bar chart.
+      // dailyEffectiveMileages is ordered by day asc, so the last entry for each year is the latest.
+      const yearToMiles = new Map<number, number>();
+      for (const point of dailyEffectiveMileages) {
+        const year = new Date(point.dateMs).getFullYear();
+        yearToMiles.set(year, point.miles);
+      }
+      yearlyLatestOdometer = Array.from(yearToMiles.entries())
+        .map(([year, miles]) => ({ year, miles }))
+        .sort((a, b) => a.year - b.year);
 
       for (let i = 1; i < dailyEffectiveMileages.length; i += 1) {
         if (dailyEffectiveMileages[i].miles < dailyEffectiveMileages[i - 1].miles) {
@@ -766,7 +778,8 @@ export default function VehiclePage() {
                 Mileage information
               </h2>
               {lastMotMileage != null || lastYearMileage != null || mileageSummary ? (
-                <dl className="p-4 sm:p-6 grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2">
+                <>
+                  <dl className="p-4 sm:p-6 grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2">
                   <div className="flex flex-col gap-0.5 py-1">
                     <dt className="text-xs uppercase tracking-wider text-slate-500 font-semibold">Last MOT mileage</dt>
                     <dd className="text-slate-900 font-semibold text-lg">
@@ -799,7 +812,39 @@ export default function VehiclePage() {
                       {lastYearMileage != null ? `${lastYearMileage.toLocaleString()} miles` : "—"}
                     </dd>
                   </div>
-                </dl>
+                  </dl>
+                  {yearlyLatestOdometer.length > 0 && (
+                  <div className="px-4 sm:px-6 pb-4 sm:pb-6">
+                    <p className="mt-2 text-xs uppercase tracking-wider text-slate-500 font-semibold">
+                      Latest odometer per year
+                    </p>
+                    <div className="mt-3 space-y-3">
+                      {(() => {
+                        const maxMiles = Math.max(...yearlyLatestOdometer.map((p) => p.miles));
+                        const safeMax = maxMiles > 0 ? maxMiles : 1;
+                        return yearlyLatestOdometer.map((p) => {
+                          const widthPct = Math.round((p.miles / safeMax) * 100);
+                          return (
+                            <div key={p.year} className="flex items-center gap-3">
+                              <div className="w-14 text-xs font-semibold text-slate-600">{p.year}</div>
+                              <div className="flex-1 h-2.5 rounded-full bg-slate-200/80 overflow-hidden">
+                                <div
+                                  className="h-full rounded-full bg-amber-500"
+                                  style={{ width: `${widthPct}%` }}
+                                  aria-hidden="true"
+                                />
+                              </div>
+                              <div className="w-24 text-right text-xs font-mono text-slate-600">
+                                {p.miles.toLocaleString()}
+                              </div>
+                            </div>
+                          );
+                        });
+                      })()}
+                    </div>
+                  </div>
+                  )}
+                </>
               ) : (
                 <p className="p-4 sm:p-6 text-slate-500 text-sm">
                   Mileage information not available from MOT history.
