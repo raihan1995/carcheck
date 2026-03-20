@@ -537,8 +537,29 @@ export default function VehiclePage() {
     : null;
   const isFairlyNew = ageYears != null && ageYears < 4;
 
+  // Age for import heuristic: prefer DVLA YOM, else MOT manufacture year, else MOT registration year.
+  const calendarYear = new Date().getFullYear();
+  let importHeuristicAgeYears: number | null = null;
+  if (vehicle.yearOfManufacture != null && Number.isFinite(vehicle.yearOfManufacture)) {
+    importHeuristicAgeYears = calendarYear - vehicle.yearOfManufacture;
+  } else if (primaryMot?.manufactureDate) {
+    const y = new Date(parseDate(primaryMot.manufactureDate)).getFullYear();
+    if (Number.isFinite(y)) importHeuristicAgeYears = calendarYear - y;
+  } else if (Number.isFinite(motRegistrationDateMs)) {
+    const y = new Date(motRegistrationDateMs).getFullYear();
+    if (Number.isFinite(y)) importHeuristicAgeYears = calendarYear - y;
+  }
+
+  const isOldEnoughForImportHint =
+    importHeuristicAgeYears != null && importHeuristicAgeYears >= 9;
+  const fewMotsForImportHint = motTotal <= 2;
+
   // Don't fall back: if the months don't match, don't apply the "fairly new" suppression.
-  const likelyImported = motTotal === 1 && vehicle.co2Emissions === 0 && (!monthMatch || !isFairlyNew);
+  const likelyImported =
+    fewMotsForImportHint &&
+    isOldEnoughForImportHint &&
+    vehicle.co2Emissions === 0 &&
+    (!monthMatch || !isFairlyNew);
 
   const hideFirstUsedDate =
     primaryMot?.firstUsedDate != null &&
