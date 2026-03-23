@@ -766,10 +766,22 @@ export default function VehiclePage() {
                 ? taxDaysLeft > 0
                   ? `${taxDaysLeft} day${taxDaysLeft === 1 ? "" : "s"} left`
                   : taxDaysLeft < 0
-                    ? `${Math.abs(taxDaysLeft)} day${Math.abs(taxDaysLeft) === 1 ? "" : "s"} overdue`
+                    ? "Expired"
                     : "Expires today"
                 : "—"}
             </p>
+            {!taxValid && (
+              <p className="mt-2 text-xs sm:text-sm text-slate-600">
+                <a
+                  href="https://www.gov.uk/vehicle-tax"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-amber-700 font-medium hover:underline"
+                >
+                  Tax your vehicle on GOV.UK
+                </a>
+              </p>
+            )}
           </div>
           <div
             className={`rounded-2xl border-2 px-4 sm:px-6 py-4 shadow-md ${
@@ -789,10 +801,22 @@ export default function VehiclePage() {
                 ? motDaysLeft > 0
                   ? `${motDaysLeft} day${motDaysLeft === 1 ? "" : "s"} left`
                   : motDaysLeft < 0
-                    ? `${Math.abs(motDaysLeft)} day${Math.abs(motDaysLeft) === 1 ? "" : "s"} overdue`
+                    ? "Expired"
                     : "Expires today"
                 : "—"}
             </p>
+            {motDaysLeft !== null && motDaysLeft < 0 && (
+              <p className="mt-2 text-xs sm:text-sm text-slate-600">
+                <a
+                  href="https://bookmygarage.com/mot/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-amber-700 font-medium hover:underline"
+                >
+                  Book an MOT
+                </a>
+              </p>
+            )}
           </div>
         </div>
 
