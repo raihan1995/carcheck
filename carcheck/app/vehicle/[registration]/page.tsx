@@ -134,6 +134,9 @@ const ROAD_TAX_FIRST_YEAR_BANDS: { maxCo2: number; rates: [number, number] }[] =
 const ROAD_TAX_STANDARD_12_MONTH = 195;
 const ROAD_TAX_STANDARD_6_MONTH = 107.25;
 
+/** Expensive car supplement (list price over £40,000) — added to standard rate for 5 years (annual figure). */
+const ROAD_TAX_LUXURY_SUPPLEMENT_ANNUAL = 425;
+
 /** Bands for cars registered between 1 March 2001 and 31 March 2017. Petrol (TC48), diesel (TC49), alternative fuel (59), zero emission. */
 const ROAD_TAX_BANDS_2001_2017: {
   band: string;
@@ -1153,11 +1156,27 @@ export default function VehiclePage() {
                         </div>
                         <div className="flex flex-col gap-0.5 py-1">
                           <dt className="text-xs uppercase tracking-wider text-slate-500 font-semibold">12 month payment</dt>
-                          <dd className="text-slate-900 font-semibold text-lg">£{roadTax.standard12Month.toLocaleString()}</dd>
+                          <dd className="text-slate-900 font-semibold text-lg">
+                            £{roadTax.standard12Month.toLocaleString()}{" "}
+                            <span
+                              className="text-slate-600 font-semibold"
+                              title="Standard rate plus £425/year expensive car supplement (list price over £40,000)"
+                            >
+                              (£{(roadTax.standard12Month + ROAD_TAX_LUXURY_SUPPLEMENT_ANNUAL).toLocaleString()})
+                            </span>
+                          </dd>
                         </div>
                         <div className="flex flex-col gap-0.5 py-1">
                           <dt className="text-xs uppercase tracking-wider text-slate-500 font-semibold">6 month payment</dt>
-                          <dd className="text-slate-900 font-semibold text-lg">£{roadTax.standard6Month.toFixed(2)}</dd>
+                          <dd className="text-slate-900 font-semibold text-lg">
+                            £{roadTax.standard6Month.toFixed(2)}{" "}
+                            <span
+                              className="text-slate-600 font-semibold"
+                              title="6-month payment plus half the annual £425 expensive car supplement (pro rata)"
+                            >
+                              (£{(roadTax.standard6Month + ROAD_TAX_LUXURY_SUPPLEMENT_ANNUAL / 2).toFixed(2)})
+                            </span>
+                          </dd>
                         </div>
                       </dl>
                       <p className="px-4 sm:px-6 pb-4 sm:pb-6 text-xs text-slate-500">
