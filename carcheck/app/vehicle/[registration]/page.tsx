@@ -312,6 +312,45 @@ function daysFromToday(dateStr: string | undefined): number | null {
   return Math.floor((ms - today.getTime()) / dayMs);
 }
 
+/**
+ * UK: first MOT is required 3 years after first registration (cars/vans).
+ * Prefer MOT API registration date; else DVLA month of first registration (1st of month).
+ * Returns YYYY-MM-DD in local calendar, or null.
+ */
+function getFirstMotDueIsoString(
+  motRegistrationDate: string | undefined,
+  monthOfFirstRegistration: string | undefined
+): string | null {
+  if (motRegistrationDate) {
+    const ms = parseDate(motRegistrationDate);
+    if (!Number.isNaN(ms)) {
+      const d = new Date(ms);
+      if (!Number.isNaN(d.getTime())) {
+        const due = new Date(d.getFullYear() + 3, d.getMonth(), d.getDate());
+        const y = due.getFullYear();
+        const mo = String(due.getMonth() + 1).padStart(2, "0");
+        const day = String(due.getDate()).padStart(2, "0");
+        return `${y}-${mo}-${day}`;
+      }
+    }
+  }
+  if (monthOfFirstRegistration) {
+    const parts = monthOfFirstRegistration.split("-");
+    if (parts.length === 2) {
+      const year = Number(parts[0]);
+      const m = Number(parts[1]);
+      if (Number.isFinite(year) && Number.isFinite(m) && m >= 1 && m <= 12) {
+        const due = new Date(year + 3, m - 1, 1);
+        const y = due.getFullYear();
+        const mo = String(due.getMonth() + 1).padStart(2, "0");
+        const day = String(due.getDate()).padStart(2, "0");
+        return `${y}-${mo}-${day}`;
+      }
+    }
+  }
+  return null;
+}
+
 /** Years between two timestamps */
 function yearsBetween(msStart: number, msEnd: number): number {
   return (msEnd - msStart) / (365.25 * 24 * 60 * 60 * 1000);
@@ -671,9 +710,32 @@ export default function VehiclePage() {
   }
 
   const taxDaysLeft = daysFromToday(vehicle.taxDueDate);
-  const motDaysLeft = daysFromToday(vehicle.motExpiryDate);
   const taxValid = taxDaysLeft !== null && taxDaysLeft > 0;
-  const motValid = motDaysLeft !== null && motDaysLeft > 0;
+
+  const firstMotDueIso = getFirstMotDueIsoString(
+    primaryMot?.registrationDate,
+    vehicle.monthOfFirstRegistration
+  );
+  const firstMotDueDaysLeft = firstMotDueIso ? daysFromToday(firstMotDueIso) : null;
+
+  /** No MOT tests yet and first MOT due date is still in the future (within 3-year exemption). */
+  const motExemptionActive =
+    motTotal === 0 &&
+    firstMotDueDaysLeft !== null &&
+    firstMotDueDaysLeft > 0;
+
+  let motDaysLeft: number | null;
+  if (motExemptionActive) {
+    motDaysLeft = firstMotDueDaysLeft;
+  } else if (vehicle.motExpiryDate) {
+    motDaysLeft = daysFromToday(vehicle.motExpiryDate);
+  } else if (motTotal === 0 && firstMotDueDaysLeft !== null) {
+    motDaysLeft = firstMotDueDaysLeft;
+  } else {
+    motDaysLeft = null;
+  }
+
+  const motValid = motExemptionActive || (motDaysLeft !== null && motDaysLeft > 0);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-slate-50 text-slate-800 overflow-x-hidden">
@@ -793,29 +855,47 @@ export default function VehiclePage() {
             <p className={`text-sm font-semibold uppercase tracking-wider ${motValid ? "text-emerald-700" : "text-red-700"}`}>
               MOT
             </p>
-            <p className={`mt-1 text-base sm:text-lg font-bold ${motValid ? "text-emerald-800" : "text-red-800"}`}>
-              Expires: {vehicle.motExpiryDate ? formatDate(vehicle.motExpiryDate) : "—"}
-            </p>
-            <p className={`mt-0.5 text-sm font-medium ${motValid ? "text-emerald-700" : "text-red-700"}`}>
-              {motDaysLeft !== null
-                ? motDaysLeft > 0
-                  ? `${motDaysLeft} day${motDaysLeft === 1 ? "" : "s"} left`
-                  : motDaysLeft < 0
-                    ? "Expired"
-                    : "Expires today"
-                : "—"}
-            </p>
-            {motDaysLeft !== null && motDaysLeft < 0 && (
-              <p className="mt-2 text-xs sm:text-sm text-slate-600">
-                <a
-                  href="https://bookmygarage.com/mot/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-amber-700 font-medium hover:underline"
-                >
-                  Book an MOT
-                </a>
-              </p>
+            {motExemptionActive && firstMotDueIso ? (
+              <>
+                <p className="mt-1 text-base sm:text-lg font-bold text-emerald-800">
+                  MOT not required until {formatDate(firstMotDueIso)}
+                </p>
+                <p className="mt-1.5 text-xs sm:text-sm text-slate-600">
+                  New car first MOT is due 3 years after first registration.
+                </p>
+              </>
+            ) : (
+              <>
+                <p className={`mt-1 text-base sm:text-lg font-bold ${motValid ? "text-emerald-800" : "text-red-800"}`}>
+                  Expires:{" "}
+                  {vehicle.motExpiryDate
+                    ? formatDate(vehicle.motExpiryDate)
+                    : firstMotDueIso
+                      ? formatDate(firstMotDueIso)
+                      : "—"}
+                </p>
+                <p className={`mt-0.5 text-sm font-medium ${motValid ? "text-emerald-700" : "text-red-700"}`}>
+                  {motDaysLeft !== null
+                    ? motDaysLeft > 0
+                      ? `${motDaysLeft} day${motDaysLeft === 1 ? "" : "s"} left`
+                      : motDaysLeft < 0
+                        ? "Expired"
+                        : "Expires today"
+                    : "—"}
+                </p>
+                {motDaysLeft !== null && motDaysLeft < 0 && (
+                  <p className="mt-2 text-xs sm:text-sm text-slate-600">
+                    <a
+                      href="https://bookmygarage.com/mot/"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-amber-700 font-medium hover:underline"
+                    >
+                      Book an MOT
+                    </a>
+                  </p>
+                )}
+              </>
             )}
           </div>
         </div>
