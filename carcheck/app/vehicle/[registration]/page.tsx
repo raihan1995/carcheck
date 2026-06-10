@@ -1190,8 +1190,7 @@ export default function VehiclePage() {
                         const safeMax = maxMiles > 0 ? maxMiles : 1;
                         return yearlyLatestOdometer.map((p, i, arr) => {
                           const widthPct = Math.round((p.miles / safeMax) * 100);
-                          const deltaToNext =
-                            i < arr.length - 1 ? arr[i + 1].miles - p.miles : null;
+                          const deltaFromPrev = i > 0 ? p.miles - arr[i - 1].miles : null;
                           return (
                             <div key={p.year} className="flex items-center gap-3">
                               <div className="w-14 text-xs font-semibold text-slate-600">{p.year}</div>
@@ -1200,14 +1199,14 @@ export default function VehiclePage() {
                                   className="absolute inset-y-0 left-0 flex items-center justify-end rounded-full bg-amber-500 px-1"
                                   style={{ width: `${widthPct}%` }}
                                 >
-                                  {deltaToNext != null && (
+                                  {deltaFromPrev != null && (
                                     <span
                                       className={`text-[10px] font-mono font-semibold whitespace-nowrap drop-shadow-sm ${
-                                        deltaToNext < 0 ? "text-red-100" : "text-white"
+                                        deltaFromPrev < 0 ? "text-red-100" : "text-white"
                                       }`}
                                     >
-                                      {deltaToNext >= 0 ? "+" : ""}
-                                      {deltaToNext.toLocaleString()}
+                                      {deltaFromPrev >= 0 ? "+" : ""}
+                                      {deltaFromPrev.toLocaleString()}
                                     </span>
                                   )}
                                 </div>
