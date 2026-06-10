@@ -1188,17 +1188,29 @@ export default function VehiclePage() {
                       {(() => {
                         const maxMiles = Math.max(...yearlyLatestOdometer.map((p) => p.miles));
                         const safeMax = maxMiles > 0 ? maxMiles : 1;
-                        return yearlyLatestOdometer.map((p) => {
+                        return yearlyLatestOdometer.map((p, i, arr) => {
                           const widthPct = Math.round((p.miles / safeMax) * 100);
+                          const deltaToNext =
+                            i < arr.length - 1 ? arr[i + 1].miles - p.miles : null;
                           return (
                             <div key={p.year} className="flex items-center gap-3">
                               <div className="w-14 text-xs font-semibold text-slate-600">{p.year}</div>
-                              <div className="flex-1 h-2.5 rounded-full bg-slate-200/80 overflow-hidden">
+                              <div className="flex-1 relative h-2.5 rounded-full bg-slate-200/80">
                                 <div
-                                  className="h-full rounded-full bg-amber-500"
+                                  className="absolute inset-y-0 left-0 flex items-center justify-end rounded-full bg-amber-500 px-1"
                                   style={{ width: `${widthPct}%` }}
-                                  aria-hidden="true"
-                                />
+                                >
+                                  {deltaToNext != null && (
+                                    <span
+                                      className={`text-[10px] font-mono font-semibold whitespace-nowrap drop-shadow-sm ${
+                                        deltaToNext < 0 ? "text-red-100" : "text-white"
+                                      }`}
+                                    >
+                                      {deltaToNext >= 0 ? "+" : ""}
+                                      {deltaToNext.toLocaleString()}
+                                    </span>
+                                  )}
+                                </div>
                               </div>
                               <div className="w-24 text-right text-xs font-mono text-slate-600">
                                 {p.miles.toLocaleString()}
