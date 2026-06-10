@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "preprocess-cars": "node scripts/preprocess-car-data.mjs"
+    "preprocess-cars": "node scripts/preprocess-car-data.mjs",
+    "preprocess-specs": "node scripts/preprocess-make-specs.mjs"
   },
   "dependencies": {
     "next": "16.1.6",

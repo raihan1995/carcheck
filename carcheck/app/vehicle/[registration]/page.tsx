@@ -56,15 +56,23 @@ type MotHistoryVehicle = {
   motTests?: MotTestItem[];
 };
 
+type SpecCandidate = {
+  id: string;
+  label: string;
+  bhp: number | null;
+  torque: number | null;
+  gearbox: string | null;
+  drivetrain: string | null;
+  acceleration0100: number | null;
+  topSpeedMph: number | null;
+  matchedVariant: string | null;
+};
+
 type ApiResponse = {
   vehicle: VehicleData;
   motHistory: MotHistoryVehicle[] | null;
-  specs?: {
-    bhp: number | null;
-    torque: number | null;
-    gearbox: string | null;
-    drivetrain: string | null;
-  } | null;
+  specCandidates?: SpecCandidate[];
+  suggestedSpecId?: string | null;
   demo?: boolean;
   error?: string;
 };
@@ -459,6 +467,8 @@ export default function VehiclePage() {
   const [data, setData] = useState<ApiResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [selectedSpecId, setSelectedSpecId] = useState("");
+  const [lookedUpSpecs, setLookedUpSpecs] = useState<SpecCandidate | null>(null);
 
   useEffect(() => {
     if (!registration) {
@@ -501,6 +511,21 @@ export default function VehiclePage() {
       cancelled = true;
     };
   }, [registration]);
+
+  useEffect(() => {
+    const candidates = data?.specCandidates;
+    const suggestedId = data?.suggestedSpecId;
+    if (!candidates?.length) {
+      setSelectedSpecId("");
+      setLookedUpSpecs(null);
+      return;
+    }
+    const match = suggestedId
+      ? (candidates.find((c) => c.id === suggestedId) ?? candidates[0])
+      : candidates[0];
+    setSelectedSpecId(match.id);
+    setLookedUpSpecs(match);
+  }, [data?.specCandidates, data?.suggestedSpecId]);
 
   const displayFields: (keyof VehicleData)[] = [
     "make",
@@ -564,7 +589,7 @@ export default function VehiclePage() {
     );
   }
 
-  const { vehicle, motHistory, specs, demo } = data;
+  const { vehicle, motHistory, specCandidates = [], demo } = data;
   const primaryMot = motHistory?.[0];
   const motTests = primaryMot?.motTests ?? [];
   const mileageSummary = computeYearlyAverageMileage(vehicle.monthOfFirstRegistration, motTests);
@@ -995,29 +1020,85 @@ export default function VehiclePage() {
             </section>
 
             <section className="rounded-3xl bg-white border border-slate-200/80 shadow-lg shadow-slate-200/30 ring-1 ring-slate-900/5 overflow-hidden">
-              <h2 className="px-4 sm:px-6 py-3.5 sm:py-4 border-b border-slate-100 text-base sm:text-lg font-bold text-slate-900 bg-slate-50/50">
+              <h2 className="px-4 sm:px-6 py-3.5 sm:py-4 border-b border-slate-100 text-base sm:text-lg font-bold text-slate-900 bg-slate-50/50 flex items-center gap-2 flex-wrap">
                 Vehicle performance
+                <span className="text-xs font-semibold uppercase tracking-wider text-blue-600 bg-blue-50 px-2 py-0.5 rounded-md border border-blue-100">
+                  Beta
+                </span>
               </h2>
-              <dl className="p-4 sm:p-6 grid gap-3 sm:gap-4 grid-cols-2 sm:grid-cols-4">
-                <div className="flex flex-col gap-0.5 py-1">
-                  <dt className="text-xs uppercase tracking-wider text-slate-500 font-semibold">BHP</dt>
-                  <dd className="text-slate-900 font-semibold">{specs?.bhp != null ? specs.bhp : "—"}</dd>
-                </div>
-                <div className="flex flex-col gap-0.5 py-1">
-                  <dt className="text-xs uppercase tracking-wider text-slate-500 font-semibold">Torque</dt>
-                  <dd className="text-slate-900 font-semibold">
-                    {specs?.torque != null ? `${specs.torque} Nm` : "—"}
-                  </dd>
-                </div>
-                <div className="flex flex-col gap-0.5 py-1">
-                  <dt className="text-xs uppercase tracking-wider text-slate-500 font-semibold">Gearbox</dt>
-                  <dd className="text-slate-900 font-semibold capitalize">{specs?.gearbox || "—"}</dd>
-                </div>
-                <div className="flex flex-col gap-0.5 py-1">
-                  <dt className="text-xs uppercase tracking-wider text-slate-500 font-semibold">Drivetrain</dt>
-                  <dd className="text-slate-900 font-semibold">{specs?.drivetrain || "—"}</dd>
-                </div>
-              </dl>
+              <div className="p-4 sm:p-6 space-y-4">
+                {specCandidates.length > 0 ? (
+                  <>
+                    {lookedUpSpecs &&
+                    (lookedUpSpecs.bhp != null ||
+                      lookedUpSpecs.torque != null ||
+                      lookedUpSpecs.gearbox ||
+                      lookedUpSpecs.drivetrain ||
+                      lookedUpSpecs.acceleration0100 != null ||
+                      lookedUpSpecs.topSpeedMph != null) ? (
+                      <dl className="grid gap-3 sm:gap-4 grid-cols-2 sm:grid-cols-3">
+                        <div className="flex flex-col gap-0.5 py-1">
+                          <dt className="text-xs uppercase tracking-wider text-slate-500 font-semibold">BHP</dt>
+                          <dd className="text-slate-900 font-semibold">
+                            {lookedUpSpecs.bhp != null ? lookedUpSpecs.bhp : "—"}
+                          </dd>
+                        </div>
+                        <div className="flex flex-col gap-0.5 py-1">
+                          <dt className="text-xs uppercase tracking-wider text-slate-500 font-semibold">Torque</dt>
+                          <dd className="text-slate-900 font-semibold">
+                            {lookedUpSpecs.torque != null ? `${lookedUpSpecs.torque} Nm` : "—"}
+                          </dd>
+                        </div>
+                        <div className="flex flex-col gap-0.5 py-1">
+                          <dt className="text-xs uppercase tracking-wider text-slate-500 font-semibold">Gearbox</dt>
+                          <dd className="text-slate-900 font-semibold">{lookedUpSpecs.gearbox || "—"}</dd>
+                        </div>
+                        <div className="flex flex-col gap-0.5 py-1">
+                          <dt className="text-xs uppercase tracking-wider text-slate-500 font-semibold">Drivetrain</dt>
+                          <dd className="text-slate-900 font-semibold">{lookedUpSpecs.drivetrain || "—"}</dd>
+                        </div>
+                        <div className="flex flex-col gap-0.5 py-1">
+                          <dt className="text-xs uppercase tracking-wider text-slate-500 font-semibold">0–60 mph</dt>
+                          <dd className="text-slate-900 font-semibold">
+                            {lookedUpSpecs.acceleration0100 != null
+                              ? `${lookedUpSpecs.acceleration0100}s`
+                              : "—"}
+                          </dd>
+                        </div>
+                        <div className="flex flex-col gap-0.5 py-1">
+                          <dt className="text-xs uppercase tracking-wider text-slate-500 font-semibold">Top speed</dt>
+                          <dd className="text-slate-900 font-semibold">
+                            {lookedUpSpecs.topSpeedMph != null ? `${lookedUpSpecs.topSpeedMph} mph` : "—"}
+                          </dd>
+                        </div>
+                      </dl>
+                    ) : null}
+                    <label className="block min-w-0 pt-2 border-t border-slate-100">
+                      <span className="text-sm text-slate-600 mb-1.5 block">Select trim</span>
+                      <select
+                        value={selectedSpecId}
+                        onChange={(e) => {
+                          const id = e.target.value;
+                          setSelectedSpecId(id);
+                          const match = specCandidates.find((c) => c.id === id);
+                          setLookedUpSpecs(match ?? null);
+                        }}
+                        className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                      >
+                        {specCandidates.map((c) => (
+                          <option key={c.id} value={c.id}>
+                            {c.label}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                  </>
+                ) : (
+                  <p className="text-slate-500 text-sm">
+                    No matching variants in our database for this vehicle.
+                  </p>
+                )}
+              </div>
             </section>
 
             <section className="rounded-3xl bg-white border border-slate-200/80 shadow-lg shadow-slate-200/30 ring-1 ring-slate-900/5 overflow-hidden">

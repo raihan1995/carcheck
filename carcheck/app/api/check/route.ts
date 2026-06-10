@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getCarSpecs, type CarSpecs } from "@/lib/car-specs-lookup";
+import { getSpecCandidates, type SpecCandidate } from "@/lib/car-specs-lookup";
 
 const DVLA_API_URL =
   "https://driver-vehicle-licensing.api.gov.uk/vehicle-enquiry/v1/vehicles";
@@ -175,7 +175,8 @@ async function fetchMotHistory(
 async function performVehicleCheck(registrationNumber: string): Promise<{
   vehicle: VehicleData;
   motHistory: MotHistoryVehicle[] | null;
-  specs: CarSpecs | null;
+  specCandidates: SpecCandidate[];
+  suggestedSpecId: string | null;
   demo?: boolean;
 }> {
   const apiKey = process.env.DVLA_API_KEY;
@@ -184,7 +185,8 @@ async function performVehicleCheck(registrationNumber: string): Promise<{
     return {
       vehicle: getMockVehicleData(registrationNumber),
       motHistory: null,
-      specs: null,
+      specCandidates: [],
+      suggestedSpecId: null,
       demo: true,
     };
   }
@@ -224,15 +226,16 @@ async function performVehicleCheck(registrationNumber: string): Promise<{
     logApiCheckError(motErr, "MOT");
   }
 
-  const specs = getCarSpecs(
+  const { candidates: specCandidates, suggestedId: suggestedSpecId } = getSpecCandidates(
     vehicle.make,
     motHistory?.[0]?.model,
     vehicle.yearOfManufacture,
     vehicle.engineCapacity,
-    vehicle.fuelType
+    vehicle.fuelType,
+    vehicle.co2Emissions
   );
 
-  return { vehicle, motHistory, specs };
+  return { vehicle, motHistory, specCandidates, suggestedSpecId };
 }
 
 export async function GET(request: NextRequest) {
@@ -300,7 +303,8 @@ export async function POST(request: NextRequest) {
           registrationNumber,
           vehicle: result.vehicle,
           motHistory: result.motHistory,
-          specs: result.specs,
+          specCandidates: result.specCandidates,
+          suggestedSpecId: result.suggestedSpecId,
         },
         { status: 503 }
       );
