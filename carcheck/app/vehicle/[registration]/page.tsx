@@ -94,13 +94,13 @@ function formatLabel(key: string): string {
 
 /** EU-style CO2 emission bands (g/km): range, label, and colour. Bar width is computed (A=25%, L-M=100%, rest evenly spread). */
 const CO2_BANDS = [
-  { min: 0, max: 101, label: "A", color: "bg-green-500" },
-  { min: 101, max: 120, label: "B-C", color: "bg-green-600" },
-  { min: 121, max: 140, label: "D-E", color: "bg-lime-500" },
-  { min: 141, max: 165, label: "F-G", color: "bg-yellow-500" },
-  { min: 166, max: 185, label: "H-I", color: "bg-amber-500" },
-  { min: 186, max: 225, label: "J-K", color: "bg-orange-500" },
-  { min: 225, max: Infinity, label: "L-M", color: "bg-red-500" },
+  { min: 0, max: 101, label: "A", color: "bg-green-500", textColor: "text-green-700" },
+  { min: 101, max: 120, label: "B-C", color: "bg-green-600", textColor: "text-green-700" },
+  { min: 121, max: 140, label: "D-E", color: "bg-lime-500", textColor: "text-lime-700" },
+  { min: 141, max: 165, label: "F-G", color: "bg-yellow-500", textColor: "text-yellow-700" },
+  { min: 166, max: 185, label: "H-I", color: "bg-amber-500", textColor: "text-amber-700" },
+  { min: 186, max: 225, label: "J-K", color: "bg-orange-500", textColor: "text-orange-700" },
+  { min: 225, max: Infinity, label: "L-M", color: "bg-red-500", textColor: "text-red-700" },
 ] as const;
 
 /** Get the band and display letter for a CO2 value (g/km). Returns null if no value. */
@@ -134,9 +134,6 @@ const ROAD_TAX_FIRST_YEAR_BANDS: { maxCo2: number; rates: [number, number] }[] =
 const ROAD_TAX_STANDARD_12_MONTH = 195;
 const ROAD_TAX_STANDARD_6_MONTH = 107.25;
 
-/** Expensive car supplement (list price over £40,000) — added to standard rate for 5 years (annual figure). */
-const ROAD_TAX_LUXURY_SUPPLEMENT_ANNUAL = 425;
-
 /** Bands for cars registered between 1 March 2001 and 31 March 2017. Petrol (TC48), diesel (TC49), alternative fuel (59), zero emission. */
 const ROAD_TAX_BANDS_2001_2017: {
   band: string;
@@ -163,20 +160,55 @@ const ROAD_TAX_BANDS_2001_2017: {
   { band: "M", minCo2: 256, maxCo2: Infinity, rate12Month: 760, rate12MonthDD: 760, rate12MonthlyInstalments: 798, rate6Month: 418, rate6MonthDD: 399 },
 ];
 
+type LegacyRoadTaxBand = { band: string; co2Range: string };
+
+/** GOV.UK A–M band from DVLA CO₂ (g/km). Returns null when CO₂ is missing or invalid. */
+function resolveLegacyRoadTaxBandDef(
+  co2: number | undefined,
+  monthOfFirstRegistration: string | undefined
+): (typeof ROAD_TAX_BANDS_2001_2017)[number] | null {
+  if (co2 == null || typeof co2 !== "number" || co2 < 0 || !Number.isFinite(co2)) return null;
+  const reg = monthOfFirstRegistration ?? "";
+  const beforeBandKExemption = reg < "2006-03-23";
+  let bandDef = ROAD_TAX_BANDS_2001_2017.find(
+    (b) => co2 >= b.minCo2 && (b.maxCo2 === Infinity || co2 <= b.maxCo2)
+  );
+  if (beforeBandKExemption && co2 > 225) bandDef = ROAD_TAX_BANDS_2001_2017.find((b) => b.band === "K");
+  if (!bandDef) bandDef = ROAD_TAX_BANDS_2001_2017[ROAD_TAX_BANDS_2001_2017.length - 1];
+  return bandDef;
+}
+
+function getLegacyRoadTaxBandFromCo2(
+  co2: number | undefined,
+  monthOfFirstRegistration: string | undefined
+): LegacyRoadTaxBand | null {
+  const bandDef = resolveLegacyRoadTaxBandDef(co2, monthOfFirstRegistration);
+  if (!bandDef) return null;
+  const co2Range =
+    bandDef.maxCo2 === Infinity ? `${bandDef.minCo2}+ g/km` : `${bandDef.minCo2}–${bandDef.maxCo2} g/km`;
+  return { band: bandDef.band, co2Range };
+}
+
 /** Pre-1 March 2001: tax by engine size only. Not over 1549cc / Over 1549cc. */
 const ROAD_TAX_PRE_2001_MAX_CC = 1549;
 const ROAD_TAX_PRE_2001_LOW = { rate12Month: 220, rate12MonthlyDD: 231 };
 const ROAD_TAX_PRE_2001_HIGH = { rate12Month: 360, rate12MonthlyDD: 378 };
 
 type RoadTaxResult =
-  | { period: "post2017"; firstYear: number; standard12Month: number; standard6Month: number; isOtherDiesel: boolean }
+  | {
+      period: "post2017";
+      firstYear: number | null;
+      standard12Month: number;
+      standard6Month: number;
+      isOtherDiesel: boolean;
+    }
   | {
       period: "2001_2017";
-      band: string;
-      co2Range: string;
-      rate12Month: number;
-      rate12MonthDD: number;
-      rate12MonthlyInstalments: number;
+      band: string | null;
+      co2Range: string | null;
+      rate12Month: number | null;
+      rate12MonthDD: number | null;
+      rate12MonthlyInstalments: number | null;
       rate6Month: number | null;
       rate6MonthDD: number | null;
     }
@@ -210,13 +242,19 @@ function getRoadTax(
 
   // 1 March 2001 – 31 March 2017: CO2 bands A–M (Band K includes >225g/km if registered before 23 March 2006)
   if (reg && reg >= "2001-03" && reg < "2017-04") {
-    const co2Val = co2 != null && Number.isFinite(co2) ? co2 : 0;
-    const beforeBandKExemption = reg < "2006-03-23";
-    let bandDef = ROAD_TAX_BANDS_2001_2017.find(
-      (b) => co2Val >= b.minCo2 && (b.maxCo2 === Infinity || co2Val <= b.maxCo2)
-    );
-    if (beforeBandKExemption && co2Val > 225) bandDef = ROAD_TAX_BANDS_2001_2017.find((b) => b.band === "K");
-    if (!bandDef) bandDef = ROAD_TAX_BANDS_2001_2017[ROAD_TAX_BANDS_2001_2017.length - 1];
+    const bandDef = resolveLegacyRoadTaxBandDef(co2, reg);
+    if (!bandDef) {
+      return {
+        period: "2001_2017",
+        band: null,
+        co2Range: null,
+        rate12Month: null,
+        rate12MonthDD: null,
+        rate12MonthlyInstalments: null,
+        rate6Month: null,
+        rate6MonthDD: null,
+      };
+    }
     const co2Range =
       bandDef.maxCo2 === Infinity ? `${bandDef.minCo2}+ g/km` : `${bandDef.minCo2}–${bandDef.maxCo2} g/km`;
     return {
@@ -233,16 +271,18 @@ function getRoadTax(
 
   // On or after 1 April 2017
   if (!reg || reg < "2017-04") return null;
-  if (co2 == null || typeof co2 !== "number" || co2 < 0) return null;
 
   const fuel = (fuelType ?? "").toUpperCase();
   const isDiesel = fuel.includes("DIESEL");
   const rde2 = (realDrivingEmissions ?? "").toUpperCase().includes("RDE2");
   const isOtherDiesel = isDiesel && !rde2;
-  const colIndex = isOtherDiesel ? 1 : 0;
 
-  const band = ROAD_TAX_FIRST_YEAR_BANDS.find((b) => co2 <= b.maxCo2);
-  const firstYear = band ? band.rates[colIndex] : 5490;
+  let firstYear: number | null = null;
+  if (co2 != null && typeof co2 === "number" && co2 >= 0 && Number.isFinite(co2)) {
+    const colIndex = isOtherDiesel ? 1 : 0;
+    const band = ROAD_TAX_FIRST_YEAR_BANDS.find((b) => co2 <= b.maxCo2);
+    firstYear = band ? band.rates[colIndex] : 5490;
+  }
 
   return {
     period: "post2017",
@@ -537,6 +577,10 @@ export default function VehiclePage() {
     vehicle.realDrivingEmissions,
     vehicle.engineCapacity
   );
+  const roadTaxLegacyBand = getLegacyRoadTaxBandFromCo2(
+    vehicle.co2Emissions,
+    vehicle.monthOfFirstRegistration
+  );
 
   const motTotal = motTests.length;
   const motPassed = motTests.filter((t) => (t.testResult ?? "").toUpperCase() === "PASSED").length;
@@ -739,6 +783,25 @@ export default function VehiclePage() {
   }
 
   const motValid = motExemptionActive || (motDaysLeft !== null && motDaysLeft > 0);
+
+  const vehicleRegAgeMs =
+    dvlaFirstRegMonthMs ??
+    motRegMonthMs ??
+    (Number.isFinite(motRegistrationDateMs) ? monthStartFromMs(motRegistrationDateMs) : null);
+  const vehicleAgeYearsForRoadTax =
+    vehicleRegAgeMs != null ? (nowMs - vehicleRegAgeMs) / (365.25 * 24 * 60 * 60 * 1000) : null;
+  /** First-year CO2 rate only relevant for cars still in (or near) their first tax period. */
+  const showFirstYearRoadTax =
+    roadTax?.period === "post2017" &&
+    roadTax.firstYear != null &&
+    vehicleAgeYearsForRoadTax != null &&
+    vehicleAgeYearsForRoadTax <= 2;
+
+  /** £40k+ supplement applies for 5 years — only mention while the car could still be in that window. */
+  const showLuxuryCarTaxNote =
+    roadTax?.period === "post2017" &&
+    vehicleAgeYearsForRoadTax != null &&
+    vehicleAgeYearsForRoadTax <= 5;
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-slate-50 text-slate-800 overflow-x-hidden">
@@ -1150,57 +1213,83 @@ export default function VehiclePage() {
                   {roadTax.period === "post2017" && (
                     <>
                       <dl className="p-4 sm:p-6 grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2">
-                        <div className="flex flex-col gap-0.5 py-1">
-                          <dt className="text-xs uppercase tracking-wider text-slate-500 font-semibold">First year (12 months)</dt>
-                          <dd className="text-slate-900 font-semibold text-lg">£{roadTax.firstYear.toLocaleString()}</dd>
-                        </div>
+                        {roadTaxLegacyBand && (
+                          <div className="flex flex-col gap-0.5 py-1 sm:col-span-2">
+                            <dt className="text-xs uppercase tracking-wider text-slate-500 font-semibold">Band</dt>
+                            <dd
+                              className={`font-semibold text-lg ${
+                                co2Band?.band.textColor ?? "text-slate-900"
+                              }`}
+                            >
+                              {roadTaxLegacyBand.band}: {roadTaxLegacyBand.co2Range}
+                            </dd>
+                          </div>
+                        )}
+                        {showFirstYearRoadTax && (
+                          <div className="flex flex-col gap-0.5 py-1">
+                            <dt className="text-xs uppercase tracking-wider text-slate-500 font-semibold">
+                              First year (12 months)
+                            </dt>
+                            <dd className="text-slate-900 font-semibold text-lg">
+                              £{roadTax.firstYear.toLocaleString()}
+                            </dd>
+                          </div>
+                        )}
                         <div className="flex flex-col gap-0.5 py-1">
                           <dt className="text-xs uppercase tracking-wider text-slate-500 font-semibold">12 month payment</dt>
                           <dd className="text-slate-900 font-semibold text-lg">
-                            £{roadTax.standard12Month.toLocaleString()}{" "}
-                            <span
-                              className="text-slate-600 font-semibold"
-                              title="Standard rate plus £425/year expensive car supplement (list price over £40,000)"
-                            >
-                              (£{(roadTax.standard12Month + ROAD_TAX_LUXURY_SUPPLEMENT_ANNUAL).toLocaleString()})
-                            </span>
+                            £{roadTax.standard12Month.toLocaleString()}
                           </dd>
                         </div>
                         <div className="flex flex-col gap-0.5 py-1">
                           <dt className="text-xs uppercase tracking-wider text-slate-500 font-semibold">6 month payment</dt>
                           <dd className="text-slate-900 font-semibold text-lg">
-                            £{roadTax.standard6Month.toFixed(2)}{" "}
-                            <span
-                              className="text-slate-600 font-semibold"
-                              title="6-month payment plus half the annual £425 expensive car supplement (pro rata)"
-                            >
-                              (£{(roadTax.standard6Month + ROAD_TAX_LUXURY_SUPPLEMENT_ANNUAL / 2).toFixed(2)})
-                            </span>
+                            £{roadTax.standard6Month.toFixed(2)}
                           </dd>
                         </div>
                       </dl>
-                      <p className="px-4 sm:px-6 pb-4 sm:pb-6 text-xs text-slate-500">
-                        Cars with a list price over £40,000 may pay an extra £425/year for 5 years.
-                      </p>
+                      {showLuxuryCarTaxNote && (
+                        <p className="px-4 sm:px-6 pb-4 sm:pb-6 text-xs text-slate-500">
+                          Cars with a list price over £40,000 may pay an extra £425/year for 5 years.
+                        </p>
+                      )}
                     </>
                   )}
                   {roadTax.period === "2001_2017" && (
                     <dl className="p-4 sm:p-6 grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2">
                       <div className="flex flex-col gap-0.5 py-1 sm:col-span-2">
                         <dt className="text-xs uppercase tracking-wider text-slate-500 font-semibold">Band</dt>
-                        <dd className="text-slate-900 font-semibold text-lg">{roadTax.band}: {roadTax.co2Range}</dd>
+                        {roadTax.band && roadTax.co2Range ? (
+                          <dd
+                            className={`font-semibold text-lg ${
+                              co2Band?.band.textColor ?? "text-slate-900"
+                            }`}
+                          >
+                            {roadTax.band}: {roadTax.co2Range}
+                          </dd>
+                        ) : (
+                          <dd className="text-slate-500 font-semibold text-lg">Band unavailable — CO₂ emissions required</dd>
+                        )}
                       </div>
                       <div className="flex flex-col gap-0.5 py-1">
                         <dt className="text-xs uppercase tracking-wider text-slate-500 font-semibold">Single 12 month payment</dt>
-                        <dd className="text-slate-900 font-semibold text-lg">£{roadTax.rate12Month.toLocaleString()}</dd>
+                        <dd className="text-slate-900 font-semibold text-lg">
+                          {roadTax.rate12Month != null ? `£${roadTax.rate12Month.toLocaleString()}` : "—"}
+                        </dd>
                       </div>
                       <div className="flex flex-col gap-0.5 py-1">
                         <dt className="text-xs uppercase tracking-wider text-slate-500 font-semibold">12 monthly instalments (DD)</dt>
-                        <dd className="text-slate-900 font-semibold text-lg">£{roadTax.rate12MonthlyInstalments.toLocaleString()}</dd>
+                        <dd className="text-slate-900 font-semibold text-lg">
+                          {roadTax.rate12MonthlyInstalments != null
+                            ? `£${roadTax.rate12MonthlyInstalments.toLocaleString()}`
+                            : "—"}
+                        </dd>
                       </div>
                       <div className="flex flex-col gap-0.5 py-1">
                         <dt className="text-xs uppercase tracking-wider text-slate-500 font-semibold">Single 6 month payment</dt>
-                        <dd className="text-slate-900 font-semibold text-lg">{roadTax.rate6Month != null ? `£${roadTax.rate6Month.toFixed(2)}` : "N/A"}</dd>
+                        <dd className="text-slate-900 font-semibold text-lg">
+                          {roadTax.rate6Month != null ? `£${roadTax.rate6Month.toFixed(2)}` : "N/A"}
+                        </dd>
                       </div>
                     </dl>
                   )}
