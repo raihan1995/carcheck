@@ -1225,7 +1225,7 @@ export default function VehiclePage() {
                             </dd>
                           </div>
                         )}
-                        {showFirstYearRoadTax && (
+                        {showFirstYearRoadTax && roadTax.firstYear != null && (
                           <div className="flex flex-col gap-0.5 py-1">
                             <dt className="text-xs uppercase tracking-wider text-slate-500 font-semibold">
                               First year (12 months)
