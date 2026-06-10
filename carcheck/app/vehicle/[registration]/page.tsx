@@ -303,8 +303,20 @@ function getRoadTax(
 
 function parseEuroNumber(euroStatus: string | undefined): number {
   if (!euroStatus || typeof euroStatus !== "string") return NaN;
-  const match = euroStatus.toUpperCase().match(/EURO\s*(\d+)/i);
-  return match ? parseInt(match[1], 10) : NaN;
+  const trimmed = euroStatus.trim();
+  if (!trimmed || trimmed === "—" || trimmed === "-") return NaN;
+
+  const upper = trimmed.toUpperCase();
+
+  // EURO 6, EURO6, EURO 6 AD, EURO6D-TEMP, etc.
+  const euroMatch = upper.match(/EURO\s*(\d+)/);
+  if (euroMatch) return parseInt(euroMatch[1], 10);
+
+  // Shorthand without EURO prefix: "5B", "5b", "6" (common on V5C / third-party data)
+  const shortMatch = upper.match(/^(\d)\s*[A-Z]?$/);
+  if (shortMatch) return parseInt(shortMatch[1], 10);
+
+  return NaN;
 }
 
 /** TfL-style ULEZ compliance using DVLA VES data. Returns null when unknown. */
@@ -316,6 +328,7 @@ function getUlezCompliance(vehicle: {
 }): boolean | null {
   const fuel = (vehicle.fuelType ?? "").toUpperCase();
   const euro = parseEuroNumber(vehicle.euroStatus);
+  const hasEuro = !Number.isNaN(euro);
   const reg = vehicle.monthOfFirstRegistration ?? ""; // YYYY-MM
 
   // Electric: always compliant
@@ -324,24 +337,25 @@ function getUlezCompliance(vehicle: {
   // Motorcycles / mopeds (type approval L1e, L2e, L3e, L4e, L5e)
   const isMotorcycle = /^L[1-5]/.test((vehicle.typeApproval ?? "").toUpperCase());
   if (isMotorcycle) {
-    if (!Number.isNaN(euro)) return euro >= 3;
+    if (hasEuro) return euro >= 3;
     return reg >= "2007-07" ? true : reg ? false : null;
   }
 
   // Petrol: Euro 4+ or registered on or after 1 Jan 2006
   if (fuel.includes("PETROL")) {
-    if (!Number.isNaN(euro)) return euro >= 4;
+    if (hasEuro) return euro >= 4;
     return reg >= "2006-01" ? true : reg ? false : null;
   }
 
-  // Diesel: Euro 6+ or registered on or after 1 Sep 2015
+  // Diesel: Euro 6+ when known; post-Sep 2015 reg assumed compliant; earlier = unknown if no Euro
   if (fuel.includes("DIESEL")) {
-    if (!Number.isNaN(euro)) return euro >= 6;
-    return reg >= "2015-09" ? true : reg ? false : null;
+    if (hasEuro) return euro >= 6;
+    if (reg >= "2015-09") return true;
+    return null;
   }
 
   // Other fuel (e.g. hybrid without electric): use Euro 6 if known, else unknown
-  if (!Number.isNaN(euro)) return euro >= 6;
+  if (hasEuro) return euro >= 6;
   return null;
 }
 
@@ -867,26 +881,50 @@ export default function VehiclePage() {
           )}
         </header>
 
-        {ulezCompliant !== null && (
+        {vehicle.fuelType && (
           <div
             className={`rounded-2xl border-2 px-4 sm:px-6 py-4 mb-4 sm:mb-6 shadow-md ${
-              ulezCompliant
+              ulezCompliant === true
                 ? "bg-gradient-to-br from-emerald-50 to-emerald-50/80 border-emerald-300/80 shadow-emerald-200/20"
-                : "bg-gradient-to-br from-red-50 to-red-50/80 border-red-300/80 shadow-red-200/20"
+                : ulezCompliant === false
+                  ? "bg-gradient-to-br from-red-50 to-red-50/80 border-red-300/80 shadow-red-200/20"
+                  : "bg-gradient-to-br from-amber-50 to-amber-50/80 border-amber-300/80 shadow-amber-200/20"
             }`}
           >
             <p
               className={`text-base sm:text-lg font-bold ${
-                ulezCompliant ? "text-emerald-800" : "text-red-800"
+                ulezCompliant === true
+                  ? "text-emerald-800"
+                  : ulezCompliant === false
+                    ? "text-red-800"
+                    : "text-amber-900"
               }`}
             >
-              {ulezCompliant ? "✓ ULEZ compliant" : "⚠ Not ULEZ compliant"}
+              {ulezCompliant === true
+                ? "✓ ULEZ compliant"
+                : ulezCompliant === false
+                  ? "⚠ Not ULEZ compliant"
+                  : "? ULEZ status unknown"}
             </p>
-            <p className={`mt-0.5 text-xs sm:text-sm font-medium ${ulezCompliant ? "text-emerald-700" : "text-red-700"}`}>
-              {vehicle.euroStatus ? `Euro status: ${vehicle.euroStatus}` : "Based on DVLA data"}
+            <p
+              className={`mt-0.5 text-xs sm:text-sm font-medium ${
+                ulezCompliant === true
+                  ? "text-emerald-700"
+                  : ulezCompliant === false
+                    ? "text-red-700"
+                    : "text-amber-800"
+              }`}
+            >
+              {vehicle.euroStatus
+                ? `Euro status: ${vehicle.euroStatus}`
+                : ulezCompliant === null &&
+                    (vehicle.fuelType ?? "").toUpperCase().includes("DIESEL") &&
+                    (vehicle.monthOfFirstRegistration ?? "") < "2015-09"
+                  ? "Euro status not held by DVLA — some pre-2015 diesels are still Euro 6"
+                  : "Based on DVLA registration data"}
             </p>
             <p className="mt-1.5 text-xs sm:text-sm text-slate-600">
-              Check your vehicle on{" "}
+              {ulezCompliant === null ? "Confirm on " : "Check your vehicle on "}
               <a
                 href="https://tfl.gov.uk/modes/driving/check-your-vehicle/"
                 target="_blank"
