@@ -95,22 +95,22 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-slate-50 text-slate-800">
+    <div className="min-h-screen bg-gradient-to-b from-background via-background-elevated to-background text-foreground">
       <div className="mx-auto max-w-2xl px-4 py-8 sm:py-16 sm:px-6">
         <header className="text-center mb-10 sm:mb-14">
           <div className="flex justify-center mb-6">
             <RevVealLogo variant="full" className="h-20 w-auto sm:h-24" />
           </div>
-          <p className="mt-3 text-slate-500 text-base sm:text-lg max-w-sm mx-auto">
+          <p className="mt-3 text-muted text-base sm:text-lg max-w-sm mx-auto">
             Enter a UK number plate to view vehicle details, MOT history and ULEZ status
           </p>
         </header>
 
         <form
           onSubmit={handleSubmit}
-          className="relative rounded-3xl bg-white/80 backdrop-blur-sm border border-slate-200/80 p-5 sm:p-8 shadow-xl shadow-slate-200/50 ring-1 ring-slate-900/5"
+          className="relative rounded-3xl bg-card/80 backdrop-blur-sm border border-card-border p-5 sm:p-8 shadow-xl shadow-black/40 ring-1 ring-white/5"
         >
-          <label htmlFor="plate" className="block text-sm font-semibold text-slate-600 mb-3">
+          <label htmlFor="plate" className="block text-sm font-semibold text-muted mb-3">
             Registration number
           </label>
           <div className="flex flex-col sm:flex-row gap-3">
@@ -120,7 +120,7 @@ export default function Home() {
               value={plate}
               onChange={(e) => setPlate(e.target.value.toUpperCase())}
               placeholder="e.g. AB12 CDE"
-              className="flex-1 min-h-[52px] rounded-xl bg-slate-50/80 border border-slate-200 text-slate-900 placeholder-slate-400 px-4 py-3.5 text-base sm:text-lg font-mono tracking-widest sm:tracking-[0.2em] focus:outline-none focus:ring-2 focus:ring-amber-400/60 focus:border-amber-400 focus:bg-white transition-all"
+              className="flex-1 min-h-[52px] rounded-xl bg-surface border border-card-border text-foreground placeholder-muted/50 px-4 py-3.5 text-base sm:text-lg font-mono tracking-widest sm:tracking-[0.2em] focus:outline-none focus:ring-2 focus:ring-amber-400/60 focus:border-amber-500 transition-all"
               disabled={loading}
               autoComplete="off"
               autoFocus
@@ -128,21 +128,21 @@ export default function Home() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full sm:w-auto sm:shrink-0 min-h-[52px] px-8 py-3.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 text-white font-semibold shadow-lg shadow-amber-500/30 hover:from-amber-600 hover:to-amber-700 hover:shadow-amber-500/40 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:ring-offset-2 disabled:opacity-60 disabled:cursor-not-allowed transition-all duration-200 touch-manipulation"
+              className="w-full sm:w-auto sm:shrink-0 min-h-[52px] px-8 py-3.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 text-white font-semibold shadow-lg shadow-amber-500/25 hover:from-amber-600 hover:to-amber-700 hover:shadow-amber-500/35 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:ring-offset-2 focus:ring-offset-background disabled:opacity-60 disabled:cursor-not-allowed transition-all duration-200 touch-manipulation"
             >
               {loading ? "Checking…" : "Check"}
             </button>
           </div>
           {error && (
-            <p className="mt-3 text-sm text-red-600 font-medium" role="alert">
+            <p className="mt-3 text-sm text-red-400 font-medium" role="alert">
               {error}
             </p>
           )}
         </form>
 
         {recentRegs.length > 0 && (
-          <section className="mt-6 rounded-2xl border border-slate-200/80 bg-white/70 px-4 py-3.5 sm:px-5 sm:py-4 shadow-sm shadow-slate-200/60">
-            <p className="text-[11px] sm:text-xs font-semibold uppercase tracking-wider text-slate-500">
+          <section className="mt-6 rounded-2xl border border-card-border bg-card/70 px-4 py-3.5 sm:px-5 sm:py-4 shadow-sm shadow-black/20">
+            <p className="text-[11px] sm:text-xs font-semibold uppercase tracking-wider text-muted">
               Recent checks
             </p>
             <div className="mt-2 flex flex-wrap gap-2">
@@ -151,7 +151,7 @@ export default function Home() {
                   key={reg}
                   type="button"
                   onClick={() => handleRecentClick(reg)}
-                  className="inline-flex items-center px-3 py-1.5 rounded-full border border-slate-200 bg-slate-50/80 text-xs sm:text-sm font-mono tracking-widest sm:tracking-[0.18em] text-slate-800 hover:bg-amber-50 hover:border-amber-300 hover:text-amber-900 transition-colors"
+                  className="inline-flex items-center px-3 py-1.5 rounded-full border border-card-border bg-surface text-xs sm:text-sm font-mono tracking-widest sm:tracking-[0.18em] text-foreground hover:bg-amber-500/15 hover:border-amber-500/40 hover:text-amber-400 transition-colors"
                 >
                   {reg}
                 </button>
@@ -160,7 +160,7 @@ export default function Home() {
           </section>
         )}
 
-        <footer className="mt-14 pb-8 sm:pb-0 text-center text-slate-400 text-sm px-2">
+        <footer className="mt-14 pb-8 sm:pb-0 text-center text-muted/60 text-sm px-2">
           <p>
             Data from the DVLA Vehicle Enquiry Service and MOT History API. For official use only.
           </p>

@@ -4,7 +4,7 @@ import { SiteHeader } from "./components/SiteHeader";
 import { UmamiAnalytics } from "./components/UmamiAnalytics";
 import "./globals.css";
 
-/** UI v2: Plus Jakarta Sans, gradient backgrounds, elevated white cards, amber accents, ULEZ ✓/✗ block. */
+/** Dark UI: Plus Jakarta Sans, elevated cards, amber accents. */
 const plusJakarta = Plus_Jakarta_Sans({
   subsets: ["latin"],
   display: "swap",
@@ -27,8 +27,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="overflow-x-hidden">
-      <body className={`${plusJakarta.className} antialiased overflow-x-hidden min-h-screen flex flex-col`}>
+    <html lang="en" className="overflow-x-hidden bg-background">
+      <body
+        className={`${plusJakarta.className} antialiased overflow-x-hidden min-h-screen flex flex-col bg-background text-foreground`}
+      >
         <SiteHeader />
         <main className="flex-1">{children}</main>
         <UmamiAnalytics />

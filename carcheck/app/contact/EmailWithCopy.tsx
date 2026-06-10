@@ -21,7 +21,7 @@ export function EmailWithCopy() {
     <div className="mt-2 flex flex-wrap items-center gap-2 sm:gap-3">
       <a
         href={`mailto:${EMAIL}`}
-        className="text-lg font-semibold text-amber-700 hover:underline break-all min-w-0"
+        className="text-lg font-semibold text-amber-400 hover:underline break-all min-w-0"
       >
         {EMAIL}
       </a>
@@ -29,11 +29,11 @@ export function EmailWithCopy() {
         type="button"
         onClick={copy}
         aria-label={copied ? "Copied" : "Copy email address"}
-        className="shrink-0 inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-100 hover:border-slate-300 transition-colors touch-manipulation"
+        className="shrink-0 inline-flex items-center gap-1.5 rounded-lg border border-card-border bg-surface px-3 py-1.5 text-sm font-medium text-foreground shadow-sm hover:bg-surface/80 hover:border-muted/40 transition-colors touch-manipulation"
       >
         {copied ? (
           <>
-            <svg className="w-4 h-4 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden>
+            <svg className="w-4 h-4 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden>
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
             </svg>
             Copied
