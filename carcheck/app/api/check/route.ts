@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSpecCandidates, type SpecCandidate } from "@/lib/car-specs-lookup";
+import { getSampleVehicleCheck, isSampleRegistration } from "@/lib/sample-vehicle-data";
 
 const DVLA_API_URL =
   "https://driver-vehicle-licensing.api.gov.uk/vehicle-enquiry/v1/vehicles";
@@ -178,7 +179,12 @@ async function performVehicleCheck(registrationNumber: string): Promise<{
   specCandidates: SpecCandidate[];
   suggestedSpecId: string | null;
   demo?: boolean;
+  sample?: boolean;
 }> {
+  if (isSampleRegistration(registrationNumber)) {
+    return getSampleVehicleCheck();
+  }
+
   const apiKey = process.env.DVLA_API_KEY;
 
   if (!apiKey) {

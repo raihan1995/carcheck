@@ -43,3 +43,7 @@ next-env.d.ts
 
 # Large CSV / raw data (keep outside repo)
 # data/*.csv
+
+# Auth database (local SQLite)
+data/revveal.db
+data/revveal.db-*

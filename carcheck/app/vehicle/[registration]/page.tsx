@@ -74,6 +74,7 @@ type ApiResponse = {
   specCandidates?: SpecCandidate[];
   suggestedSpecId?: string | null;
   demo?: boolean;
+  sample?: boolean;
   error?: string;
 };
 
@@ -603,7 +604,7 @@ export default function VehiclePage() {
     );
   }
 
-  const { vehicle, motHistory, specCandidates = [], demo } = data;
+  const { vehicle, motHistory, specCandidates = [], demo, sample } = data;
   const primaryMot = motHistory?.[0];
   const motTests = primaryMot?.motTests ?? [];
   const mileageSummary = computeYearlyAverageMileage(vehicle.monthOfFirstRegistration, motTests);
@@ -853,7 +854,13 @@ export default function VehiclePage() {
           Back to check another vehicle
         </Link>
 
-        {demo && (
+        {sample && (
+          <div className="mb-4 sm:mb-6 rounded-2xl bg-blue-950/40 border border-blue-700/50 px-4 py-3.5 text-blue-200 text-sm shadow-sm">
+            <span className="font-semibold text-blue-300">Sample</span> — example vehicle data
+            showing a typical RevVeal check. Premium details will be added here later.
+          </div>
+        )}
+        {demo && !sample && (
           <div className="mb-4 sm:mb-6 rounded-2xl bg-amber-950/40 border border-amber-700/50 px-4 py-3.5 text-amber-300 text-sm shadow-sm">
             Demo data — add <code className="bg-amber-900/50 px-1.5 py-0.5 rounded font-mono text-xs break-all">DVLA_API_KEY</code> and MOT credentials to your <code className="bg-amber-900/50 px-1.5 py-0.5 rounded font-mono text-xs break-all">.env</code> for real results.
           </div>

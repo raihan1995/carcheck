@@ -8,10 +8,19 @@ A UK number plate lookup site. Enter a registration to see vehicle details (make
 
 ```bash
 npm install
+cp .env.example .env
+# Add AUTH_SECRET (min 32 chars), e.g. openssl rand -base64 32
 npm run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000).
+
+## Accounts (login / register)
+
+- **Register** (`/register`) — first name, surname, email, password (min 10 chars, 1 capital, 1 special), confirm password.
+- **Login** (`/login`) — email and password only; link to forgot password and sign up.
+- Passwords are stored as **bcrypt** hashes in SQLite (`data/revveal.db` locally).
+- Set `AUTH_SECRET` in `.env`. Optional: `RESEND_API_KEY` for password reset emails; without it, reset links are logged in dev only.
 
 ## Real vehicle data
 

@@ -1,18 +1,73 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import { useCallback, useEffect, useState } from "react";
 import { RevVealLogo } from "./RevVealLogo";
+
+type SessionUser = {
+  userId: string;
+  email: string;
+  firstName: string;
+  surname: string;
+};
+
+const SAMPLE_REPORT_PATH = "/vehicle/SAMPLE";
 
 const navLinks = [
   { href: "/", label: "Home" },
   { href: "/contact", label: "Contact us" },
+  { href: SAMPLE_REPORT_PATH, label: "Sample" },
 ];
 
 export function SiteHeader() {
   const pathname = usePathname();
+  const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [user, setUser] = useState<SessionUser | null>(null);
+  const [loggingOut, setLoggingOut] = useState(false);
+
+  const loadSession = useCallback(async () => {
+    try {
+      const res = await fetch("/api/auth/session");
+      const data = await res.json();
+      setUser(data.user ?? null);
+    } catch {
+      setUser(null);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadSession();
+  }, [loadSession, pathname]);
+
+  async function handleLogout() {
+    setLoggingOut(true);
+    try {
+      await fetch("/api/auth/logout", { method: "POST" });
+      setUser(null);
+      setMenuOpen(false);
+      router.push("/");
+      router.refresh();
+    } finally {
+      setLoggingOut(false);
+    }
+  }
+
+  function isNavActive(href: string): boolean {
+    if (href === SAMPLE_REPORT_PATH) {
+      return pathname === SAMPLE_REPORT_PATH || pathname === "/vehicle/sample";
+    }
+    return pathname === href;
+  }
+
+  function navLinkClass(href: string) {
+    return `rounded-lg px-4 py-2.5 text-sm font-medium transition-colors ${
+      isNavActive(href)
+        ? "bg-amber-500/15 text-amber-400"
+        : "text-muted hover:bg-surface hover:text-foreground"
+    }`;
+  }
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-card-border bg-card/95 backdrop-blur-sm shadow-sm shadow-black/20">
@@ -27,18 +82,51 @@ export function SiteHeader() {
 
         <nav className="hidden md:flex md:items-center md:gap-1">
           {navLinks.map(({ href, label }) => (
-            <Link
-              key={href}
-              href={href}
-              className={`rounded-lg px-4 py-2.5 text-sm font-medium transition-colors ${
-                pathname === href
-                  ? "bg-amber-500/15 text-amber-400"
-                  : "text-muted hover:bg-surface hover:text-foreground"
-              }`}
-            >
+            <Link key={href} href={href} className={navLinkClass(href)}>
               {label}
             </Link>
           ))}
+          {user ? (
+            <>
+              <Link
+                href="/dashboard"
+                className={`rounded-lg px-3 py-2.5 text-sm font-medium transition-colors hidden lg:inline ${
+                  pathname === "/dashboard"
+                    ? "bg-amber-500/15 text-amber-400"
+                    : "text-muted hover:bg-surface hover:text-amber-400"
+                }`}
+              >
+                Hi, {user.firstName}
+              </Link>
+              <Link
+                href="/dashboard"
+                className={`rounded-lg px-4 py-2.5 text-sm font-medium transition-colors lg:hidden ${
+                  pathname === "/dashboard"
+                    ? "bg-amber-500/15 text-amber-400"
+                    : "text-muted hover:bg-surface hover:text-foreground"
+                }`}
+              >
+                Account
+              </Link>
+              <button
+                type="button"
+                onClick={handleLogout}
+                disabled={loggingOut}
+                className="rounded-lg px-4 py-2.5 text-sm font-medium text-muted hover:bg-surface hover:text-foreground transition-colors disabled:opacity-60"
+              >
+                {loggingOut ? "Logging out…" : "Log out"}
+              </button>
+            </>
+          ) : (
+            <>
+              <Link href="/login" className={navLinkClass("/login")}>
+                Login
+              </Link>
+              <Link href="/register" className={navLinkClass("/register")}>
+                Register
+              </Link>
+            </>
+          )}
         </nav>
 
         <button
@@ -75,7 +163,7 @@ export function SiteHeader() {
                   href={href}
                   onClick={() => setMenuOpen(false)}
                   className={`px-4 py-3.5 text-base font-medium ${
-                    pathname === href
+                    isNavActive(href)
                       ? "bg-amber-500/15 text-amber-400"
                       : "text-foreground/90 hover:bg-surface"
                   }`}
@@ -83,6 +171,54 @@ export function SiteHeader() {
                   {label}
                 </Link>
               ))}
+              {user ? (
+                <>
+                  <Link
+                    href="/dashboard"
+                    onClick={() => setMenuOpen(false)}
+                    className={`px-4 py-3.5 text-base font-medium border-t border-card-border mt-1 ${
+                      pathname === "/dashboard"
+                        ? "bg-amber-500/15 text-amber-400"
+                        : "text-foreground/90 hover:bg-surface"
+                    }`}
+                  >
+                    {user.firstName} {user.surname} — Dashboard
+                  </Link>
+                  <button
+                    type="button"
+                    onClick={handleLogout}
+                    disabled={loggingOut}
+                    className="px-4 py-3.5 text-base font-medium text-left text-foreground/90 hover:bg-surface disabled:opacity-60"
+                  >
+                    {loggingOut ? "Logging out…" : "Log out"}
+                  </button>
+                </>
+              ) : (
+                <>
+                  <Link
+                    href="/login"
+                    onClick={() => setMenuOpen(false)}
+                    className={`px-4 py-3.5 text-base font-medium ${
+                      pathname === "/login"
+                        ? "bg-amber-500/15 text-amber-400"
+                        : "text-foreground/90 hover:bg-surface"
+                    }`}
+                  >
+                    Login
+                  </Link>
+                  <Link
+                    href="/register"
+                    onClick={() => setMenuOpen(false)}
+                    className={`px-4 py-3.5 text-base font-medium ${
+                      pathname === "/register"
+                        ? "bg-amber-500/15 text-amber-400"
+                        : "text-foreground/90 hover:bg-surface"
+                    }`}
+                  >
+                    Register
+                  </Link>
+                </>
+              )}
             </nav>
           </div>
         </>
