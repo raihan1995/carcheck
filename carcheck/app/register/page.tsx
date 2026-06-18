@@ -1,5 +1,7 @@
 import { redirect } from "next/navigation";
+import { Suspense } from "react";
 
+import { AuthShell } from "@/app/components/auth/AuthShell";
 import { createClient } from "@/lib/supabase/server";
 
 import { RegisterForm } from "./RegisterForm";
@@ -19,5 +21,15 @@ export default async function RegisterPage() {
     redirect("/dashboard/reports");
   }
 
-  return <RegisterForm />;
+  return (
+    <Suspense
+      fallback={
+        <AuthShell title="Create account" subtitle="Sign up for a free RevVeal account.">
+          <p className="text-muted text-sm">Loading…</p>
+        </AuthShell>
+      }
+    >
+      <RegisterForm />
+    </Suspense>
+  );
 }

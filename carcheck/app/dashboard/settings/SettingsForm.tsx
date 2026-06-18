@@ -141,6 +141,9 @@ export function SettingsForm() {
     <div className="space-y-8">
       <form onSubmit={handleProfileSubmit} className="space-y-4">
         <h2 className="text-xs uppercase tracking-wider text-muted font-semibold">Profile</h2>
+        <p className="text-sm text-muted -mt-2">
+          Add your name anytime — used to personalise your dashboard.
+        </p>
         <AuthField
           id="settings-firstName"
           label="First name"
@@ -148,6 +151,7 @@ export function SettingsForm() {
           onChange={setFirstName}
           autoComplete="given-name"
           disabled={savingProfile}
+          hint="Optional"
         />
         <AuthField
           id="settings-surname"
@@ -156,6 +160,7 @@ export function SettingsForm() {
           onChange={setSurname}
           autoComplete="family-name"
           disabled={savingProfile}
+          hint="Optional"
         />
         {profileError && <p className="text-sm text-red-400">{profileError}</p>}
         {profileMessage && <p className="text-sm text-emerald-400">{profileMessage}</p>}

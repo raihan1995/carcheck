@@ -21,16 +21,11 @@ export function validatePassword(password: string): string | null {
 }
 
 export function validateRegisterFields(input: {
-  firstName: string;
-  surname: string;
   email: string;
   password: string;
   confirmPassword: string;
 }): Record<string, string> {
   const errors: Record<string, string> = {};
-
-  if (!input.firstName.trim()) errors.firstName = "First name is required.";
-  if (!input.surname.trim()) errors.surname = "Surname is required.";
 
   const email = input.email.trim().toLowerCase();
   if (!email) errors.email = "Email is required.";

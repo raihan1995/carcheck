@@ -1,18 +1,21 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { FormEvent, useState } from "react";
 
+import { AuthDivider } from "@/app/components/auth/AuthDivider";
 import { AuthField } from "@/app/components/auth/AuthField";
 import { AuthShell } from "@/app/components/auth/AuthShell";
+import { AuthGoogleButton, AuthMagicLinkButton } from "@/app/components/auth/AuthSocial";
+import { buildAuthCallbackUrl, safeRedirectPath } from "@/lib/auth/redirect";
 import { PASSWORD_HINT, validateRegisterFields } from "@/lib/auth/password";
 import { createClient } from "@/lib/supabase/client";
 
 export function RegisterForm() {
   const router = useRouter();
-  const [firstName, setFirstName] = useState("");
-  const [surname, setSurname] = useState("");
+  const searchParams = useSearchParams();
+  const nextPath = searchParams.get("next");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -21,14 +24,18 @@ export function RegisterForm() {
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
 
-  async function handleSubmit(e: FormEvent) {
-    e.preventDefault();
+  const loginHref = nextPath ? `/login?next=${encodeURIComponent(nextPath)}` : "/login";
+
+  function clearMessages() {
     setError(null);
     setSuccess(null);
+  }
+
+  async function handleSubmit(e: FormEvent) {
+    e.preventDefault();
+    clearMessages();
 
     const errors = validateRegisterFields({
-      firstName,
-      surname,
       email,
       password,
       confirmPassword,
@@ -42,17 +49,11 @@ export function RegisterForm() {
 
     try {
       const supabase = createClient();
-      const origin = window.location.origin;
+      const emailRedirectTo = buildAuthCallbackUrl(window.location.origin, nextPath);
       const { data, error: signUpError } = await supabase.auth.signUp({
         email: email.trim().toLowerCase(),
         password,
-        options: {
-          data: {
-            first_name: firstName.trim(),
-            surname: surname.trim(),
-          },
-          emailRedirectTo: `${origin}/auth/callback?next=/dashboard/reports`,
-        },
+        options: { emailRedirectTo },
       });
 
       if (signUpError) {
@@ -61,7 +62,7 @@ export function RegisterForm() {
       }
 
       if (data.session) {
-        router.push("/dashboard/reports");
+        router.push(safeRedirectPath(nextPath));
         router.refresh();
         return;
       }
@@ -76,25 +77,16 @@ export function RegisterForm() {
 
   return (
     <AuthShell title="Create account" subtitle="Sign up for a free RevVeal account.">
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <AuthField
-          id="firstName"
-          label="First name"
-          value={firstName}
-          onChange={setFirstName}
-          autoComplete="given-name"
+      <div className="space-y-6">
+        <AuthGoogleButton
+          nextPath={nextPath}
           disabled={loading}
-          error={fieldErrors.firstName}
+          onError={setError}
+          onClearMessages={clearMessages}
         />
-        <AuthField
-          id="surname"
-          label="Surname"
-          value={surname}
-          onChange={setSurname}
-          autoComplete="family-name"
-          disabled={loading}
-          error={fieldErrors.surname}
-        />
+
+        <AuthDivider />
+
         <AuthField
           id="email"
           label="Email"
@@ -105,51 +97,65 @@ export function RegisterForm() {
           disabled={loading}
           error={fieldErrors.email}
         />
-        <AuthField
-          id="password"
-          label="Password"
-          type="password"
-          value={password}
-          onChange={setPassword}
-          autoComplete="new-password"
+
+        <AuthMagicLinkButton
+          email={email}
+          nextPath={nextPath}
           disabled={loading}
-          hint={PASSWORD_HINT}
-          error={fieldErrors.password}
+          onError={setError}
+          onSuccess={setSuccess}
+          onClearMessages={clearMessages}
         />
-        <AuthField
-          id="confirmPassword"
-          label="Confirm password"
-          type="password"
-          value={confirmPassword}
-          onChange={setConfirmPassword}
-          autoComplete="new-password"
-          disabled={loading}
-          error={fieldErrors.confirmPassword}
-        />
-        {error && (
-          <p className="text-sm text-red-400 font-medium" role="alert">
-            {error}
+
+        <AuthDivider label="or register with password" />
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <AuthField
+            id="password"
+            label="Password"
+            type="password"
+            value={password}
+            onChange={setPassword}
+            autoComplete="new-password"
+            disabled={loading}
+            hint={PASSWORD_HINT}
+            error={fieldErrors.password}
+          />
+          <AuthField
+            id="confirmPassword"
+            label="Confirm password"
+            type="password"
+            value={confirmPassword}
+            onChange={setConfirmPassword}
+            autoComplete="new-password"
+            disabled={loading}
+            error={fieldErrors.confirmPassword}
+          />
+          {error && (
+            <p className="text-sm text-red-400 font-medium" role="alert">
+              {error}
+            </p>
+          )}
+          {success && (
+            <p className="text-sm text-emerald-400 font-medium" role="status">
+              {success}
+            </p>
+          )}
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full min-h-[48px] rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 text-white font-semibold shadow-lg shadow-amber-500/25 hover:from-amber-600 hover:to-amber-700 disabled:opacity-60 transition-all"
+          >
+            {loading ? "Creating account…" : "Register with password"}
+          </button>
+          <p className="text-center text-sm text-muted pt-2">
+            Already have an account?{" "}
+            <Link href={loginHref} className="text-amber-400 font-semibold hover:underline">
+              Log in
+            </Link>
           </p>
-        )}
-        {success && (
-          <p className="text-sm text-emerald-400 font-medium" role="status">
-            {success}
-          </p>
-        )}
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full min-h-[48px] rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 text-white font-semibold shadow-lg shadow-amber-500/25 hover:from-amber-600 hover:to-amber-700 disabled:opacity-60 transition-all"
-        >
-          {loading ? "Creating account…" : "Register"}
-        </button>
-        <p className="text-center text-sm text-muted pt-2">
-          Already have an account?{" "}
-          <Link href="/login" className="text-amber-400 font-semibold hover:underline">
-            Log in
-          </Link>
-        </p>
-      </form>
+        </form>
+      </div>
     </AuthShell>
   );
 }

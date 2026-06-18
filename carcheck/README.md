@@ -17,7 +17,7 @@ Open [http://localhost:3000](http://localhost:3000).
 
 ## Accounts (login / register)
 
-- **Register** (`/register`) — first name, surname, email, password (min 10 chars, 1 capital, 1 special), confirm password.
+- **Register** (`/register`) — email, password (min 10 chars, 1 capital, 1 special), confirm password. Name is optional and can be added later in Settings.
 - **Login** (`/login`) — email and password; forgot password sends a Supabase reset email.
 - **Dashboard** (`/dashboard`) — My reports, My receipts, Settings (profile, email, password).
 - Auth and user data use **Supabase** (`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` in `.env` or `.env.local`).
