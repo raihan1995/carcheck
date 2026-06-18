@@ -4,6 +4,8 @@ import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 
+import { createClient } from "@/lib/supabase/client";
+
 type VehicleData = {
   registrationNumber: string;
   make?: string;
@@ -484,6 +486,14 @@ export default function VehiclePage() {
   const [error, setError] = useState<string | null>(null);
   const [selectedSpecId, setSelectedSpecId] = useState("");
   const [lookedUpSpecs, setLookedUpSpecs] = useState<SpecCandidate | null>(null);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  useEffect(() => {
+    const supabase = createClient();
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      setIsLoggedIn(!!user);
+    });
+  }, []);
 
   useEffect(() => {
     if (!registration) {
@@ -605,6 +615,7 @@ export default function VehiclePage() {
   }
 
   const { vehicle, motHistory, specCandidates = [], demo, sample } = data;
+  const performanceLocked = !isLoggedIn && !sample;
   const primaryMot = motHistory?.[0];
   const motTests = primaryMot?.motTests ?? [];
   const mileageSummary = computeYearlyAverageMileage(vehicle.monthOfFirstRegistration, motTests);
@@ -1071,77 +1082,99 @@ export default function VehiclePage() {
                   Beta
                 </span>
               </h2>
-              <div className="p-4 sm:p-6 space-y-4">
-                {specCandidates.length > 0 ? (
-                  <>
-                    {lookedUpSpecs &&
-                    (lookedUpSpecs.bhp != null ||
-                      lookedUpSpecs.torque != null ||
-                      lookedUpSpecs.gearbox ||
-                      lookedUpSpecs.drivetrain ||
-                      lookedUpSpecs.acceleration0100 != null ||
-                      lookedUpSpecs.topSpeedMph != null) ? (
-                      <dl className="grid gap-3 sm:gap-4 grid-cols-2 sm:grid-cols-3">
-                        <div className="flex flex-col gap-0.5 py-1">
-                          <dt className="text-xs uppercase tracking-wider text-muted font-semibold">BHP</dt>
-                          <dd className="text-foreground font-semibold">
-                            {lookedUpSpecs.bhp != null ? lookedUpSpecs.bhp : "—"}
-                          </dd>
-                        </div>
-                        <div className="flex flex-col gap-0.5 py-1">
-                          <dt className="text-xs uppercase tracking-wider text-muted font-semibold">Torque</dt>
-                          <dd className="text-foreground font-semibold">
-                            {lookedUpSpecs.torque != null ? `${lookedUpSpecs.torque} Nm` : "—"}
-                          </dd>
-                        </div>
-                        <div className="flex flex-col gap-0.5 py-1">
-                          <dt className="text-xs uppercase tracking-wider text-muted font-semibold">Gearbox</dt>
-                          <dd className="text-foreground font-semibold">{lookedUpSpecs.gearbox || "—"}</dd>
-                        </div>
-                        <div className="flex flex-col gap-0.5 py-1">
-                          <dt className="text-xs uppercase tracking-wider text-muted font-semibold">Drivetrain</dt>
-                          <dd className="text-foreground font-semibold">{lookedUpSpecs.drivetrain || "—"}</dd>
-                        </div>
-                        <div className="flex flex-col gap-0.5 py-1">
-                          <dt className="text-xs uppercase tracking-wider text-muted font-semibold">0–60 mph</dt>
-                          <dd className="text-foreground font-semibold">
-                            {lookedUpSpecs.acceleration0100 != null
-                              ? `${lookedUpSpecs.acceleration0100}s`
-                              : "—"}
-                          </dd>
-                        </div>
-                        <div className="flex flex-col gap-0.5 py-1">
-                          <dt className="text-xs uppercase tracking-wider text-muted font-semibold">Top speed</dt>
-                          <dd className="text-foreground font-semibold">
-                            {lookedUpSpecs.topSpeedMph != null ? `${lookedUpSpecs.topSpeedMph} mph` : "—"}
-                          </dd>
-                        </div>
-                      </dl>
-                    ) : null}
-                    <label className="block min-w-0 pt-2 border-t border-card-border/60">
-                      <span className="text-sm text-muted mb-1.5 block">Select trim</span>
-                      <select
-                        value={selectedSpecId}
-                        onChange={(e) => {
-                          const id = e.target.value;
-                          setSelectedSpecId(id);
-                          const match = specCandidates.find((c) => c.id === id);
-                          setLookedUpSpecs(match ?? null);
-                        }}
-                        className="w-full rounded-xl border border-card-border bg-surface px-3 py-2.5 text-sm text-foreground shadow-sm focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/20"
+              <div className="p-4 sm:p-6 space-y-4 relative">
+                <div
+                  className={
+                    performanceLocked
+                      ? "blur-md select-none pointer-events-none space-y-4"
+                      : "space-y-4"
+                  }
+                  aria-hidden={performanceLocked}
+                >
+                  {specCandidates.length > 0 ? (
+                    <>
+                      {lookedUpSpecs &&
+                      (lookedUpSpecs.bhp != null ||
+                        lookedUpSpecs.torque != null ||
+                        lookedUpSpecs.gearbox ||
+                        lookedUpSpecs.drivetrain ||
+                        lookedUpSpecs.acceleration0100 != null ||
+                        lookedUpSpecs.topSpeedMph != null) ? (
+                        <dl className="grid gap-3 sm:gap-4 grid-cols-2 sm:grid-cols-3">
+                          <div className="flex flex-col gap-0.5 py-1">
+                            <dt className="text-xs uppercase tracking-wider text-muted font-semibold">BHP</dt>
+                            <dd className="text-foreground font-semibold">
+                              {lookedUpSpecs.bhp != null ? lookedUpSpecs.bhp : "—"}
+                            </dd>
+                          </div>
+                          <div className="flex flex-col gap-0.5 py-1">
+                            <dt className="text-xs uppercase tracking-wider text-muted font-semibold">Torque</dt>
+                            <dd className="text-foreground font-semibold">
+                              {lookedUpSpecs.torque != null ? `${lookedUpSpecs.torque} Nm` : "—"}
+                            </dd>
+                          </div>
+                          <div className="flex flex-col gap-0.5 py-1">
+                            <dt className="text-xs uppercase tracking-wider text-muted font-semibold">Gearbox</dt>
+                            <dd className="text-foreground font-semibold">{lookedUpSpecs.gearbox || "—"}</dd>
+                          </div>
+                          <div className="flex flex-col gap-0.5 py-1">
+                            <dt className="text-xs uppercase tracking-wider text-muted font-semibold">Drivetrain</dt>
+                            <dd className="text-foreground font-semibold">{lookedUpSpecs.drivetrain || "—"}</dd>
+                          </div>
+                          <div className="flex flex-col gap-0.5 py-1">
+                            <dt className="text-xs uppercase tracking-wider text-muted font-semibold">0–60 mph</dt>
+                            <dd className="text-foreground font-semibold">
+                              {lookedUpSpecs.acceleration0100 != null
+                                ? `${lookedUpSpecs.acceleration0100}s`
+                                : "—"}
+                            </dd>
+                          </div>
+                          <div className="flex flex-col gap-0.5 py-1">
+                            <dt className="text-xs uppercase tracking-wider text-muted font-semibold">Top speed</dt>
+                            <dd className="text-foreground font-semibold">
+                              {lookedUpSpecs.topSpeedMph != null ? `${lookedUpSpecs.topSpeedMph} mph` : "—"}
+                            </dd>
+                          </div>
+                        </dl>
+                      ) : null}
+                      <label className="block min-w-0 pt-2 border-t border-card-border/60">
+                        <span className="text-sm text-muted mb-1.5 block">Select trim</span>
+                        <select
+                          value={selectedSpecId}
+                          onChange={(e) => {
+                            const id = e.target.value;
+                            setSelectedSpecId(id);
+                            const match = specCandidates.find((c) => c.id === id);
+                            setLookedUpSpecs(match ?? null);
+                          }}
+                          className="w-full rounded-xl border border-card-border bg-surface px-3 py-2.5 text-sm text-foreground shadow-sm focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/20"
+                        >
+                          {specCandidates.map((c) => (
+                            <option key={c.id} value={c.id}>
+                              {c.label}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                    </>
+                  ) : (
+                    <p className="text-muted text-sm">
+                      No matching variants in our database for this vehicle.
+                    </p>
+                  )}
+                </div>
+                {performanceLocked && (
+                  <div className="absolute inset-0 z-10 flex items-center justify-center px-4 sm:px-6">
+                    <p className="text-center text-sm sm:text-base text-muted max-w-md">
+                      <Link
+                        href={`/login?next=${encodeURIComponent(`/vehicle/${registration}`)}`}
+                        className="text-blue-400 font-semibold hover:underline"
                       >
-                        {specCandidates.map((c) => (
-                          <option key={c.id} value={c.id}>
-                            {c.label}
-                          </option>
-                        ))}
-                      </select>
-                    </label>
-                  </>
-                ) : (
-                  <p className="text-muted text-sm">
-                    No matching variants in our database for this vehicle.
-                  </p>
+                        Log in now
+                      </Link>{" "}
+                      to unlock this feature.
+                    </p>
+                  </div>
                 )}
               </div>
             </section>
