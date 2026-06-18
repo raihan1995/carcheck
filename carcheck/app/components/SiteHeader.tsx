@@ -3,11 +3,12 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
+
+import { createClient } from "@/lib/supabase/client";
+
 import { RevVealLogo } from "./RevVealLogo";
 
-type SessionUser = {
-  userId: string;
-  email: string;
+type HeaderUser = {
   firstName: string;
   surname: string;
 };
@@ -20,18 +21,43 @@ const navLinks = [
   { href: SAMPLE_REPORT_PATH, label: "Sample" },
 ];
 
+function isDashboardPath(pathname: string): boolean {
+  return pathname === "/dashboard" || pathname.startsWith("/dashboard/");
+}
+
 export function SiteHeader() {
   const pathname = usePathname();
   const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
-  const [user, setUser] = useState<SessionUser | null>(null);
+  const [user, setUser] = useState<HeaderUser | null>(null);
   const [loggingOut, setLoggingOut] = useState(false);
 
   const loadSession = useCallback(async () => {
     try {
-      const res = await fetch("/api/auth/session");
-      const data = await res.json();
-      setUser(data.user ?? null);
+      const supabase = createClient();
+      const {
+        data: { user: authUser },
+      } = await supabase.auth.getUser();
+
+      if (!authUser) {
+        setUser(null);
+        return;
+      }
+
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("first_name, surname")
+        .eq("id", authUser.id)
+        .maybeSingle();
+
+      setUser({
+        firstName:
+          profile?.first_name ??
+          (authUser.user_metadata?.first_name as string | undefined) ??
+          "Account",
+        surname:
+          profile?.surname ?? (authUser.user_metadata?.surname as string | undefined) ?? "",
+      });
     } catch {
       setUser(null);
     }
@@ -44,7 +70,8 @@ export function SiteHeader() {
   async function handleLogout() {
     setLoggingOut(true);
     try {
-      await fetch("/api/auth/logout", { method: "POST" });
+      const supabase = createClient();
+      await supabase.auth.signOut();
       setUser(null);
       setMenuOpen(false);
       router.push("/");
@@ -89,9 +116,9 @@ export function SiteHeader() {
           {user ? (
             <>
               <Link
-                href="/dashboard"
+                href="/dashboard/reports"
                 className={`rounded-lg px-3 py-2.5 text-sm font-medium transition-colors hidden lg:inline ${
-                  pathname === "/dashboard"
+                  isDashboardPath(pathname)
                     ? "bg-amber-500/15 text-amber-400"
                     : "text-muted hover:bg-surface hover:text-amber-400"
                 }`}
@@ -99,9 +126,9 @@ export function SiteHeader() {
                 Hi, {user.firstName}
               </Link>
               <Link
-                href="/dashboard"
-                className={`rounded-lg px-4 py-2.5 text-sm font-medium transition-colors lg:hidden ${
-                  pathname === "/dashboard"
+                href="/dashboard/reports"
+                className={`rounded-lg px-3 py-2.5 text-sm font-medium transition-colors lg:hidden ${
+                  isDashboardPath(pathname)
                     ? "bg-amber-500/15 text-amber-400"
                     : "text-muted hover:bg-surface hover:text-foreground"
                 }`}
@@ -174,10 +201,10 @@ export function SiteHeader() {
               {user ? (
                 <>
                   <Link
-                    href="/dashboard"
+                    href="/dashboard/reports"
                     onClick={() => setMenuOpen(false)}
                     className={`px-4 py-3.5 text-base font-medium border-t border-card-border mt-1 ${
-                      pathname === "/dashboard"
+                      isDashboardPath(pathname)
                         ? "bg-amber-500/15 text-amber-400"
                         : "text-foreground/90 hover:bg-surface"
                     }`}

@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 
-import { getSessionFromCookies } from "@/lib/auth/session";
+import { createClient } from "@/lib/supabase/server";
 
 import { RegisterForm } from "./RegisterForm";
 
@@ -10,9 +10,13 @@ export const metadata = {
 };
 
 export default async function RegisterPage() {
-  const session = await getSessionFromCookies();
-  if (session) {
-    redirect("/dashboard");
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (user) {
+    redirect("/dashboard/reports");
   }
 
   return <RegisterForm />;

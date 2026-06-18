@@ -1,8 +1,5 @@
-import bcrypt from "bcryptjs";
-
 export const MIN_PASSWORD_LENGTH = 10;
 export const MAX_PASSWORD_LENGTH = 128;
-const BCRYPT_ROUNDS = 12;
 
 export const PASSWORD_HINT =
   "At least 10 characters, one capital letter, and one special character.";
@@ -23,10 +20,30 @@ export function validatePassword(password: string): string | null {
   return null;
 }
 
-export async function hashPassword(password: string): Promise<string> {
-  return bcrypt.hash(password, BCRYPT_ROUNDS);
-}
+export function validateRegisterFields(input: {
+  firstName: string;
+  surname: string;
+  email: string;
+  password: string;
+  confirmPassword: string;
+}): Record<string, string> {
+  const errors: Record<string, string> = {};
 
-export async function verifyPassword(password: string, hash: string): Promise<boolean> {
-  return bcrypt.compare(password, hash);
+  if (!input.firstName.trim()) errors.firstName = "First name is required.";
+  if (!input.surname.trim()) errors.surname = "Surname is required.";
+
+  const email = input.email.trim().toLowerCase();
+  if (!email) errors.email = "Email is required.";
+  else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    errors.email = "Enter a valid email address.";
+  }
+
+  const passwordError = validatePassword(input.password);
+  if (passwordError) errors.password = passwordError;
+
+  if (input.password !== input.confirmPassword) {
+    errors.confirmPassword = "Passwords do not match.";
+  }
+
+  return errors;
 }

@@ -6,7 +6,8 @@ import { FormEvent, useState } from "react";
 
 import { AuthField } from "@/app/components/auth/AuthField";
 import { AuthShell } from "@/app/components/auth/AuthShell";
-import { PASSWORD_HINT } from "@/lib/auth/password";
+import { PASSWORD_HINT, validateRegisterFields } from "@/lib/auth/password";
+import { createClient } from "@/lib/supabase/client";
 
 export function RegisterForm() {
   const router = useRouter();
@@ -16,28 +17,56 @@ export function RegisterForm() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setError(null);
+    setSuccess(null);
+
+    const errors = validateRegisterFields({
+      firstName,
+      surname,
+      email,
+      password,
+      confirmPassword,
+    });
+    if (Object.keys(errors).length > 0) {
+      setFieldErrors(errors);
+      return;
+    }
     setFieldErrors({});
     setLoading(true);
+
     try {
-      const res = await fetch("/api/auth/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ firstName, surname, email, password, confirmPassword }),
+      const supabase = createClient();
+      const origin = window.location.origin;
+      const { data, error: signUpError } = await supabase.auth.signUp({
+        email: email.trim().toLowerCase(),
+        password,
+        options: {
+          data: {
+            first_name: firstName.trim(),
+            surname: surname.trim(),
+          },
+          emailRedirectTo: `${origin}/auth/callback?next=/dashboard/reports`,
+        },
       });
-      const data = await res.json();
-      if (!res.ok) {
-        if (data.fieldErrors) setFieldErrors(data.fieldErrors);
-        setError(data.error || "Registration failed.");
+
+      if (signUpError) {
+        setError(signUpError.message);
         return;
       }
-      router.push("/dashboard");
-      router.refresh();
+
+      if (data.session) {
+        router.push("/dashboard/reports");
+        router.refresh();
+        return;
+      }
+
+      setSuccess("Account created. Check your email to confirm your address, then log in.");
     } catch {
       setError("Network error. Please try again.");
     } finally {
@@ -100,6 +129,11 @@ export function RegisterForm() {
         {error && (
           <p className="text-sm text-red-400 font-medium" role="alert">
             {error}
+          </p>
+        )}
+        {success && (
+          <p className="text-sm text-emerald-400 font-medium" role="status">
+            {success}
           </p>
         )}
         <button

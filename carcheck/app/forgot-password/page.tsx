@@ -5,6 +5,7 @@ import { FormEvent, useState } from "react";
 
 import { AuthField } from "@/app/components/auth/AuthField";
 import { AuthShell } from "@/app/components/auth/AuthShell";
+import { createClient } from "@/lib/supabase/client";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
@@ -18,17 +19,17 @@ export default function ForgotPasswordPage() {
     setSuccess(null);
     setLoading(true);
     try {
-      const res = await fetch("/api/auth/forgot-password", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        setError(data.error || "Request failed.");
+      const supabase = createClient();
+      const origin = window.location.origin;
+      const { error: resetError } = await supabase.auth.resetPasswordForEmail(
+        email.trim().toLowerCase(),
+        { redirectTo: `${origin}/auth/callback?next=/reset-password` }
+      );
+      if (resetError) {
+        setError(resetError.message);
         return;
       }
-      setSuccess(data.message || "If an account exists for that email, we sent password reset instructions.");
+      setSuccess("If an account exists for that email, we sent password reset instructions.");
     } catch {
       setError("Network error. Please try again.");
     } finally {
