@@ -5,6 +5,7 @@ import { FormEvent, useState } from "react";
 
 import { AuthField } from "@/app/components/auth/AuthField";
 import { AuthShell } from "@/app/components/auth/AuthShell";
+import { buildAuthCallbackUrl } from "@/lib/auth/redirect";
 import { createClient } from "@/lib/supabase/client";
 
 export default function ForgotPasswordPage() {
@@ -20,10 +21,9 @@ export default function ForgotPasswordPage() {
     setLoading(true);
     try {
       const supabase = createClient();
-      const origin = window.location.origin;
       const { error: resetError } = await supabase.auth.resetPasswordForEmail(
         email.trim().toLowerCase(),
-        { redirectTo: `${origin}/auth/callback?next=/reset-password` }
+        { redirectTo: buildAuthCallbackUrl("/reset-password") }
       );
       if (resetError) {
         setError(resetError.message);

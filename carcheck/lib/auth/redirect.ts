@@ -6,10 +6,19 @@ export function safeRedirectPath(
   return path;
 }
 
+/** Canonical app origin for auth redirects (set NEXT_PUBLIC_APP_URL on Vercel). */
+export function getAuthOrigin(): string {
+  const configured = process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "");
+  if (configured) return configured;
+  if (typeof window !== "undefined") return window.location.origin;
+  return "";
+}
+
 export function buildAuthCallbackUrl(
-  origin: string,
-  nextPath: string | null | undefined
+  nextPath: string | null | undefined,
+  origin?: string
 ): string {
+  const base = origin ?? getAuthOrigin();
   const next = safeRedirectPath(nextPath);
-  return `${origin}/auth/callback?next=${encodeURIComponent(next)}`;
+  return `${base}/auth/callback?next=${encodeURIComponent(next)}`;
 }

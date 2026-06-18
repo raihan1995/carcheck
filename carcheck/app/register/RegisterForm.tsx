@@ -49,7 +49,7 @@ export function RegisterForm() {
 
     try {
       const supabase = createClient();
-      const emailRedirectTo = buildAuthCallbackUrl(window.location.origin, nextPath);
+      const emailRedirectTo = buildAuthCallbackUrl(nextPath);
       const { data, error: signUpError } = await supabase.auth.signUp({
         email: email.trim().toLowerCase(),
         password,
