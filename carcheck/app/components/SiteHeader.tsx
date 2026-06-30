@@ -104,7 +104,7 @@ export function SiteHeader() {
           title="Home"
           className="flex items-center shrink-0 text-foreground focus:outline-none focus:ring-2 focus:ring-amber-400 focus:ring-offset-2 focus:ring-offset-background rounded-lg min-h-[44px] items-center"
         >
-          <RevVealLogo variant="compact" className="h-8 w-auto sm:h-9" />
+          <RevVealLogo variant="compact" className="h-12 w-auto sm:h-14" />
         </Link>
 
         <nav className="hidden md:flex md:items-center md:gap-1">

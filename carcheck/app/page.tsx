@@ -99,7 +99,7 @@ export default function Home() {
       <div className="mx-auto max-w-2xl px-4 py-8 sm:py-16 sm:px-6">
         <header className="text-center mb-10 sm:mb-14">
           <div className="flex justify-center mb-6">
-            <RevVealLogo variant="full" className="h-20 w-auto sm:h-24" />
+            <RevVealLogo variant="full" className="h-36 w-auto sm:h-44" />
           </div>
           <p className="mt-3 text-muted text-base sm:text-lg max-w-sm mx-auto">
             Enter a UK number plate to view vehicle details, MOT history and ULEZ status
