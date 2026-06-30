@@ -4,9 +4,49 @@ Project history for **RevVeal** (UK Car Check). Use this when you need to see wh
 
 ---
 
-## UI revamp 3.0 — Dark theme (current)
+## UI revamp 4.0 — "Garage Atelier" (current)
 
-**Status:** Local / not yet committed on `main` (as of last update).  
+**Theme:** Dark editorial. Warm ink background, brass/gold accent (replaces flat amber),
+hairline rules instead of glassy cards, high-contrast serif display over a grotesk body.
+Designed to read like a printed car magazine rather than a generated SaaS template.
+
+**Status:** Local working tree (as of last update).  
+**Baseline to revert to UI 3.0:** commit `fe634f5` on `main` (last UI 3.0 commit).
+
+### Revert to UI 3.0
+
+```bash
+# Restore all UI-related files from the last UI 3.0 commit
+git checkout fe634f5 -- app/globals.css app/layout.tsx app/page.tsx app/components/ app/contact/ app/dashboard/ app/login/ app/register/ app/forgot-password/ app/reset-password/ "app/vehicle/[registration]/page.tsx"
+```
+
+Or check out the whole tree at that commit in a new branch:
+
+```bash
+git checkout -b ui-3.0-restore fe634f5
+```
+
+### What changed (4.0)
+
+| Area | Changes |
+|------|---------|
+| **Type system** (`app/layout.tsx`) | Fraunces (display serif), Space Grotesk (body), JetBrains Mono (figures) via `next/font`, wired to CSS variables |
+| **Design tokens** (`app/globals.css`) | Warm ink palette (`--background #0b0a08`), brass `--accent #c9a35a` + `--accent-strong`/`--accent-soft`, `--hairline`; film-grain overlay, `.kicker`, `.section-index`, `.link-underline`, `.contour` motif utilities |
+| **Brand** (`RevVealLogo.tsx`) | Typographic "Rev**Veal**." wordmark in Fraunces (retired PNG logo); brass second-half plays on the "reveal" pun |
+| **Header** (`SiteHeader.tsx`) | Slim transparent bar, hairline border, animated underline nav, pill Register CTA, numbered mobile drawer |
+| **Home** (`app/page.tsx`) | Asymmetric editorial hero, large serif headline, search as an underlined field with a GB plate band, "Inside every check" index column, contour motif |
+| **Vehicle page** (`app/vehicle/[registration]/page.tsx`) | Editorial masthead with make as headline + plate object, tax/MOT/ULEZ status strip, hairline section cards with kicker labels, brass charts, restyled loading/error/MOT history |
+| **Auth** (`AuthShell` + forms + fields) | Two-column editorial split with brand panel + contour, underline inputs, brass buttons |
+| **Dashboard** (`layout`, `DashboardNav`, reports, receipts, settings) | Serif headings, underline tabs, hairline list rows, outline buttons |
+| **Contact** (`app/contact/`) | Editorial hero, oversized serif email link |
+
+**Unchanged on purpose:** UK plate stays statutory yellow (`#FFD132`) with a GB band. The EU CO₂ band colours and MOT defect-severity colours stay semantic. No logic changes — all data, auth and calculation code is untouched.
+
+---
+
+## UI revamp 3.0 — Dark theme
+
+**Status:** Committed on `main` (`6a8da9f` … `fe634f5`).  
 **Baseline to revert to UI 2.0:** commit `052b5b1` on `main`.
 
 ### Revert to UI 2.0

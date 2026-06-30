@@ -23,7 +23,7 @@ export function AuthField({
 }: AuthFieldProps) {
   return (
     <div>
-      <label htmlFor={id} className="block text-sm font-semibold text-muted mb-1.5">
+      <label htmlFor={id} className="kicker block text-muted mb-2">
         {label}
       </label>
       <input
@@ -33,13 +33,13 @@ export function AuthField({
         onChange={(e) => onChange(e.target.value)}
         autoComplete={autoComplete}
         disabled={disabled}
-        className={`w-full min-h-[48px] rounded-xl bg-surface border px-4 py-3 text-foreground placeholder-muted/50 focus:outline-none focus:ring-2 focus:ring-amber-500/40 focus:border-amber-500 transition-all ${
-          error ? "border-red-500/60" : "border-card-border"
+        className={`w-full min-h-[48px] border-b bg-transparent px-1 py-2.5 text-foreground placeholder-muted/40 focus:outline-none transition-colors ${
+          error ? "border-red-500/70" : "border-foreground/25 focus:border-accent"
         }`}
       />
-      {hint && !error && <p className="mt-1.5 text-xs text-muted">{hint}</p>}
+      {hint && !error && <p className="mt-2 text-xs text-muted">{hint}</p>}
       {error && (
-        <p className="mt-1.5 text-xs text-red-400 font-medium" role="alert">
+        <p className="mt-2 text-xs text-red-400 font-medium" role="alert">
           {error}
         </p>
       )}

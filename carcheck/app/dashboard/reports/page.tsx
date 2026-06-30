@@ -27,33 +27,33 @@ export default async function ReportsPage() {
 
   return (
     <section>
-      <h2 className="text-xs uppercase tracking-wider text-muted font-semibold">My reports</h2>
-      <p className="mt-1 text-sm text-muted">
+      <h2 className="font-display text-2xl">My reports</h2>
+      <p className="mt-2 text-sm text-muted">
         Full vehicle reports you&apos;ve purchased — saved on your account permanently.
       </p>
 
       {rows.length === 0 ? (
-        <div className="mt-6 rounded-2xl border border-dashed border-card-border bg-surface/50 p-6 text-center">
+        <div className="mt-8 border-y border-hairline py-12 text-center">
           <p className="text-muted text-sm">No purchased reports yet.</p>
           <Link
             href="/"
-            className="mt-3 inline-flex text-sm font-medium text-amber-400 hover:underline"
+            className="link-underline mt-3 inline-flex text-sm font-medium text-accent"
           >
             Check a vehicle
           </Link>
         </div>
       ) : (
-        <ul className="mt-4 divide-y divide-card-border/60 rounded-2xl border border-card-border overflow-hidden">
+        <ul className="mt-6 divide-y divide-hairline border-y border-hairline">
           {rows.map((report) => (
             <li
               key={report.id}
-              className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-4 bg-surface/30"
+              className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 py-5"
             >
               <div>
-                <p className="font-mono font-bold tracking-widest text-foreground">
+                <p className="font-mono text-lg font-bold tracking-[0.12em] text-foreground">
                   {formatPlate(report.registration)}
                 </p>
-                <p className="text-xs text-muted mt-0.5">
+                <p className="kicker text-muted mt-1">
                   Purchased{" "}
                   {new Date(report.purchased_at).toLocaleDateString("en-GB", {
                     day: "numeric",
@@ -64,9 +64,12 @@ export default async function ReportsPage() {
               </div>
               <Link
                 href={`/vehicle/${encodeURIComponent(formatPlate(report.registration))}`}
-                className="inline-flex items-center justify-center min-h-[40px] px-4 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 text-white text-sm font-semibold shadow-md shadow-amber-500/20 hover:from-amber-600 hover:to-amber-700 transition-all"
+                className="link-underline inline-flex items-center gap-2 self-start text-sm font-medium text-accent sm:self-auto"
               >
                 View report
+                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 12h14M13 6l6 6-6 6" />
+                </svg>
               </Link>
             </li>
           ))}

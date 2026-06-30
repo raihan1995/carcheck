@@ -89,57 +89,47 @@ export function SiteHeader() {
   }
 
   function navLinkClass(href: string) {
-    return `rounded-lg px-4 py-2.5 text-sm font-medium transition-colors ${
+    return `link-underline py-1 text-sm transition-colors ${
       isNavActive(href)
-        ? "bg-amber-500/15 text-amber-400"
-        : "text-muted hover:bg-surface hover:text-foreground"
+        ? "text-accent"
+        : "text-muted hover:text-foreground"
     }`;
   }
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-card-border bg-card/95 backdrop-blur-sm shadow-sm shadow-black/20">
-      <div className="mx-auto flex h-14 sm:h-16 max-w-7xl items-center justify-between px-4 sm:px-6">
+    <header className="sticky top-0 z-50 w-full border-b border-hairline bg-background/80 backdrop-blur-md">
+      <div className="mx-auto flex h-16 sm:h-[4.5rem] max-w-7xl items-center justify-between px-4 sm:px-8">
         <Link
           href="/"
           title="Home"
-          className="flex items-center shrink-0 text-foreground focus:outline-none focus:ring-2 focus:ring-amber-400 focus:ring-offset-2 focus:ring-offset-background rounded-lg min-h-[44px] items-center"
+          className="flex items-center shrink-0 text-foreground focus:outline-none focus-visible:ring-1 focus-visible:ring-accent rounded-sm min-h-[44px]"
         >
-          <RevVealLogo variant="compact" className="h-12 w-auto sm:h-14" />
+          <RevVealLogo variant="compact" />
         </Link>
 
-        <nav className="hidden md:flex md:items-center md:gap-1">
+        <nav className="hidden md:flex md:items-center md:gap-8">
           {navLinks.map(({ href, label }) => (
             <Link key={href} href={href} className={navLinkClass(href)}>
               {label}
             </Link>
           ))}
+          <span className="h-5 w-px bg-hairline" aria-hidden />
           {user ? (
             <>
               <Link
                 href="/dashboard/reports"
-                className={`rounded-lg px-3 py-2.5 text-sm font-medium transition-colors hidden lg:inline ${
-                  isDashboardPath(pathname)
-                    ? "bg-amber-500/15 text-amber-400"
-                    : "text-muted hover:bg-surface hover:text-amber-400"
+                className={`link-underline py-1 text-sm transition-colors ${
+                  isDashboardPath(pathname) ? "text-accent" : "text-muted hover:text-foreground"
                 }`}
               >
-                Hi, {user.firstName}
-              </Link>
-              <Link
-                href="/dashboard/reports"
-                className={`rounded-lg px-3 py-2.5 text-sm font-medium transition-colors lg:hidden ${
-                  isDashboardPath(pathname)
-                    ? "bg-amber-500/15 text-amber-400"
-                    : "text-muted hover:bg-surface hover:text-foreground"
-                }`}
-              >
-                Account
+                <span className="hidden lg:inline">Hi, {user.firstName}</span>
+                <span className="lg:hidden">Account</span>
               </Link>
               <button
                 type="button"
                 onClick={handleLogout}
                 disabled={loggingOut}
-                className="rounded-lg px-4 py-2.5 text-sm font-medium text-muted hover:bg-surface hover:text-foreground transition-colors disabled:opacity-60"
+                className="link-underline py-1 text-sm text-muted hover:text-foreground transition-colors disabled:opacity-60"
               >
                 {loggingOut ? "Logging out…" : "Log out"}
               </button>
@@ -149,7 +139,10 @@ export function SiteHeader() {
               <Link href="/login" className={navLinkClass("/login")}>
                 Login
               </Link>
-              <Link href="/register" className={navLinkClass("/register")}>
+              <Link
+                href="/register"
+                className="rounded-full border border-accent/50 px-5 py-2 text-sm font-medium text-accent hover:bg-accent hover:text-background transition-colors"
+              >
                 Register
               </Link>
             </>
@@ -159,7 +152,7 @@ export function SiteHeader() {
         <button
           type="button"
           onClick={() => setMenuOpen((o) => !o)}
-          className="flex h-10 w-10 md:hidden items-center justify-center rounded-lg text-muted hover:bg-surface hover:text-foreground focus:outline-none focus:ring-2 focus:ring-amber-400 focus:ring-offset-2 focus:ring-offset-background"
+          className="flex h-10 w-10 md:hidden items-center justify-center rounded-sm text-muted hover:text-foreground focus:outline-none focus-visible:ring-1 focus-visible:ring-accent"
           aria-expanded={menuOpen}
           aria-label="Toggle menu"
         >
@@ -178,23 +171,24 @@ export function SiteHeader() {
       {menuOpen && (
         <>
           <div
-            className="fixed inset-0 top-14 sm:top-16 z-40 bg-black/60 md:hidden"
+            className="fixed inset-0 top-16 sm:top-[4.5rem] z-40 bg-background/80 backdrop-blur-sm md:hidden"
             aria-hidden
             onClick={() => setMenuOpen(false)}
           />
-          <div className="absolute left-0 right-0 top-full z-50 border-b border-card-border bg-card shadow-lg shadow-black/40 md:hidden">
-            <nav className="flex flex-col py-2">
-              {navLinks.map(({ href, label }) => (
+          <div className="absolute left-0 right-0 top-full z-50 border-y border-hairline bg-background md:hidden">
+            <nav className="flex flex-col px-5 py-3">
+              {navLinks.map(({ href, label }, i) => (
                 <Link
                   key={href}
                   href={href}
                   onClick={() => setMenuOpen(false)}
-                  className={`px-4 py-3.5 text-base font-medium ${
-                    isNavActive(href)
-                      ? "bg-amber-500/15 text-amber-400"
-                      : "text-foreground/90 hover:bg-surface"
+                  className={`flex items-baseline gap-3 py-3.5 text-lg font-display ${
+                    isNavActive(href) ? "text-accent" : "text-foreground/90"
                   }`}
                 >
+                  <span className="section-index text-xs text-muted/60">
+                    {String(i + 1).padStart(2, "0")}
+                  </span>
                   {label}
                 </Link>
               ))}
@@ -203,10 +197,8 @@ export function SiteHeader() {
                   <Link
                     href="/dashboard/reports"
                     onClick={() => setMenuOpen(false)}
-                    className={`px-4 py-3.5 text-base font-medium border-t border-card-border mt-1 ${
-                      isDashboardPath(pathname)
-                        ? "bg-amber-500/15 text-amber-400"
-                        : "text-foreground/90 hover:bg-surface"
+                    className={`py-3.5 text-lg font-display border-t border-hairline mt-1 ${
+                      isDashboardPath(pathname) ? "text-accent" : "text-foreground/90"
                     }`}
                   >
                     {user.firstName} {user.surname} — Dashboard
@@ -215,36 +207,28 @@ export function SiteHeader() {
                     type="button"
                     onClick={handleLogout}
                     disabled={loggingOut}
-                    className="px-4 py-3.5 text-base font-medium text-left text-foreground/90 hover:bg-surface disabled:opacity-60"
+                    className="py-3.5 text-lg font-display text-left text-muted disabled:opacity-60"
                   >
                     {loggingOut ? "Logging out…" : "Log out"}
                   </button>
                 </>
               ) : (
-                <>
+                <div className="mt-2 flex flex-col gap-3 border-t border-hairline pt-4">
                   <Link
                     href="/login"
                     onClick={() => setMenuOpen(false)}
-                    className={`px-4 py-3.5 text-base font-medium ${
-                      pathname === "/login"
-                        ? "bg-amber-500/15 text-amber-400"
-                        : "text-foreground/90 hover:bg-surface"
-                    }`}
+                    className="py-2 text-lg font-display text-foreground/90"
                   >
                     Login
                   </Link>
                   <Link
                     href="/register"
                     onClick={() => setMenuOpen(false)}
-                    className={`px-4 py-3.5 text-base font-medium ${
-                      pathname === "/register"
-                        ? "bg-amber-500/15 text-amber-400"
-                        : "text-foreground/90 hover:bg-surface"
-                    }`}
+                    className="rounded-full border border-accent/50 px-5 py-3 text-center text-base font-medium text-accent"
                   >
                     Register
                   </Link>
-                </>
+                </div>
               )}
             </nav>
           </div>

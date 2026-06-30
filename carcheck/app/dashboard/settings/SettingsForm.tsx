@@ -140,7 +140,7 @@ export function SettingsForm() {
   return (
     <div className="space-y-8">
       <form onSubmit={handleProfileSubmit} className="space-y-4">
-        <h2 className="text-xs uppercase tracking-wider text-muted font-semibold">Profile</h2>
+        <h2 className="kicker text-accent">Profile</h2>
         <p className="text-sm text-muted -mt-2">
           Add your name anytime — used to personalise your dashboard.
         </p>
@@ -167,14 +167,14 @@ export function SettingsForm() {
         <button
           type="submit"
           disabled={savingProfile}
-          className="min-h-[44px] px-5 rounded-xl bg-surface border border-card-border text-sm font-medium hover:bg-surface/80 disabled:opacity-60"
+          className="min-h-[44px] px-6 rounded-md border border-accent/50 text-sm font-medium text-accent hover:bg-accent hover:text-background disabled:opacity-60 transition-colors"
         >
           {savingProfile ? "Saving…" : "Save profile"}
         </button>
       </form>
 
-      <form onSubmit={handleEmailSubmit} className="space-y-4 pt-6 border-t border-card-border">
-        <h2 className="text-xs uppercase tracking-wider text-muted font-semibold">Email</h2>
+      <form onSubmit={handleEmailSubmit} className="space-y-4 pt-8 border-t border-hairline">
+        <h2 className="kicker text-accent">Email</h2>
         <AuthField
           id="settings-email"
           label="Email address"
@@ -189,14 +189,14 @@ export function SettingsForm() {
         <button
           type="submit"
           disabled={savingEmail}
-          className="min-h-[44px] px-5 rounded-xl bg-surface border border-card-border text-sm font-medium hover:bg-surface/80 disabled:opacity-60"
+          className="min-h-[44px] px-6 rounded-md border border-accent/50 text-sm font-medium text-accent hover:bg-accent hover:text-background disabled:opacity-60 transition-colors"
         >
           {savingEmail ? "Saving…" : "Update email"}
         </button>
       </form>
 
-      <form onSubmit={handlePasswordSubmit} className="space-y-4 pt-6 border-t border-card-border">
-        <h2 className="text-xs uppercase tracking-wider text-muted font-semibold">Password</h2>
+      <form onSubmit={handlePasswordSubmit} className="space-y-4 pt-8 border-t border-hairline">
+        <h2 className="kicker text-accent">Password</h2>
         <AuthField
           id="settings-password"
           label="New password"
@@ -221,7 +221,7 @@ export function SettingsForm() {
         <button
           type="submit"
           disabled={savingPassword}
-          className="min-h-[44px] px-5 rounded-xl bg-surface border border-card-border text-sm font-medium hover:bg-surface/80 disabled:opacity-60"
+          className="min-h-[44px] px-6 rounded-md border border-accent/50 text-sm font-medium text-accent hover:bg-accent hover:text-background disabled:opacity-60 transition-colors"
         >
           {savingPassword ? "Saving…" : "Update password"}
         </button>

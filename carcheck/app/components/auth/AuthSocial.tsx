@@ -109,7 +109,7 @@ export function AuthGoogleButton({
       type="button"
       onClick={handleGoogleSignIn}
       disabled={disabled || loading}
-      className="w-full min-h-[48px] rounded-xl border border-card-border bg-surface text-foreground font-semibold hover:bg-surface/80 disabled:opacity-60 transition-all flex items-center justify-center gap-3"
+      className="w-full min-h-[48px] rounded-md border border-hairline bg-surface/60 text-foreground font-medium hover:border-foreground/30 hover:bg-surface disabled:opacity-60 transition-colors flex items-center justify-center gap-3"
     >
       <GoogleIcon />
       {loading ? "Redirecting to Google…" : "Continue with Google"}
@@ -173,7 +173,7 @@ export function AuthMagicLinkButton({
       type="button"
       onClick={handleMagicLink}
       disabled={disabled || loading}
-      className="w-full min-h-[44px] rounded-xl border border-card-border bg-surface/50 text-foreground text-sm font-medium hover:bg-surface disabled:opacity-60 transition-all"
+      className="w-full min-h-[44px] rounded-md border border-hairline bg-transparent text-muted-strong text-sm font-medium hover:border-foreground/30 hover:text-foreground disabled:opacity-60 transition-colors"
     >
       {loading ? "Sending link…" : "Email me a sign-in link"}
     </button>

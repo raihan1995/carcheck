@@ -1,14 +1,32 @@
 @import "tailwindcss";
 
+/*
+  RevVeal — UI 4.0 "Garage Atelier"
+  Dark editorial theme: warm ink background, brass/gold accent, hairline rules,
+  high-contrast serif display (Fraunces) over a grotesk body (Space Grotesk),
+  technical figures in JetBrains Mono. Designed to read like a print magazine.
+*/
+
 :root {
-  --background: #0a0a0f;
-  --background-elevated: #0d0d14;
-  --foreground: #e2e8f0;
-  --card: #12121a;
-  --card-border: #1e293b;
-  --muted: #94a3b8;
-  --surface: #1a1a24;
-  --accent: #f59e0b;
+  /* Warm ink palette — like dark paper, not cold slate */
+  --background: #0b0a08;
+  --background-elevated: #100e0a;
+  --foreground: #ece7dd;
+  --card: #14110c;
+  --card-border: #2a2419;
+  --hairline: #29231a;
+  --muted: #9c9384;
+  --muted-strong: #c4baa9;
+  --surface: #1b160f;
+
+  /* Evolved accent — refined brass / gold instead of flat amber */
+  --accent: #c9a35a;
+  --accent-strong: #b3863a;
+  --accent-soft: #e6cf9b;
+  --accent-tint: rgba(201, 163, 90, 0.12);
+
+  /* Plate stays statutory yellow */
+  --plate: #ffd132;
 }
 
 @theme inline {
@@ -17,12 +35,99 @@
   --color-foreground: var(--foreground);
   --color-card: var(--card);
   --color-card-border: var(--card-border);
+  --color-hairline: var(--hairline);
   --color-muted: var(--muted);
+  --color-muted-strong: var(--muted-strong);
   --color-surface: var(--surface);
   --color-accent: var(--accent);
+  --color-accent-strong: var(--accent-strong);
+  --color-accent-soft: var(--accent-soft);
+  --color-accent-tint: var(--accent-tint);
+  --color-plate: var(--plate);
+
+  --font-display: var(--font-fraunces), Georgia, "Times New Roman", serif;
+  --font-sans: var(--font-space-grotesk), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains-mono), ui-monospace, "SFMono-Regular", monospace;
+}
+
+html {
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
+  font-family: var(--font-sans);
+  font-feature-settings: "ss01", "cv01";
+}
+
+/* Subtle film-grain / paper texture over the whole page — fixed, non-interactive.
+   Gives the dark surface a hand-made, printed feel rather than flat digital black. */
+.grain-overlay {
+  pointer-events: none;
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  opacity: 0.5;
+  mix-blend-mode: soft-light;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* Editorial display type: tighter tracking, optical sizing for Fraunces */
+.font-display {
+  font-family: var(--font-display);
+  font-optical-sizing: auto;
+  letter-spacing: -0.01em;
+}
+
+/* Oversized section index numerals used across editorial sections, e.g. "01 / Vehicle" */
+.section-index {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.08em;
+}
+
+/* Kicker / eyebrow label — small caps, wide tracking, brass */
+.kicker {
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.32em;
+  font-size: 0.6875rem;
+}
+
+/* Hairline rule helper */
+.rule {
+  border: 0;
+  border-top: 1px solid var(--hairline);
+}
+
+/* Thin accent underline that animates on hover for nav/links */
+.link-underline {
+  background-image: linear-gradient(var(--accent), var(--accent));
+  background-size: 0% 1px;
+  background-position: 0 100%;
+  background-repeat: no-repeat;
+  transition: background-size 0.3s ease;
+}
+.link-underline:hover {
+  background-size: 100% 1px;
+}
+
+/* Faint engineering arc — signature motif drawn behind hero/section corners */
+.contour {
+  background-image: radial-gradient(
+    circle at var(--cx, 100%) var(--cy, 0%),
+    transparent 0,
+    transparent calc(var(--r, 240px) - 1px),
+    rgba(201, 163, 90, 0.14) var(--r, 240px),
+    transparent calc(var(--r, 240px) + 1px)
+  );
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
 }

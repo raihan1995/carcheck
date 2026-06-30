@@ -13,17 +13,17 @@ export function DashboardNav() {
   const pathname = usePathname();
 
   return (
-    <nav className="flex flex-wrap gap-2 border-b border-card-border pb-4">
+    <nav className="flex flex-wrap gap-8 border-b border-hairline">
       {tabs.map(({ href, label }) => {
         const active = pathname === href || pathname.startsWith(`${href}/`);
         return (
           <Link
             key={href}
             href={href}
-            className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
+            className={`-mb-px border-b-2 pb-3 text-sm transition-colors ${
               active
-                ? "bg-amber-500/15 text-amber-400"
-                : "text-muted hover:bg-surface hover:text-foreground"
+                ? "border-accent text-accent"
+                : "border-transparent text-muted hover:text-foreground"
             }`}
           >
             {label}

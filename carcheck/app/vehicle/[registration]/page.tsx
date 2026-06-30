@@ -577,16 +577,12 @@ export default function VehiclePage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-background via-background-elevated to-background flex items-center justify-center px-4">
+      <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center px-5">
         <div className="text-center">
-          <div className="w-12 h-12 rounded-xl bg-amber-500/20 flex items-center justify-center mx-auto mb-4">
-            <svg className="w-6 h-6 text-amber-400 animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.75 15.75V18m-7.5-6.75h.008v.008H8.25v-.008Zm0 2.25h.008v.008H8.25V13.5Zm0-6.75h.008v.008H8.25V6.75Zm0 2.25h.008v.008H8.25V9Zm6-3h.008v.008H14.25V6.75Zm0 2.25h.008v.008H14.25V9Zm0 2.25h.008v.008H14.25v-.008Zm0 2.25h.008v.008H14.25V15Z" />
-            </svg>
-          </div>
-          <p className="text-muted font-medium">Loading vehicle details…</p>
-          <div className="mt-4 h-1.5 w-40 mx-auto bg-surface rounded-full overflow-hidden">
-            <div className="h-full w-1/3 bg-gradient-to-r from-amber-400 to-amber-500 rounded-full animate-pulse" />
+          <p className="kicker text-accent">Revealing</p>
+          <p className="font-display mt-3 text-2xl text-muted-strong">Reading the records…</p>
+          <div className="mx-auto mt-6 h-px w-48 overflow-hidden bg-hairline">
+            <div className="h-full w-1/3 animate-pulse bg-accent" />
           </div>
         </div>
       </div>
@@ -595,18 +591,19 @@ export default function VehiclePage() {
 
   if (error || !data?.vehicle) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-background via-background-elevated to-background flex items-center justify-center px-4 py-8">
-        <div className="max-w-md w-full rounded-3xl bg-card border border-card-border p-6 sm:p-8 text-center shadow-xl shadow-black/30 ring-1 ring-white/5">
-          <div className="w-14 h-14 rounded-2xl bg-red-500/20 flex items-center justify-center mx-auto mb-4">
-            <svg className="w-7 h-7 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
-            </svg>
-          </div>
-          <p className="text-red-400 text-base sm:text-lg font-medium mb-6">{error || "Vehicle not found."}</p>
+      <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center px-5 py-10">
+        <div className="w-full max-w-md text-center">
+          <p className="kicker text-red-400">Not found</p>
+          <p className="font-display mt-4 text-3xl leading-tight text-foreground">
+            {error || "We couldn't find that vehicle."}
+          </p>
           <Link
             href="/"
-            className="inline-flex items-center justify-center min-h-[52px] px-8 py-3 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 text-white font-semibold shadow-lg shadow-amber-500/30 hover:from-amber-600 hover:to-amber-700 transition-all touch-manipulation"
+            className="mt-8 inline-flex items-center gap-2 border-b-2 border-accent pb-1 text-accent font-medium hover:gap-3 transition-all touch-manipulation"
           >
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M19 12H5M11 18l-6-6 6-6" />
+            </svg>
             Check another vehicle
           </Link>
         </div>
@@ -855,202 +852,170 @@ export default function VehiclePage() {
     vehicleAgeYearsForRoadTax <= 5;
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background via-background-elevated to-background text-foreground overflow-x-hidden">
-      <div className="mx-auto max-w-3xl lg:max-w-6xl px-4 py-6 sm:py-12 pb-12 sm:pb-16">
+    <div className="relative overflow-x-hidden">
+      <div className="mx-auto max-w-3xl lg:max-w-6xl px-5 sm:px-8 py-8 sm:py-12 pb-16">
         <Link
           href="/"
-          className="inline-flex items-center gap-2 text-muted hover:text-amber-400 text-sm mb-6 sm:mb-8 py-2.5 -mx-2 px-3 rounded-xl hover:bg-surface/80 hover:shadow-sm transition-all min-h-[44px] touch-manipulation font-medium"
+          className="link-underline inline-flex items-center gap-2 text-sm text-muted hover:text-accent mb-8 py-1 transition-colors min-h-[44px] sm:min-h-0"
         >
-          <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
-          Back to check another vehicle
+          <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19 12H5M11 18l-6-6 6-6" /></svg>
+          Check another vehicle
         </Link>
 
         {sample && (
-          <div className="mb-4 sm:mb-6 rounded-2xl bg-blue-950/40 border border-blue-700/50 px-4 py-3.5 text-blue-200 text-sm shadow-sm">
-            <span className="font-semibold text-blue-300">Sample</span> — example vehicle data
-            showing a typical RevVeal check. Premium details will be added here later.
+          <div className="mb-6 border-l-2 border-blue-500/60 bg-blue-500/[0.06] px-4 py-3 text-sm text-blue-200/90">
+            <span className="kicker text-blue-300">Sample</span>
+            <span className="ml-2">Example data showing a typical RevVeal check.</span>
           </div>
         )}
         {demo && !sample && (
-          <div className="mb-4 sm:mb-6 rounded-2xl bg-amber-950/40 border border-amber-700/50 px-4 py-3.5 text-amber-300 text-sm shadow-sm">
-            Demo data — add <code className="bg-amber-900/50 px-1.5 py-0.5 rounded font-mono text-xs break-all">DVLA_API_KEY</code> and MOT credentials to your <code className="bg-amber-900/50 px-1.5 py-0.5 rounded font-mono text-xs break-all">.env</code> for real results.
+          <div className="mb-6 border-l-2 border-accent/60 bg-accent-tint px-4 py-3 text-sm text-accent-soft">
+            <span className="kicker text-accent">Demo</span>
+            <span className="ml-2">
+              Add <code className="font-mono text-xs">DVLA_API_KEY</code> and MOT credentials to your{" "}
+              <code className="font-mono text-xs">.env</code> for live results.
+            </span>
           </div>
         )}
 
-        <header className="relative rounded-3xl bg-card border border-card-border p-5 sm:p-8 mb-4 sm:mb-6 shadow-lg shadow-black/30 ring-1 ring-white/5 overflow-hidden">
-          <p className="text-muted text-xs sm:text-sm font-semibold uppercase tracking-wider mb-3 text-center">
-            Registration
-          </p>
-          <div className="flex justify-center">
+        {/* Editorial masthead: the plate is the hero object */}
+        <header className="relative mb-10 sm:mb-14">
+          <div className="contour pointer-events-none absolute -right-24 -top-20 hidden h-96 w-96 opacity-60 sm:block" style={{ ["--r" as string]: "190px" }} aria-hidden />
+          <p className="kicker text-accent">Vehicle record</p>
+          <div className="mt-5 flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
+            <div className="min-w-0">
+              {vehicle.make && (
+                <h1 className="font-display text-4xl sm:text-6xl font-semibold leading-[0.95] tracking-tight break-words">
+                  {vehicle.make}
+                </h1>
+              )}
+              {vehicle.colour && (
+                <p className="mt-2 font-display text-xl italic text-muted">{vehicle.colour}</p>
+              )}
+            </div>
             <div
-              className="inline-block rounded-lg border-2 border-slate-800 bg-[#FFD132] px-5 sm:px-8 py-3 sm:py-4 shadow-md"
+              className="inline-flex shrink-0 self-start overflow-hidden rounded-md border border-black/40 shadow-lg shadow-black/40 sm:self-end"
               aria-label="Registration number"
             >
-              <span className="text-3xl sm:text-5xl font-extrabold tracking-[0.18em] text-black font-mono uppercase">
+              <span className="flex flex-col items-center justify-center bg-[#003399] px-2.5 py-2 text-[#ffd132]" aria-hidden>
+                <span className="text-[10px] leading-none">★</span>
+                <span className="font-mono text-xs font-bold leading-tight">UK</span>
+              </span>
+              <span className="bg-plate px-4 sm:px-6 py-2 sm:py-3 font-mono text-3xl sm:text-5xl font-bold uppercase tracking-[0.12em] text-black">
                 {vehicle.registrationNumber}
               </span>
             </div>
           </div>
-          {vehicle.make && (
-            <p className="mt-4 text-lg sm:text-xl text-muted break-words font-medium text-center">
-              {vehicle.make}
-              {vehicle.colour && <span className="text-muted/60 font-normal"> · {vehicle.colour}</span>}
-            </p>
-          )}
         </header>
 
-        {vehicle.fuelType && (
-          <div
-            className={`rounded-2xl border-2 px-4 sm:px-6 py-4 mb-4 sm:mb-6 shadow-md ${
-              ulezCompliant === true
-                ? "bg-gradient-to-br from-emerald-950/50 to-emerald-900/30 border-emerald-700/50 shadow-emerald-900/20"
-                : ulezCompliant === false
-                  ? "bg-gradient-to-br from-red-950/50 to-red-900/30 border-red-700/50 shadow-red-900/20"
-                  : "bg-gradient-to-br from-amber-950/50 to-amber-900/30 border-amber-700/50 shadow-amber-900/20"
-            }`}
-          >
-            <p
-              className={`text-base sm:text-lg font-bold ${
-                ulezCompliant === true
-                  ? "text-emerald-300"
-                  : ulezCompliant === false
-                    ? "text-red-300"
-                    : "text-amber-300"
-              }`}
-            >
-              {ulezCompliant === true
-                ? "✓ ULEZ compliant"
-                : ulezCompliant === false
-                  ? "⚠ Not ULEZ compliant"
-                  : "? ULEZ status unknown"}
-            </p>
-            <p
-              className={`mt-0.5 text-xs sm:text-sm font-medium ${
-                ulezCompliant === true
-                  ? "text-emerald-400"
-                  : ulezCompliant === false
-                    ? "text-red-400"
-                    : "text-amber-400"
-              }`}
-            >
-              {vehicle.euroStatus
-                ? `Euro status: ${vehicle.euroStatus}`
-                : ulezCompliant === null &&
-                    (vehicle.fuelType ?? "").toUpperCase().includes("DIESEL") &&
-                    (vehicle.monthOfFirstRegistration ?? "") < "2015-09"
-                  ? "Euro status not held by DVLA — some pre-2015 diesels are still Euro 6"
-                  : "Based on DVLA registration data"}
-            </p>
-            <p className="mt-1.5 text-xs sm:text-sm text-muted">
-              {ulezCompliant === null ? "Confirm on " : "Check your vehicle on "}
-              <a
-                href="https://tfl.gov.uk/modes/driving/check-your-vehicle/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-amber-400 font-medium hover:underline"
-              >
-                TfL&apos;s ULEZ checker
-              </a>
-              .
-            </p>
-          </div>
-        )}
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 mb-4 sm:mb-6">
-          <div
-            className={`rounded-2xl border-2 px-4 sm:px-6 py-4 shadow-md ${
-              taxValid
-                ? "bg-gradient-to-br from-emerald-950/50 to-emerald-900/30 border-emerald-700/50 shadow-emerald-900/20"
-                : "bg-gradient-to-br from-red-950/50 to-red-900/30 border-red-700/50 shadow-red-900/20"
-            }`}
-          >
-            <p className={`text-sm font-semibold uppercase tracking-wider ${taxValid ? "text-emerald-400" : "text-red-400"}`}>
-              Tax
-            </p>
-            <p className={`mt-1 text-base sm:text-lg font-bold ${taxValid ? "text-emerald-300" : "text-red-300"}`}>
-              Expires: {vehicle.taxDueDate ? formatDate(vehicle.taxDueDate) : "—"}
-            </p>
-            <p className={`mt-0.5 text-sm font-medium ${taxValid ? "text-emerald-400" : "text-red-400"}`}>
+        {/* Status strip — tax, MOT, ULEZ as an editorial dashboard row */}
+        <div className="mb-12 grid grid-cols-1 divide-y divide-hairline border-y border-hairline sm:grid-cols-3 sm:divide-x sm:divide-y-0">
+          {/* Tax */}
+          <div className="px-0 py-5 sm:px-6 sm:first:pl-0">
+            <div className="flex items-center justify-between">
+              <p className="kicker text-muted">Tax</p>
+              <span className={`h-2 w-2 rounded-full ${taxValid ? "bg-emerald-400" : "bg-red-400"}`} aria-hidden />
+            </div>
+            <p className={`font-display mt-3 text-2xl ${taxValid ? "text-emerald-300" : "text-red-300"}`}>
               {taxDaysLeft !== null
                 ? taxDaysLeft > 0
                   ? `${taxDaysLeft} day${taxDaysLeft === 1 ? "" : "s"} left`
                   : taxDaysLeft < 0
                     ? "Expired"
-                    : "Expires today"
-                : "—"}
+                    : "Due today"
+                : "Unknown"}
+            </p>
+            <p className="mt-1 text-xs text-muted">
+              {vehicle.taxDueDate ? `Expires ${formatDate(vehicle.taxDueDate)}` : "No due date held"}
             </p>
             {!taxValid && (
-              <p className="mt-2 text-xs sm:text-sm text-muted">
-                <a
-                  href="https://www.gov.uk/vehicle-tax"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-amber-400 font-medium hover:underline"
-                >
-                  Tax your vehicle on GOV.UK
-                </a>
-              </p>
+              <a href="https://www.gov.uk/vehicle-tax" target="_blank" rel="noopener noreferrer" className="link-underline mt-2 inline-block text-xs font-medium text-accent">
+                Tax it on GOV.UK
+              </a>
             )}
           </div>
-          <div
-            className={`rounded-2xl border-2 px-4 sm:px-6 py-4 shadow-md ${
-              motValid
-                ? "bg-gradient-to-br from-emerald-950/50 to-emerald-900/30 border-emerald-700/50 shadow-emerald-900/20"
-                : "bg-gradient-to-br from-red-950/50 to-red-900/30 border-red-700/50 shadow-red-900/20"
-            }`}
-          >
-            <p className={`text-sm font-semibold uppercase tracking-wider ${motValid ? "text-emerald-400" : "text-red-400"}`}>
-              MOT
-            </p>
+
+          {/* MOT */}
+          <div className="px-0 py-5 sm:px-6">
+            <div className="flex items-center justify-between">
+              <p className="kicker text-muted">MOT</p>
+              <span className={`h-2 w-2 rounded-full ${motValid ? "bg-emerald-400" : "bg-red-400"}`} aria-hidden />
+            </div>
             {motExemptionActive && firstMotDueIso ? (
               <>
-                <p className="mt-1 text-base sm:text-lg font-bold text-emerald-300">
-                  MOT not required until {formatDate(firstMotDueIso)}
-                </p>
-                <p className="mt-1.5 text-xs sm:text-sm text-muted">
-                  New car first MOT is due 3 years after first registration.
-                </p>
+                <p className="font-display mt-3 text-2xl text-emerald-300">Not yet due</p>
+                <p className="mt-1 text-xs text-muted">First MOT by {formatDate(firstMotDueIso)} (3-yr rule)</p>
               </>
             ) : (
               <>
-                <p className={`mt-1 text-base sm:text-lg font-bold ${motValid ? "text-emerald-300" : "text-red-300"}`}>
-                  Expires:{" "}
-                  {vehicle.motExpiryDate
-                    ? formatDate(vehicle.motExpiryDate)
-                    : firstMotDueIso
-                      ? formatDate(firstMotDueIso)
-                      : "—"}
-                </p>
-                <p className={`mt-0.5 text-sm font-medium ${motValid ? "text-emerald-400" : "text-red-400"}`}>
+                <p className={`font-display mt-3 text-2xl ${motValid ? "text-emerald-300" : "text-red-300"}`}>
                   {motDaysLeft !== null
                     ? motDaysLeft > 0
                       ? `${motDaysLeft} day${motDaysLeft === 1 ? "" : "s"} left`
                       : motDaysLeft < 0
                         ? "Expired"
-                        : "Expires today"
-                    : "—"}
+                        : "Due today"
+                    : "Unknown"}
+                </p>
+                <p className="mt-1 text-xs text-muted">
+                  {vehicle.motExpiryDate
+                    ? `Expires ${formatDate(vehicle.motExpiryDate)}`
+                    : firstMotDueIso
+                      ? `Expires ${formatDate(firstMotDueIso)}`
+                      : "No expiry held"}
                 </p>
                 {motDaysLeft !== null && motDaysLeft < 0 && (
-                  <p className="mt-2 text-xs sm:text-sm text-muted">
-                    <a
-                      href="https://bookmygarage.com/mot/"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-amber-400 font-medium hover:underline"
-                    >
-                      Book an MOT
-                    </a>
-                  </p>
+                  <a href="https://bookmygarage.com/mot/" target="_blank" rel="noopener noreferrer" className="link-underline mt-2 inline-block text-xs font-medium text-accent">
+                    Book an MOT
+                  </a>
                 )}
               </>
+            )}
+          </div>
+
+          {/* ULEZ */}
+          <div className="px-0 py-5 sm:px-6">
+            <div className="flex items-center justify-between">
+              <p className="kicker text-muted">ULEZ</p>
+              <span
+                className={`h-2 w-2 rounded-full ${
+                  ulezCompliant === true ? "bg-emerald-400" : ulezCompliant === false ? "bg-red-400" : "bg-accent"
+                }`}
+                aria-hidden
+              />
+            </div>
+            {vehicle.fuelType ? (
+              <>
+                <p
+                  className={`font-display mt-3 text-2xl ${
+                    ulezCompliant === true ? "text-emerald-300" : ulezCompliant === false ? "text-red-300" : "text-accent-soft"
+                  }`}
+                >
+                  {ulezCompliant === true ? "Compliant" : ulezCompliant === false ? "Not compliant" : "Unknown"}
+                </p>
+                <p className="mt-1 text-xs text-muted">
+                  {vehicle.euroStatus
+                    ? `Euro status: ${vehicle.euroStatus}`
+                    : ulezCompliant === null &&
+                        (vehicle.fuelType ?? "").toUpperCase().includes("DIESEL") &&
+                        (vehicle.monthOfFirstRegistration ?? "") < "2015-09"
+                      ? "Euro status not held — some pre-2015 diesels are Euro 6"
+                      : "Based on DVLA data"}
+                </p>
+                <a href="https://tfl.gov.uk/modes/driving/check-your-vehicle/" target="_blank" rel="noopener noreferrer" className="link-underline mt-2 inline-block text-xs font-medium text-accent">
+                  Confirm on TfL
+                </a>
+              </>
+            ) : (
+              <p className="font-display mt-3 text-2xl text-muted">Unknown</p>
             )}
           </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 lg:gap-x-6 lg:gap-y-6 mb-4 sm:mb-6">
           <div className="flex flex-col gap-4 sm:gap-6">
-            <section className="rounded-3xl bg-card border border-card-border shadow-lg shadow-black/30 ring-1 ring-white/5 overflow-hidden">
-              <h2 className="px-4 sm:px-6 py-3.5 sm:py-4 border-b border-card-border/60 text-base sm:text-lg font-bold text-foreground bg-surface/50">
+            <section className="rounded-lg border border-hairline bg-card/50 overflow-hidden">
+              <h2 className="px-5 sm:px-6 py-4 border-b border-hairline font-display text-lg text-foreground">
                 Vehicle details
               </h2>
               <dl className="p-4 sm:p-6 grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2">
@@ -1058,7 +1023,7 @@ export default function VehiclePage() {
                   const value = vehicle[key];
                   return (
                     <div key={key} className="flex flex-col gap-0.5 py-1">
-                      <dt className="text-xs uppercase tracking-wider text-muted font-semibold">
+                      <dt className="kicker text-muted">
                         {formatLabel(key)}
                       </dt>
                       <dd className="text-foreground font-medium break-words">
@@ -1069,16 +1034,16 @@ export default function VehiclePage() {
                 })}
               </dl>
               {likelyImported && (
-                <p className="px-4 sm:px-6 pb-4 sm:pb-6 text-amber-400 font-semibold text-sm">
+                <p className="px-5 sm:px-6 pb-5 sm:pb-6 text-accent font-medium text-sm">
                   Vehicle likely imported
                 </p>
               )}
             </section>
 
-            <section className="rounded-3xl bg-card border border-card-border shadow-lg shadow-black/30 ring-1 ring-white/5 overflow-hidden">
-              <h2 className="px-4 sm:px-6 py-3.5 sm:py-4 border-b border-card-border/60 text-base sm:text-lg font-bold text-foreground bg-surface/50 flex items-center gap-2 flex-wrap">
+            <section className="rounded-lg border border-hairline bg-card/50 overflow-hidden">
+              <h2 className="px-5 sm:px-6 py-4 border-b border-hairline font-display text-lg text-foreground flex items-center gap-2 flex-wrap">
                 Vehicle performance
-                <span className="text-xs font-semibold uppercase tracking-wider text-blue-400 bg-blue-950/60 px-2 py-0.5 rounded-md border border-blue-800/50">
+                <span className="kicker rounded-full border border-accent/40 px-2.5 py-0.5 text-accent">
                   Beta
                 </span>
               </h2>
@@ -1102,27 +1067,27 @@ export default function VehiclePage() {
                         lookedUpSpecs.topSpeedMph != null) ? (
                         <dl className="grid gap-3 sm:gap-4 grid-cols-2 sm:grid-cols-3">
                           <div className="flex flex-col gap-0.5 py-1">
-                            <dt className="text-xs uppercase tracking-wider text-muted font-semibold">BHP</dt>
+                            <dt className="kicker text-muted">BHP</dt>
                             <dd className="text-foreground font-semibold">
                               {lookedUpSpecs.bhp != null ? lookedUpSpecs.bhp : "—"}
                             </dd>
                           </div>
                           <div className="flex flex-col gap-0.5 py-1">
-                            <dt className="text-xs uppercase tracking-wider text-muted font-semibold">Torque</dt>
+                            <dt className="kicker text-muted">Torque</dt>
                             <dd className="text-foreground font-semibold">
                               {lookedUpSpecs.torque != null ? `${lookedUpSpecs.torque} Nm` : "—"}
                             </dd>
                           </div>
                           <div className="flex flex-col gap-0.5 py-1">
-                            <dt className="text-xs uppercase tracking-wider text-muted font-semibold">Gearbox</dt>
+                            <dt className="kicker text-muted">Gearbox</dt>
                             <dd className="text-foreground font-semibold">{lookedUpSpecs.gearbox || "—"}</dd>
                           </div>
                           <div className="flex flex-col gap-0.5 py-1">
-                            <dt className="text-xs uppercase tracking-wider text-muted font-semibold">Drivetrain</dt>
+                            <dt className="kicker text-muted">Drivetrain</dt>
                             <dd className="text-foreground font-semibold">{lookedUpSpecs.drivetrain || "—"}</dd>
                           </div>
                           <div className="flex flex-col gap-0.5 py-1">
-                            <dt className="text-xs uppercase tracking-wider text-muted font-semibold">0–60 mph</dt>
+                            <dt className="kicker text-muted">0–60 mph</dt>
                             <dd className="text-foreground font-semibold">
                               {lookedUpSpecs.acceleration0100 != null
                                 ? `${lookedUpSpecs.acceleration0100}s`
@@ -1130,15 +1095,15 @@ export default function VehiclePage() {
                             </dd>
                           </div>
                           <div className="flex flex-col gap-0.5 py-1">
-                            <dt className="text-xs uppercase tracking-wider text-muted font-semibold">Top speed</dt>
+                            <dt className="kicker text-muted">Top speed</dt>
                             <dd className="text-foreground font-semibold">
                               {lookedUpSpecs.topSpeedMph != null ? `${lookedUpSpecs.topSpeedMph} mph` : "—"}
                             </dd>
                           </div>
                         </dl>
                       ) : null}
-                      <label className="block min-w-0 pt-2 border-t border-card-border/60">
-                        <span className="text-sm text-muted mb-1.5 block">Select trim</span>
+                      <label className="block min-w-0 pt-4 border-t border-hairline">
+                        <span className="kicker mb-2 block text-muted">Select trim</span>
                         <select
                           value={selectedSpecId}
                           onChange={(e) => {
@@ -1147,7 +1112,7 @@ export default function VehiclePage() {
                             const match = specCandidates.find((c) => c.id === id);
                             setLookedUpSpecs(match ?? null);
                           }}
-                          className="w-full rounded-xl border border-card-border bg-surface px-3 py-2.5 text-sm text-foreground shadow-sm focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/20"
+                          className="w-full rounded-md border border-hairline bg-surface px-3 py-2.5 text-sm text-foreground focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent/40"
                         >
                           {specCandidates.map((c) => (
                             <option key={c.id} value={c.id}>
@@ -1168,7 +1133,7 @@ export default function VehiclePage() {
                     <p className="text-center text-sm sm:text-base text-muted max-w-md">
                       <Link
                         href={`/login?next=${encodeURIComponent(`/vehicle/${registration}`)}`}
-                        className="text-blue-400 font-semibold hover:underline"
+                        className="link-underline font-medium text-accent"
                       >
                         Log in now
                       </Link>{" "}
@@ -1179,21 +1144,21 @@ export default function VehiclePage() {
               </div>
             </section>
 
-            <section className="rounded-3xl bg-card border border-card-border shadow-lg shadow-black/30 ring-1 ring-white/5 overflow-hidden">
-              <h2 className="px-4 sm:px-6 py-3.5 sm:py-4 border-b border-card-border/60 text-base sm:text-lg font-bold text-foreground bg-surface/50">
+            <section className="rounded-lg border border-hairline bg-card/50 overflow-hidden">
+              <h2 className="px-5 sm:px-6 py-4 border-b border-hairline font-display text-lg text-foreground">
                 Mileage information
               </h2>
               {lastMotMileage != null || lastYearMileage != null || mileageSummary ? (
                 <>
                   <dl className="p-4 sm:p-6 grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2">
                   <div className="flex flex-col gap-0.5 py-1">
-                    <dt className="text-xs uppercase tracking-wider text-muted font-semibold">Last MOT mileage</dt>
+                    <dt className="kicker text-muted">Last MOT mileage</dt>
                     <dd className="text-foreground font-semibold text-lg">
                       {lastMotMileage != null ? `${lastMotMileage.toLocaleString()} miles` : "—"}
                     </dd>
                   </div>
                   <div className="flex flex-col gap-0.5 py-1">
-                    <dt className="text-xs uppercase tracking-wider text-muted font-semibold">Mileage issues</dt>
+                    <dt className="kicker text-muted">Mileage issues</dt>
                     <dd
                       className={`font-semibold text-lg ${
                         hasMileageIssue ? "text-red-400" : "text-emerald-400"
@@ -1204,7 +1169,7 @@ export default function VehiclePage() {
                   </div>
                   {mileageSummary && (
                     <div className="flex flex-col gap-0.5 py-1">
-                      <dt className="text-xs uppercase tracking-wider text-muted font-semibold">
+                      <dt className="kicker text-muted">
                         Average yearly mileage
                       </dt>
                       <dd className="text-foreground font-semibold text-lg">
@@ -1213,7 +1178,7 @@ export default function VehiclePage() {
                     </div>
                   )}
                   <div className="flex flex-col gap-0.5 py-1">
-                    <dt className="text-xs uppercase tracking-wider text-muted font-semibold">Mileage last year</dt>
+                    <dt className="kicker text-muted">Mileage last year</dt>
                     <dd className="text-foreground font-semibold text-lg">
                       {lastYearMileage != null ? `${lastYearMileage.toLocaleString()} miles` : "—"}
                     </dd>
@@ -1221,7 +1186,7 @@ export default function VehiclePage() {
                   </dl>
                   {yearlyLatestOdometer.length > 0 && (
                   <div className="px-4 sm:px-6 pb-4 sm:pb-6">
-                    <p className="mt-2 text-xs uppercase tracking-wider text-muted font-semibold">
+                    <p className="mt-2 kicker text-muted">
                       Latest odometer per year
                     </p>
                     <div className="mt-3 space-y-3">
@@ -1236,13 +1201,13 @@ export default function VehiclePage() {
                               <div className="w-14 text-xs font-semibold text-muted">{p.year}</div>
                               <div className="flex-1 relative h-2.5 rounded-full bg-surface">
                                 <div
-                                  className="absolute inset-y-0 left-0 flex items-center justify-end rounded-full bg-amber-500 px-1"
+                                  className="absolute inset-y-0 left-0 flex items-center justify-end rounded-full bg-accent px-1"
                                   style={{ width: `${widthPct}%` }}
                                 >
                                   {deltaFromPrev != null && (
                                     <span
-                                      className={`text-[10px] font-mono font-semibold whitespace-nowrap drop-shadow-sm ${
-                                        deltaFromPrev < 0 ? "text-red-100" : "text-white"
+                                      className={`text-[10px] font-mono font-semibold whitespace-nowrap ${
+                                        deltaFromPrev < 0 ? "text-red-100" : "text-background"
                                       }`}
                                     >
                                       {deltaFromPrev >= 0 ? "+" : ""}
@@ -1271,21 +1236,21 @@ export default function VehiclePage() {
           </div>
 
           <div className="flex flex-col gap-4 sm:gap-6">
-            <section className="rounded-3xl bg-card border border-card-border shadow-lg shadow-black/30 ring-1 ring-white/5 overflow-hidden">
-              <h2 className="px-4 sm:px-6 py-3.5 sm:py-4 border-b border-card-border/60 text-base sm:text-lg font-bold text-foreground bg-surface/50">
+            <section className="rounded-lg border border-hairline bg-card/50 overflow-hidden">
+              <h2 className="px-5 sm:px-6 py-4 border-b border-hairline font-display text-lg text-foreground">
                 MOT summary
               </h2>
-              <dl className="p-4 sm:p-6 grid grid-cols-3 gap-2 sm:gap-4 divide-x divide-card-border/60">
+              <dl className="p-5 sm:p-6 grid grid-cols-3 gap-2 sm:gap-4 divide-x divide-hairline">
                 <div className="flex flex-col gap-0.5 py-1 px-1 sm:px-2 text-center min-w-0">
-                  <dt className="text-[10px] sm:text-xs uppercase tracking-wider text-muted font-semibold leading-tight">Total MOT tests</dt>
+                  <dt className="kicker text-muted leading-tight">Total tests</dt>
                   <dd className="text-foreground font-semibold text-base sm:text-lg tabular-nums">{motTotal}</dd>
                 </div>
                 <div className="flex flex-col gap-0.5 py-1 px-1 sm:px-2 text-center min-w-0">
-                  <dt className="text-[10px] sm:text-xs uppercase tracking-wider text-muted font-semibold leading-tight">Passed</dt>
+                  <dt className="kicker text-muted leading-tight">Passed</dt>
                   <dd className="text-emerald-400 font-semibold text-base sm:text-lg tabular-nums">{motPassed}</dd>
                 </div>
                 <div className="flex flex-col gap-0.5 py-1 px-1 sm:px-2 text-center min-w-0">
-                  <dt className="text-[10px] sm:text-xs uppercase tracking-wider text-muted font-semibold leading-tight">Failed</dt>
+                  <dt className="kicker text-muted leading-tight">Failed</dt>
                   <dd className="text-red-400 font-semibold text-base sm:text-lg tabular-nums">{motFailed}</dd>
                 </div>
               </dl>
@@ -1317,56 +1282,56 @@ export default function VehiclePage() {
             </section>
 
             {primaryMot && (primaryMot.model ?? primaryMot.engineSize ?? primaryMot.primaryColour ?? primaryMot.firstUsedDate ?? primaryMot.registrationDate ?? primaryMot.manufactureDate ?? primaryMot.hasOutstandingRecall) && (
-              <section className="rounded-3xl bg-card border border-card-border shadow-lg shadow-black/30 ring-1 ring-white/5 overflow-hidden">
-                <h2 className="px-4 sm:px-6 py-3.5 sm:py-4 border-b border-card-border/60 text-base sm:text-lg font-bold text-foreground bg-surface/50">
+              <section className="rounded-lg border border-hairline bg-card/50 overflow-hidden">
+                <h2 className="px-5 sm:px-6 py-4 border-b border-hairline font-display text-lg text-foreground">
                   MOT vehicle info
                 </h2>
                 <dl className="p-4 sm:p-6 grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2">
                   {primaryMot.model && (
                     <div className="flex flex-col gap-0.5">
-                      <dt className="text-xs uppercase tracking-wider text-muted">Model</dt>
+                      <dt className="kicker text-muted">Model</dt>
                       <dd className="text-foreground font-medium">{primaryMot.model}</dd>
                     </div>
                   )}
                   {primaryMot.engineSize && (
                     <div className="flex flex-col gap-0.5">
-                      <dt className="text-xs uppercase tracking-wider text-muted">Engine size (MOT)</dt>
+                      <dt className="kicker text-muted">Engine size (MOT)</dt>
                       <dd className="text-foreground font-medium">{primaryMot.engineSize} cc</dd>
                     </div>
                   )}
                   {primaryMot.primaryColour && (
                     <div className="flex flex-col gap-0.5">
-                      <dt className="text-xs uppercase tracking-wider text-muted">Primary colour (MOT)</dt>
+                      <dt className="kicker text-muted">Primary colour (MOT)</dt>
                       <dd className="text-foreground font-medium">{primaryMot.primaryColour}</dd>
                     </div>
                   )}
                   {primaryMot.firstUsedDate && !hideFirstUsedDate && (
                     <div className="flex flex-col gap-0.5">
-                      <dt className="text-xs uppercase tracking-wider text-muted">First used date</dt>
+                      <dt className="kicker text-muted">First used date</dt>
                       <dd className="text-foreground font-medium">{formatDate(primaryMot.firstUsedDate)}</dd>
                     </div>
                   )}
                   {primaryMot.registrationDate && (
                     <div className="flex flex-col gap-0.5">
-                      <dt className="text-xs uppercase tracking-wider text-muted">Registration date (MOT)</dt>
+                      <dt className="kicker text-muted">Registration date (MOT)</dt>
                       <dd className="text-foreground font-medium">{formatDate(primaryMot.registrationDate)}</dd>
                     </div>
                   )}
                   {primaryMot.manufactureDate && !hideManufactureDate && (
                     <div className="flex flex-col gap-0.5">
-                      <dt className="text-xs uppercase tracking-wider text-muted">Manufacture date (MOT)</dt>
+                      <dt className="kicker text-muted">Manufacture date (MOT)</dt>
                       <dd className="text-foreground font-medium">{formatDate(primaryMot.manufactureDate)}</dd>
                     </div>
                   )}
                   {primaryMot.hasOutstandingRecall && (
                     <div className="flex flex-col gap-0.5 sm:col-span-2">
-                      <dt className="text-xs uppercase tracking-wider text-muted">Outstanding recall</dt>
+                      <dt className="kicker text-muted">Outstanding recall</dt>
                       <dd className="text-foreground font-medium">{primaryMot.hasOutstandingRecall}</dd>
                     </div>
                   )}
                   {primaryMot.vehicleId && (
                     <div className="flex flex-col gap-0.5 sm:col-span-2">
-                      <dt className="text-xs uppercase tracking-wider text-muted">Vehicle ID (MOT)</dt>
+                      <dt className="kicker text-muted">Vehicle ID (MOT)</dt>
                       <dd className="text-foreground font-mono text-sm">{primaryMot.vehicleId}</dd>
                     </div>
                   )}
@@ -1374,8 +1339,8 @@ export default function VehiclePage() {
               </section>
             )}
 
-            <section className="rounded-3xl bg-card border border-card-border shadow-lg shadow-black/30 ring-1 ring-white/5 overflow-hidden">
-              <h2 className="px-4 sm:px-6 py-3.5 sm:py-4 border-b border-card-border/60 text-base sm:text-lg font-bold text-foreground bg-surface/50">
+            <section className="rounded-lg border border-hairline bg-card/50 overflow-hidden">
+              <h2 className="px-5 sm:px-6 py-4 border-b border-hairline font-display text-lg text-foreground">
                 Road tax
               </h2>
               {roadTax ? (
@@ -1385,7 +1350,7 @@ export default function VehiclePage() {
                       <dl className="p-4 sm:p-6 grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2">
                         {roadTaxLegacyBand && (
                           <div className="flex flex-col gap-0.5 py-1 sm:col-span-2">
-                            <dt className="text-xs uppercase tracking-wider text-muted font-semibold">Band</dt>
+                            <dt className="kicker text-muted">Band</dt>
                             <dd
                               className={`font-semibold text-lg ${
                                 co2Band?.band.textColor ?? "text-foreground"
@@ -1397,7 +1362,7 @@ export default function VehiclePage() {
                         )}
                         {showFirstYearRoadTax && roadTax.firstYear != null && (
                           <div className="flex flex-col gap-0.5 py-1">
-                            <dt className="text-xs uppercase tracking-wider text-muted font-semibold">
+                            <dt className="kicker text-muted">
                               First year (12 months)
                             </dt>
                             <dd className="text-foreground font-semibold text-lg">
@@ -1406,13 +1371,13 @@ export default function VehiclePage() {
                           </div>
                         )}
                         <div className="flex flex-col gap-0.5 py-1">
-                          <dt className="text-xs uppercase tracking-wider text-muted font-semibold">12 month payment</dt>
+                          <dt className="kicker text-muted">12 month payment</dt>
                           <dd className="text-foreground font-semibold text-lg">
                             £{roadTax.standard12Month.toLocaleString()}
                           </dd>
                         </div>
                         <div className="flex flex-col gap-0.5 py-1">
-                          <dt className="text-xs uppercase tracking-wider text-muted font-semibold">6 month payment</dt>
+                          <dt className="kicker text-muted">6 month payment</dt>
                           <dd className="text-foreground font-semibold text-lg">
                             £{roadTax.standard6Month.toFixed(2)}
                           </dd>
@@ -1428,7 +1393,7 @@ export default function VehiclePage() {
                   {roadTax.period === "2001_2017" && (
                     <dl className="p-4 sm:p-6 grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2">
                       <div className="flex flex-col gap-0.5 py-1 sm:col-span-2">
-                        <dt className="text-xs uppercase tracking-wider text-muted font-semibold">Band</dt>
+                        <dt className="kicker text-muted">Band</dt>
                         {roadTax.band && roadTax.co2Range ? (
                           <dd
                             className={`font-semibold text-lg ${
@@ -1442,13 +1407,13 @@ export default function VehiclePage() {
                         )}
                       </div>
                       <div className="flex flex-col gap-0.5 py-1">
-                        <dt className="text-xs uppercase tracking-wider text-muted font-semibold">Single 12 month payment</dt>
+                        <dt className="kicker text-muted">Single 12 month payment</dt>
                         <dd className="text-foreground font-semibold text-lg">
                           {roadTax.rate12Month != null ? `£${roadTax.rate12Month.toLocaleString()}` : "—"}
                         </dd>
                       </div>
                       <div className="flex flex-col gap-0.5 py-1">
-                        <dt className="text-xs uppercase tracking-wider text-muted font-semibold">12 monthly instalments (DD)</dt>
+                        <dt className="kicker text-muted">12 monthly instalments (DD)</dt>
                         <dd className="text-foreground font-semibold text-lg">
                           {roadTax.rate12MonthlyInstalments != null
                             ? `£${roadTax.rate12MonthlyInstalments.toLocaleString()}`
@@ -1456,7 +1421,7 @@ export default function VehiclePage() {
                         </dd>
                       </div>
                       <div className="flex flex-col gap-0.5 py-1">
-                        <dt className="text-xs uppercase tracking-wider text-muted font-semibold">Single 6 month payment</dt>
+                        <dt className="kicker text-muted">Single 6 month payment</dt>
                         <dd className="text-foreground font-semibold text-lg">
                           {roadTax.rate6Month != null ? `£${roadTax.rate6Month.toFixed(2)}` : "N/A"}
                         </dd>
@@ -1466,11 +1431,11 @@ export default function VehiclePage() {
                   {roadTax.period === "pre2001" && (
                     <dl className="p-4 sm:p-6 grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2">
                       <div className="flex flex-col gap-0.5 py-1">
-                        <dt className="text-xs uppercase tracking-wider text-muted font-semibold">Engine size</dt>
+                        <dt className="kicker text-muted">Engine size</dt>
                         <dd className="text-foreground font-semibold text-lg">{roadTax.engineBand}</dd>
                       </div>
                       <div className="flex flex-col gap-0.5 py-1">
-                        <dt className="text-xs uppercase tracking-wider text-muted font-semibold">12 month payment</dt>
+                        <dt className="kicker text-muted">12 month payment</dt>
                         <dd className="text-foreground font-semibold text-lg">£{roadTax.rate12Month.toLocaleString()}</dd>
                       </div>
                     </dl>
@@ -1481,7 +1446,7 @@ export default function VehiclePage() {
                       href="https://www.gov.uk/vehicle-tax-rate-tables"
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-amber-400 hover:underline"
+                      className="link-underline text-accent"
                     >
                       GOV.UK
                     </a>
@@ -1496,12 +1461,13 @@ export default function VehiclePage() {
             </section>
 
             {co2Band && (
-              <section className="rounded-3xl bg-card border border-card-border shadow-lg shadow-black/30 ring-1 ring-white/5 overflow-hidden">
-                <div className="px-4 sm:px-6 py-4 border-b border-card-border/60 bg-surface/50">
-                  <h2 className="text-base sm:text-lg font-bold text-foreground">CO2 emission figures</h2>
-                  <p className="mt-2 text-2xl sm:text-3xl font-bold text-foreground">
-                    {vehicle.co2Emissions} g/km{" "}
-                    <span className="text-muted font-semibold">({co2Band.letter})</span>
+              <section className="rounded-lg border border-hairline bg-card/50 overflow-hidden">
+                <div className="px-5 sm:px-6 py-4 border-b border-hairline">
+                  <h2 className="font-display text-lg text-foreground">CO₂ emission figures</h2>
+                  <p className="font-display mt-2 text-3xl sm:text-4xl text-foreground">
+                    {vehicle.co2Emissions}
+                    <span className="text-lg text-muted"> g/km</span>{" "}
+                    <span className="text-accent">({co2Band.letter})</span>
                   </p>
                 </div>
                 <div className="p-4 sm:p-6 space-y-1">
@@ -1535,33 +1501,33 @@ export default function VehiclePage() {
           </div>
         </div>
 
-        <section className="rounded-3xl bg-card border border-card-border shadow-lg shadow-black/30 ring-1 ring-white/5 overflow-hidden mb-4 sm:mb-6">
-          <h2 className="px-4 sm:px-6 py-3.5 sm:py-4 border-b border-card-border/60 text-base sm:text-lg font-bold text-foreground bg-surface/50">
+        <section className="rounded-lg border border-hairline bg-card/50 overflow-hidden mb-4 sm:mb-6">
+          <h2 className="px-5 sm:px-6 py-4 border-b border-hairline font-display text-lg text-foreground">
             MOT history
           </h2>
           {motTests.length > 0 ? (
             <>
               {mileageSummary && (
-                <div className="px-4 sm:px-6 py-4 sm:py-5 bg-gradient-to-r from-surface to-amber-950/30 border-b border-card-border/60">
-                  <p className="text-xs sm:text-sm font-semibold text-muted uppercase tracking-wider">Yearly average mileage</p>
-                  <p className="mt-1 text-xl sm:text-2xl font-bold text-foreground">
+                <div className="px-5 sm:px-6 py-5 border-b border-hairline bg-accent-tint">
+                  <p className="kicker text-accent">Yearly average mileage</p>
+                  <p className="font-display mt-2 text-2xl sm:text-3xl text-foreground">
                     {mileageSummary.yearlyAverageMiles.toLocaleString()}{" "}
-                    <span className="text-sm sm:text-base font-semibold text-muted">miles/year</span>
+                    <span className="text-base text-muted">miles/year</span>
                   </p>
                   <p className="mt-1 text-xs text-muted">
                     From {mileageSummary.fromDate} to {mileageSummary.toDate} · {mileageSummary.totalMiles.toLocaleString()} miles over {mileageSummary.totalYears.toFixed(1)} years
                   </p>
                 </div>
               )}
-            <ul className="divide-y divide-card-border/60">
+            <ul className="divide-y divide-hairline">
               {motTests.map((test, i) => (
-                <li key={test.motTestNumber ?? i} className="p-4 sm:p-6 hover:bg-surface/50 transition-colors">
+                <li key={test.motTestNumber ?? i} className="p-5 sm:p-6 hover:bg-surface/40 transition-colors">
                   <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-2">
                     <span
-                      className={`inline-flex items-center px-3 py-1.5 rounded-full text-xs font-semibold shadow-sm ${
+                      className={`kicker inline-flex items-center border-l-2 pl-2 ${
                         test.testResult === "PASSED"
-                          ? "bg-emerald-950/60 text-emerald-300 ring-1 ring-emerald-700/50"
-                          : "bg-red-950/60 text-red-300 ring-1 ring-red-700/50"
+                          ? "border-emerald-500 text-emerald-300"
+                          : "border-red-500 text-red-300"
                       }`}
                     >
                       {test.testResult ?? "—"}
@@ -1615,8 +1581,8 @@ export default function VehiclePage() {
           )}
         </section>
 
-        <footer className="mt-8 sm:mt-12 pb-8 text-center text-muted/60 text-xs sm:text-sm px-2 font-medium">
-          <p>Data from DVLA Vehicle Enquiry Service and MOT History API.</p>
+        <footer className="mt-12 border-t border-hairline pt-6 text-xs text-muted/70">
+          <p>Data from the DVLA Vehicle Enquiry Service and the MOT History API.</p>
         </footer>
       </div>
     </div>

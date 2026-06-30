@@ -2,7 +2,7 @@
 
 A UK number plate lookup site. Enter a registration to see vehicle details (make, colour, fuel type, MOT and tax status, ULEZ, road tax, mileage insights, and optional performance specs) from the DVLA Vehicle Enquiry Service and MOT History API.
 
-**Changelog & UI versions:** see [CHANGELOG.md](./CHANGELOG.md) — includes **UI revamp 3.0** (dark, current) and **UI revamp 2.0** (light) with git commands to revert.
+**Changelog & UI versions:** see [CHANGELOG.md](./CHANGELOG.md) — includes **UI revamp 4.0 "Garage Atelier"** (dark editorial, current), **UI revamp 3.0** (dark) and **UI revamp 2.0** (light) with git commands to revert.
 
 ## Run locally
 
@@ -50,7 +50,8 @@ To enrich results with BHP, torque, gearbox, and performance from a Kaggle-style
 
 | Version | Theme | Revert baseline |
 |---------|--------|-----------------|
-| **UI 3.0** | Dark — `#0a0a0f` background, elevated cards, amber accents | Current working tree (see CHANGELOG) |
+| **UI 4.0 "Garage Atelier"** | Dark editorial — warm ink `#0b0a08`, brass `#c9a35a` accent, hairlines, serif display, film grain | Current working tree (see CHANGELOG) |
+| **UI 3.0** | Dark — `#0a0a0f` background, elevated cards, amber accents | `git checkout fe634f5` for last UI 3.0 |
 | **UI 2.0** | Light — white/slate gradients, Plus Jakarta Sans | `git checkout 052b5b1` for last pushed light UI |
 
 Full feature list and revert commands: [CHANGELOG.md](./CHANGELOG.md).
@@ -60,5 +61,6 @@ Full feature list and revert commands: [CHANGELOG.md](./CHANGELOG.md).
 - Next.js 16 (App Router)
 - Tailwind CSS v4 (CSS variables in `app/globals.css`)
 - TypeScript
+- **UI 4.0** — Dark editorial; Fraunces / Space Grotesk / JetBrains Mono, brass accent, hairline rules, grain texture
 - **UI 3.0** — Dark theme, design tokens (`background`, `card`, `surface`, `muted`, amber accent)
 - **UI 2.0** — Plus Jakarta Sans, light gradients, elevated white cards

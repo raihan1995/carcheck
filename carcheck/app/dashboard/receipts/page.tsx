@@ -41,23 +41,23 @@ export default async function ReceiptsPage() {
 
   return (
     <section>
-      <h2 className="text-xs uppercase tracking-wider text-muted font-semibold">My receipts</h2>
-      <p className="mt-1 text-sm text-muted">Payment history for your full vehicle reports.</p>
+      <h2 className="font-display text-2xl">My receipts</h2>
+      <p className="mt-2 text-sm text-muted">Payment history for your full vehicle reports.</p>
 
       {rows.length === 0 ? (
-        <div className="mt-6 rounded-2xl border border-dashed border-card-border bg-surface/50 p-6 text-center">
+        <div className="mt-8 border-y border-hairline py-12 text-center">
           <p className="text-muted text-sm">No receipts yet.</p>
         </div>
       ) : (
-        <ul className="mt-4 divide-y divide-card-border/60 rounded-2xl border border-card-border overflow-hidden">
+        <ul className="mt-6 divide-y divide-hairline border-y border-hairline">
           {rows.map((row) => (
-            <li key={row.id} className="p-4 bg-surface/30">
+            <li key={row.id} className="py-5">
               <div className="flex flex-wrap items-start justify-between gap-2">
                 <div>
                   <p className="font-medium text-foreground">
                     Full report — {formatPlate(row.registration)}
                   </p>
-                  <p className="text-xs text-muted mt-0.5">
+                  <p className="kicker text-muted mt-1">
                     {new Date(row.purchased_at).toLocaleDateString("en-GB", {
                       day: "numeric",
                       month: "short",
@@ -65,7 +65,7 @@ export default async function ReceiptsPage() {
                     })}
                   </p>
                 </div>
-                <p className="text-foreground font-semibold tabular-nums">
+                <p className="font-display text-lg text-foreground tabular-nums">
                   {formatMoney(row.amount_pence, row.currency)}
                 </p>
               </div>

@@ -32,18 +32,21 @@ export default async function DashboardLayout({
     "there";
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background via-background-elevated to-background text-foreground">
-      <div className="mx-auto max-w-2xl px-4 py-10 sm:py-16">
-        <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Hi, {firstName}</h1>
-        <p className="mt-2 text-muted">Your RevVeal account dashboard.</p>
+    <div className="relative">
+      <div className="mx-auto max-w-3xl px-5 sm:px-8 py-12 sm:py-16">
+        <p className="kicker text-accent">Dashboard</p>
+        <h1 className="font-display mt-4 text-4xl sm:text-5xl font-semibold tracking-tight">
+          Hi, {firstName}
+        </h1>
+        <p className="mt-3 text-muted">Your reports, receipts and account settings.</p>
 
-        <div className="mt-8 rounded-3xl bg-card border border-card-border p-6 sm:p-8 shadow-lg shadow-black/30">
+        <div className="mt-10">
           <DashboardNav />
-          <div className="mt-6">{children}</div>
+          <div className="mt-8">{children}</div>
         </div>
 
-        <p className="mt-8">
-          <Link href="/" className="text-amber-400 font-medium hover:underline text-sm">
+        <p className="mt-12 border-t border-hairline pt-6">
+          <Link href="/" className="link-underline text-muted hover:text-accent text-sm">
             ← Back to home
           </Link>
         </p>

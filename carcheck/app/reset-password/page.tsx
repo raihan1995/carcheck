@@ -74,7 +74,7 @@ export default function ResetPasswordPage() {
       <AuthShell title="Reset password" subtitle="This reset link is invalid or has expired.">
         <p className="text-muted text-sm">
           Request a new link from the{" "}
-          <Link href="/forgot-password" className="text-amber-400 hover:underline font-medium">
+          <Link href="/forgot-password" className="link-underline text-accent font-medium">
             forgot password
           </Link>{" "}
           page.
@@ -115,7 +115,7 @@ export default function ResetPasswordPage() {
         <button
           type="submit"
           disabled={loading}
-          className="w-full min-h-[48px] rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 text-white font-semibold shadow-lg shadow-amber-500/25 hover:from-amber-600 hover:to-amber-700 disabled:opacity-60 transition-all"
+          className="w-full min-h-[48px] rounded-md bg-accent text-background font-medium hover:bg-accent-strong disabled:opacity-60 transition-colors"
         >
           {loading ? "Updating…" : "Update password"}
         </button>

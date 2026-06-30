@@ -9,18 +9,28 @@ export const metadata = {
 
 export default function ContactPage() {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background via-background-elevated to-background text-foreground">
-      <div className="mx-auto max-w-2xl px-4 py-12 sm:py-16">
-        <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Contact us</h1>
-        <p className="mt-4 text-muted">
-          Get in touch with the RevVeal team — we&apos;re happy to help.
+    <div className="relative overflow-hidden">
+      <div
+        className="contour pointer-events-none absolute -right-40 -top-32 h-[560px] w-[560px] opacity-60"
+        style={{ ["--r" as string]: "280px", ["--cx" as string]: "100%", ["--cy" as string]: "0%" }}
+        aria-hidden
+      />
+      <div className="relative mx-auto max-w-3xl px-5 sm:px-8 py-16 sm:py-24">
+        <p className="kicker text-accent">Get in touch</p>
+        <h1 className="font-display mt-5 text-5xl sm:text-6xl font-semibold tracking-tight">
+          Talk to us.
+        </h1>
+        <p className="mt-5 max-w-md text-muted leading-relaxed">
+          Questions, data corrections, or anything else — the RevVeal team is happy to help.
         </p>
-        <div className="mt-8 rounded-2xl bg-card border border-card-border p-6 shadow-lg shadow-black/30">
-          <p className="text-xs uppercase tracking-wider text-muted font-semibold">Email</p>
+
+        <div className="mt-12 border-t border-hairline pt-8">
+          <p className="kicker text-muted">Email</p>
           <EmailWithCopy />
         </div>
-        <p className="mt-8">
-          <Link href="/" className="text-amber-400 font-medium hover:underline">
+
+        <p className="mt-12 border-t border-hairline pt-6">
+          <Link href="/" className="link-underline text-muted hover:text-accent text-sm">
             ← Back to home
           </Link>
         </p>

@@ -18,10 +18,10 @@ export function EmailWithCopy() {
   }, []);
 
   return (
-    <div className="mt-2 flex flex-wrap items-center gap-2 sm:gap-3">
+    <div className="mt-4 flex flex-wrap items-center gap-3 sm:gap-5">
       <a
         href={`mailto:${EMAIL}`}
-        className="text-lg font-semibold text-amber-400 hover:underline break-all min-w-0"
+        className="font-display text-2xl sm:text-3xl text-accent hover:text-accent-soft break-all min-w-0 transition-colors"
       >
         {EMAIL}
       </a>
@@ -29,7 +29,7 @@ export function EmailWithCopy() {
         type="button"
         onClick={copy}
         aria-label={copied ? "Copied" : "Copy email address"}
-        className="shrink-0 inline-flex items-center gap-1.5 rounded-lg border border-card-border bg-surface px-3 py-1.5 text-sm font-medium text-foreground shadow-sm hover:bg-surface/80 hover:border-muted/40 transition-colors touch-manipulation"
+        className="shrink-0 inline-flex items-center gap-1.5 rounded-md border border-hairline px-3 py-1.5 text-sm font-medium text-muted-strong hover:border-foreground/30 hover:text-foreground transition-colors touch-manipulation"
       >
         {copied ? (
           <>

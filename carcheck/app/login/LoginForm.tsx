@@ -100,7 +100,7 @@ export function LoginForm() {
             disabled={loading}
           />
           <p className="text-right -mt-2">
-            <Link href="/forgot-password" className="text-sm text-amber-400 hover:underline font-medium">
+            <Link href="/forgot-password" className="link-underline text-sm text-accent font-medium">
               Forgot password?
             </Link>
           </p>
@@ -117,13 +117,13 @@ export function LoginForm() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full min-h-[48px] rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 text-white font-semibold shadow-lg shadow-amber-500/25 hover:from-amber-600 hover:to-amber-700 disabled:opacity-60 transition-all"
+            className="w-full min-h-[48px] rounded-md bg-accent text-background font-medium hover:bg-accent-strong disabled:opacity-60 transition-colors"
           >
             {loading ? "Signing in…" : "Log in with password"}
           </button>
           <p className="text-center text-sm text-muted pt-2">
             Haven&apos;t got a free account yet?{" "}
-            <Link href={registerHref} className="text-amber-400 font-semibold hover:underline">
+            <Link href={registerHref} className="link-underline text-accent font-medium">
               Register
             </Link>
           </p>
