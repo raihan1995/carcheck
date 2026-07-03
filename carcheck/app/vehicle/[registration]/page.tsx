@@ -1055,7 +1055,7 @@ export default function VehiclePage() {
                     : ulezCompliant === null &&
                         (vehicle.fuelType ?? "").toUpperCase().includes("DIESEL") &&
                         (vehicle.monthOfFirstRegistration ?? "") < "2015-09"
-                      ? "Euro status not held — some pre-2015 diesels are Euro 6"
+                      ? "No Euro status held, most pre-2015 diesels are Euro 5"
                       : "Based on DVLA data"}
                 </p>
                 <a href="https://tfl.gov.uk/modes/driving/check-your-vehicle/" target="_blank" rel="noopener noreferrer" className="link-underline mt-2 inline-block text-xs font-medium text-accent">
