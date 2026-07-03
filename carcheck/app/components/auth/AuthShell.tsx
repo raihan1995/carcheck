@@ -11,7 +11,7 @@ type AuthShellProps = {
 
 export function AuthShell({ title, subtitle, children }: AuthShellProps) {
   return (
-    <div className="grid min-h-[calc(100vh-4rem)] lg:grid-cols-2">
+    <div className="grid min-h-[calc(100vh-4rem)] lg:grid-cols-2 bg-white">
       {/* Editorial brand panel */}
       <aside className="relative hidden overflow-hidden border-r border-hairline px-12 py-16 lg:flex lg:flex-col lg:justify-between">
         <div

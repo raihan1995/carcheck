@@ -97,7 +97,7 @@ export function SiteHeader() {
   }
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-hairline bg-background/95 backdrop-blur-md shadow-sm">
+    <header className="sticky top-0 z-50 w-full border-b border-hairline bg-white/95 backdrop-blur-md">
       <div className="mx-auto flex h-16 sm:h-[4.5rem] max-w-7xl items-center justify-between px-4 sm:px-8">
         <Link
           href="/"
@@ -171,11 +171,11 @@ export function SiteHeader() {
       {menuOpen && (
         <>
           <div
-            className="fixed inset-0 top-16 sm:top-[4.5rem] z-40 bg-background/80 backdrop-blur-sm md:hidden"
+            className="fixed inset-0 top-16 sm:top-[4.5rem] z-40 bg-white/80 backdrop-blur-sm md:hidden"
             aria-hidden
             onClick={() => setMenuOpen(false)}
           />
-          <div className="absolute left-0 right-0 top-full z-50 border-y border-hairline bg-background md:hidden">
+          <div className="absolute left-0 right-0 top-full z-50 border-y border-hairline bg-white md:hidden">
             <nav className="flex flex-col px-5 py-3">
               {navLinks.map(({ href, label }, i) => (
                 <Link

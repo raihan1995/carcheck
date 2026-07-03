@@ -46,9 +46,10 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`overflow-x-hidden bg-background ${fraunces.variable} ${spaceGrotesk.variable} ${jetbrainsMono.variable}`}
+      className={`overflow-x-hidden bg-white text-foreground ${fraunces.variable} ${spaceGrotesk.variable} ${jetbrainsMono.variable}`}
+      style={{ colorScheme: "light" }}
     >
-      <body className="antialiased overflow-x-hidden min-h-screen flex flex-col bg-background text-foreground">
+      <body className="antialiased overflow-x-hidden min-h-screen flex flex-col bg-white text-foreground">
         <div className="grain-overlay" aria-hidden />
         <SiteHeader />
         <main className="relative z-10 flex-1">{children}</main>

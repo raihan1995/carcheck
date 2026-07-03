@@ -9,7 +9,7 @@ export function AuthDivider({ label = "or" }: AuthDividerProps) {
         <div className="w-full border-t border-hairline" />
       </div>
       <div className="relative flex justify-center">
-        <span className="kicker bg-background px-3 text-muted/70">{label}</span>
+        <span className="kicker bg-white px-3 text-muted/70">{label}</span>
       </div>
     </div>
   );

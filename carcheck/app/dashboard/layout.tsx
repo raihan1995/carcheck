@@ -32,7 +32,7 @@ export default async function DashboardLayout({
     "there";
 
   return (
-    <div className="relative">
+    <div className="relative bg-white">
       <div className="mx-auto max-w-3xl px-5 sm:px-8 py-12 sm:py-16">
         <p className="kicker text-accent">Dashboard</p>
         <h1 className="font-display mt-4 text-4xl sm:text-5xl font-semibold tracking-tight">

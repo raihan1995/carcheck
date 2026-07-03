@@ -852,7 +852,7 @@ export default function VehiclePage() {
     vehicleAgeYearsForRoadTax <= 5;
 
   return (
-    <div className="relative overflow-x-hidden">
+    <div className="relative overflow-x-hidden bg-white">
       <div className="mx-auto max-w-3xl lg:max-w-6xl px-5 sm:px-8 py-8 sm:py-12 pb-16">
         <Link
           href="/"
@@ -1014,7 +1014,7 @@ export default function VehiclePage() {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 lg:gap-x-6 lg:gap-y-6 mb-4 sm:mb-6">
           <div className="flex flex-col gap-4 sm:gap-6">
-            <section className="rounded-lg border border-hairline bg-card/50 overflow-hidden">
+            <section className="rounded-lg border border-hairline bg-white overflow-hidden">
               <h2 className="px-5 sm:px-6 py-4 border-b border-hairline font-display text-lg text-foreground">
                 Vehicle details
               </h2>
@@ -1040,7 +1040,7 @@ export default function VehiclePage() {
               )}
             </section>
 
-            <section className="rounded-lg border border-hairline bg-card/50 overflow-hidden">
+            <section className="rounded-lg border border-hairline bg-white overflow-hidden">
               <h2 className="px-5 sm:px-6 py-4 border-b border-hairline font-display text-lg text-foreground flex items-center gap-2 flex-wrap">
                 Vehicle performance
                 <span className="kicker rounded-full border border-accent/40 px-2.5 py-0.5 text-accent">
@@ -1144,7 +1144,7 @@ export default function VehiclePage() {
               </div>
             </section>
 
-            <section className="rounded-lg border border-hairline bg-card/50 overflow-hidden">
+            <section className="rounded-lg border border-hairline bg-white overflow-hidden">
               <h2 className="px-5 sm:px-6 py-4 border-b border-hairline font-display text-lg text-foreground">
                 Mileage information
               </h2>
@@ -1236,7 +1236,7 @@ export default function VehiclePage() {
           </div>
 
           <div className="flex flex-col gap-4 sm:gap-6">
-            <section className="rounded-lg border border-hairline bg-card/50 overflow-hidden">
+            <section className="rounded-lg border border-hairline bg-white overflow-hidden">
               <h2 className="px-5 sm:px-6 py-4 border-b border-hairline font-display text-lg text-foreground">
                 MOT summary
               </h2>
@@ -1282,7 +1282,7 @@ export default function VehiclePage() {
             </section>
 
             {primaryMot && (primaryMot.model ?? primaryMot.engineSize ?? primaryMot.primaryColour ?? primaryMot.firstUsedDate ?? primaryMot.registrationDate ?? primaryMot.manufactureDate ?? primaryMot.hasOutstandingRecall) && (
-              <section className="rounded-lg border border-hairline bg-card/50 overflow-hidden">
+              <section className="rounded-lg border border-hairline bg-white overflow-hidden">
                 <h2 className="px-5 sm:px-6 py-4 border-b border-hairline font-display text-lg text-foreground">
                   MOT vehicle info
                 </h2>
@@ -1339,7 +1339,7 @@ export default function VehiclePage() {
               </section>
             )}
 
-            <section className="rounded-lg border border-hairline bg-card/50 overflow-hidden">
+            <section className="rounded-lg border border-hairline bg-white overflow-hidden">
               <h2 className="px-5 sm:px-6 py-4 border-b border-hairline font-display text-lg text-foreground">
                 Road tax
               </h2>
@@ -1461,7 +1461,7 @@ export default function VehiclePage() {
             </section>
 
             {co2Band && (
-              <section className="rounded-lg border border-hairline bg-card/50 overflow-hidden">
+              <section className="rounded-lg border border-hairline bg-white overflow-hidden">
                 <div className="px-5 sm:px-6 py-4 border-b border-hairline">
                   <h2 className="font-display text-lg text-foreground">CO₂ emission figures</h2>
                   <p className="font-display mt-2 text-3xl sm:text-4xl text-foreground">
@@ -1501,7 +1501,7 @@ export default function VehiclePage() {
           </div>
         </div>
 
-        <section className="rounded-lg border border-hairline bg-card/50 overflow-hidden mb-4 sm:mb-6">
+        <section className="rounded-lg border border-hairline bg-white overflow-hidden mb-4 sm:mb-6">
           <h2 className="px-5 sm:px-6 py-4 border-b border-hairline font-display text-lg text-foreground">
             MOT history
           </h2>

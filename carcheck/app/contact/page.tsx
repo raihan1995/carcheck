@@ -9,7 +9,7 @@ export const metadata = {
 
 export default function ContactPage() {
   return (
-    <div className="relative overflow-hidden">
+    <div className="relative bg-white">
       <div
         className="contour pointer-events-none absolute -right-40 -top-32 h-[560px] w-[560px] opacity-60"
         style={{ ["--r" as string]: "280px", ["--cx" as string]: "100%", ["--cy" as string]: "0%" }}

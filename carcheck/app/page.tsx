@@ -3,8 +3,6 @@
 import { useState, useEffect, FormEvent } from "react";
 import { useRouter } from "next/navigation";
 
-import { RevVealLogo } from "./components/RevVealLogo";
-
 function normalizeRegistration(vrn: string): string {
   return vrn.replace(/\s+/g, "").toUpperCase().replace(/[^A-Z0-9]/g, "");
 }
@@ -96,115 +94,137 @@ export default function Home() {
   }
 
   return (
-    <div className="bg-background">
-      {/* Hero banner — logo image as the visual anchor (Auto Trader–style hero) */}
-      <section className="relative mx-auto max-w-6xl px-4 sm:px-6 pt-6 sm:pt-10">
-        <div className="overflow-hidden rounded-2xl sm:rounded-3xl bg-background-elevated border border-hairline shadow-sm">
+    <div className="bg-white text-foreground">
+      {/* Banner — logo image as hero */}
+      <section className="border-b border-hairline bg-white">
+        <div className="mx-auto max-w-4xl px-5 py-10 sm:py-14 flex justify-center">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src="/img/revveal.png"
-            alt=""
-            aria-hidden
-            className="w-full h-auto max-h-[220px] sm:max-h-[280px] object-cover object-center"
+            alt="RevVeal"
+            className="h-24 w-auto sm:h-32 md:h-40 object-contain"
           />
-        </div>
-
-        {/* Floating search card overlapping the banner */}
-        <div className="relative z-10 -mt-8 sm:-mt-10 mx-auto max-w-3xl">
-          <div className="rounded-2xl border border-hairline bg-card px-5 py-6 sm:px-8 sm:py-8 shadow-lg shadow-black/5">
-            <div className="flex justify-center mb-6">
-              <RevVealLogo variant="full" />
-            </div>
-
-            <p className="text-center text-muted text-sm sm:text-base max-w-md mx-auto">
-              Enter a UK number plate to view vehicle details, MOT history, tax and ULEZ status.
-            </p>
-
-            <form onSubmit={handleSubmit} className="mt-6">
-              <label htmlFor="plate" className="sr-only">
-                Registration number
-              </label>
-              <div className="flex flex-col sm:flex-row gap-3">
-                <div className="flex flex-1 items-center gap-2 rounded-xl bg-surface border border-hairline px-3 sm:px-4 min-h-[52px] focus-within:border-accent focus-within:ring-2 focus-within:ring-accent/20 transition-all">
-                  <span
-                    className="hidden sm:flex shrink-0 select-none flex-col items-center justify-center rounded-[3px] bg-[#003399] px-1.5 py-1 text-[#ffd132]"
-                    aria-hidden
-                  >
-                    <span className="text-[8px] leading-none">★</span>
-                    <span className="font-mono text-[10px] font-bold leading-tight">UK</span>
-                  </span>
-                  <input
-                    id="plate"
-                    type="text"
-                    value={plate}
-                    onChange={(e) => setPlate(e.target.value.toUpperCase())}
-                    placeholder="e.g. AB12 CDE"
-                    className="flex-1 min-w-0 bg-transparent py-3 font-mono text-lg sm:text-xl tracking-[0.12em] text-foreground placeholder-muted/50 focus:outline-none"
-                    disabled={loading}
-                    autoComplete="off"
-                    autoFocus
-                  />
-                </div>
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="w-full sm:w-auto sm:shrink-0 min-h-[52px] px-8 rounded-xl bg-accent text-white font-semibold hover:bg-accent-strong focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 disabled:opacity-60 transition-colors touch-manipulation"
-                >
-                  {loading ? "Checking…" : "Check vehicle"}
-                </button>
-              </div>
-              {error && (
-                <p className="mt-3 text-sm text-red-600 font-medium text-center" role="alert">
-                  {error}
-                </p>
-              )}
-            </form>
-          </div>
         </div>
       </section>
 
-      {/* Content below hero */}
-      <div className="mx-auto max-w-6xl px-4 sm:px-6 pt-16 sm:pt-20 pb-16">
-        {recentRegs.length > 0 && (
-          <section className="max-w-3xl mx-auto mb-12">
-            <p className="kicker text-muted text-center">Recent checks</p>
-            <div className="mt-3 flex flex-wrap justify-center gap-2">
-              {recentRegs.map((reg) => (
-                <button
-                  key={reg}
-                  type="button"
-                  onClick={() => handleRecentClick(reg)}
-                  className="inline-flex items-center rounded-lg border border-hairline bg-card px-3 py-1.5 font-mono text-sm tracking-[0.12em] text-muted-strong hover:border-accent/60 hover:text-accent transition-colors shadow-sm"
-                >
-                  {reg}
-                </button>
-              ))}
+      {/* Editorial hero — asymmetric grid, hairlines, oversized plate input */}
+      <div className="relative mx-auto grid max-w-6xl gap-12 px-5 py-12 sm:px-8 sm:py-16 lg:grid-cols-[1.15fr_0.85fr] lg:gap-20 lg:py-20">
+        <div
+          className="contour pointer-events-none absolute -right-32 top-8 hidden h-[480px] w-[480px] lg:block"
+          style={{ ["--r" as string]: "240px" }}
+          aria-hidden
+        />
+
+        <div className="relative max-w-xl">
+          <p className="kicker text-accent">01 — UK Number Plate Check</p>
+
+          <h1 className="font-display mt-6 text-5xl sm:text-6xl lg:text-[4.25rem] font-semibold leading-[0.95] tracking-tight text-foreground">
+            Reveal a car&apos;s
+            <br />
+            <span className="italic text-accent">whole</span> story.
+          </h1>
+
+          <p className="mt-6 max-w-md text-base sm:text-lg leading-relaxed text-muted">
+            One number plate. Make, MOT history, mileage, tax, ULEZ and emissions —
+            drawn straight from the DVLA and the MOT register.
+          </p>
+
+          <form onSubmit={handleSubmit} className="mt-10">
+            <label htmlFor="plate" className="kicker block text-muted">
+              Registration
+            </label>
+            <div className="mt-3 flex items-stretch border-b-2 border-foreground/20 focus-within:border-accent transition-colors">
+              <span
+                className="mb-2 mr-3 hidden select-none flex-col items-center justify-center rounded-[3px] bg-[#003399] px-2 py-1 text-[#ffd132] sm:flex"
+                aria-hidden
+              >
+                <span className="text-[9px] leading-none">★</span>
+                <span className="font-mono text-xs font-bold leading-tight">UK</span>
+              </span>
+              <input
+                id="plate"
+                type="text"
+                value={plate}
+                onChange={(e) => setPlate(e.target.value.toUpperCase())}
+                placeholder="AB12 CDE"
+                className="flex-1 min-w-0 bg-transparent pb-3 font-mono text-3xl sm:text-4xl tracking-[0.15em] text-foreground placeholder-muted/40 focus:outline-none"
+                disabled={loading}
+                autoComplete="off"
+                autoFocus
+              />
+              <button
+                type="submit"
+                disabled={loading}
+                className="group mb-2 ml-3 inline-flex shrink-0 items-center gap-2 self-end rounded-full bg-accent px-5 py-2 text-sm font-semibold text-white hover:bg-accent-strong disabled:opacity-50 touch-manipulation transition-colors"
+              >
+                {loading ? "Checking…" : "Reveal"}
+                {!loading && (
+                  <svg
+                    className="h-4 w-4 transition-transform group-hover:translate-x-0.5"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth={2}
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 12h14M13 6l6 6-6 6" />
+                  </svg>
+                )}
+              </button>
             </div>
-          </section>
-        )}
+            {error && (
+              <p className="mt-3 text-sm text-red-600 font-medium" role="alert">
+                {error}
+              </p>
+            )}
+          </form>
 
-        <section className="border-t border-hairline pt-10">
-          <p className="kicker text-muted text-center">Inside every check</p>
-          <dl className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-4 max-w-5xl mx-auto">
-            {[
-              ["01", "Vehicle details", "Make, colour, fuel, year, engine"],
-              ["02", "MOT history", "Every test, advisory and mileage reading"],
-              ["03", "Tax & ULEZ", "Status, due dates and clean-air compliance"],
-              ["04", "Mileage insight", "Yearly averages and anomaly detection"],
-            ].map(([num, title, desc]) => (
-              <div key={num} className="rounded-xl border border-hairline bg-card p-5 shadow-sm">
-                <span className="section-index text-sm text-accent">{num}</span>
-                <dt className="font-display mt-2 text-lg leading-tight">{title}</dt>
-                <dd className="mt-1 text-sm text-muted">{desc}</dd>
+          {recentRegs.length > 0 && (
+            <section className="mt-10 pt-8 border-t border-hairline">
+              <p className="kicker text-muted">Recent checks</p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {recentRegs.map((reg) => (
+                  <button
+                    key={reg}
+                    type="button"
+                    onClick={() => handleRecentClick(reg)}
+                    className="inline-flex items-center border border-hairline bg-white px-3 py-1.5 font-mono text-xs sm:text-sm tracking-[0.15em] text-muted-strong hover:border-accent hover:text-accent transition-colors"
+                  >
+                    {reg}
+                  </button>
+                ))}
               </div>
-            ))}
-          </dl>
-        </section>
+            </section>
+          )}
+        </div>
 
-        <footer className="mt-14 border-t border-hairline pt-6 text-center text-xs text-muted">
-          <p>Data from the DVLA Vehicle Enquiry Service and the MOT History API. For information only.</p>
-        </footer>
+        <aside className="relative lg:pt-4">
+          <div className="border-t border-hairline pt-6 lg:border-t-0 lg:pt-0 lg:border-l lg:border-hairline lg:pl-10">
+            <p className="kicker text-muted">Inside every check</p>
+            <dl className="mt-5 divide-y divide-hairline">
+              {[
+                ["01", "Vehicle details", "Make, colour, fuel, year, engine"],
+                ["02", "MOT history", "Every test, advisory and mileage reading"],
+                ["03", "Tax & ULEZ", "Status, due dates and clean-air compliance"],
+                ["04", "Mileage insight", "Yearly averages and anomaly detection"],
+              ].map(([num, title, desc]) => (
+                <div key={num} className="flex gap-4 py-5">
+                  <span className="section-index pt-0.5 text-sm text-accent">{num}</span>
+                  <div>
+                    <dt className="font-display text-xl leading-tight text-foreground">{title}</dt>
+                    <dd className="mt-1 text-sm text-muted leading-relaxed">{desc}</dd>
+                  </div>
+                </div>
+              ))}
+            </dl>
+          </div>
+        </aside>
       </div>
+
+      <footer className="border-t border-hairline bg-white">
+        <p className="mx-auto max-w-6xl px-5 sm:px-8 py-8 text-xs text-muted">
+          Data from the DVLA Vehicle Enquiry Service and the MOT History API. For information only.
+        </p>
+      </footer>
     </div>
   );
 }
