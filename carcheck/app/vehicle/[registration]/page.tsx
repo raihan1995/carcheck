@@ -378,6 +378,14 @@ function parseEuroNumber(euroStatus: string | undefined): number {
   return NaN;
 }
 
+/** Light background tint for Tax / MOT / ULEZ status panels (true = ok, false = bad, null = unknown). */
+function statusPanelClasses(state: boolean | null): string {
+  const base = "px-4 py-5 sm:px-6";
+  if (state === true) return `${base} bg-emerald-50`;
+  if (state === false) return `${base} bg-red-50`;
+  return `${base} bg-accent-tint`;
+}
+
 /** TfL-style ULEZ compliance using DVLA VES data. Returns null when unknown. */
 function getUlezCompliance(vehicle: {
   fuelType?: string;
@@ -888,6 +896,10 @@ export default function VehiclePage() {
 
   const motValid = motExemptionActive || (motDaysLeft !== null && motDaysLeft > 0);
 
+  const taxStatus: boolean | null = taxDaysLeft === null ? null : taxValid;
+  const motStatus: boolean | null = motExemptionActive ? true : motDaysLeft === null ? null : motValid;
+  const ulezStatus: boolean | null = vehicle.fuelType ? ulezCompliant : null;
+
   const vehicleRegAgeMs =
     dvlaFirstRegMonthMs ??
     motRegMonthMs ??
@@ -964,15 +976,16 @@ export default function VehiclePage() {
           </div>
         </header>
 
-        {/* Status strip — tax, MOT, ULEZ as an editorial dashboard row */}
+        {/* Status strip — tax, MOT, ULEZ with tinted panels */}
         <div className="mb-12 grid grid-cols-1 divide-y divide-hairline border-y border-hairline sm:grid-cols-3 sm:divide-x sm:divide-y-0">
           {/* Tax */}
-          <div className="px-0 py-5 sm:px-6 sm:first:pl-0">
-            <div className="flex items-center justify-between">
-              <p className="kicker text-muted">Tax</p>
-              <span className={`h-2 w-2 rounded-full ${taxValid ? "bg-emerald-400" : "bg-red-400"}`} aria-hidden />
-            </div>
-            <p className={`mt-3 text-2xl font-semibold ${taxValid ? "text-emerald-700" : "text-red-600"}`}>
+          <div className={statusPanelClasses(taxStatus)}>
+            <p className="kicker text-muted">Tax</p>
+            <p
+              className={`mt-3 text-2xl font-semibold ${
+                taxStatus === true ? "text-emerald-700" : taxStatus === false ? "text-red-600" : "text-accent-strong"
+              }`}
+            >
               {taxDaysLeft !== null
                 ? taxDaysLeft > 0
                   ? `${taxDaysLeft} day${taxDaysLeft === 1 ? "" : "s"} left`
@@ -992,11 +1005,8 @@ export default function VehiclePage() {
           </div>
 
           {/* MOT */}
-          <div className="px-0 py-5 sm:px-6">
-            <div className="flex items-center justify-between">
-              <p className="kicker text-muted">MOT</p>
-              <span className={`h-2 w-2 rounded-full ${motValid ? "bg-emerald-400" : "bg-red-400"}`} aria-hidden />
-            </div>
+          <div className={statusPanelClasses(motStatus)}>
+            <p className="kicker text-muted">MOT</p>
             {motExemptionActive && firstMotDueIso ? (
               <>
                 <p className="mt-3 text-2xl font-semibold text-emerald-700">Not yet due</p>
@@ -1004,7 +1014,11 @@ export default function VehiclePage() {
               </>
             ) : (
               <>
-                <p className={`mt-3 text-2xl font-semibold ${motValid ? "text-emerald-700" : "text-red-600"}`}>
+                <p
+                  className={`mt-3 text-2xl font-semibold ${
+                    motStatus === true ? "text-emerald-700" : motStatus === false ? "text-red-600" : "text-accent-strong"
+                  }`}
+                >
                   {motDaysLeft !== null
                     ? motDaysLeft > 0
                       ? `${motDaysLeft} day${motDaysLeft === 1 ? "" : "s"} left`
@@ -1030,16 +1044,8 @@ export default function VehiclePage() {
           </div>
 
           {/* ULEZ */}
-          <div className="px-0 py-5 sm:px-6">
-            <div className="flex items-center justify-between">
-              <p className="kicker text-muted">ULEZ</p>
-              <span
-                className={`h-2 w-2 rounded-full ${
-                  ulezCompliant === true ? "bg-emerald-400" : ulezCompliant === false ? "bg-red-400" : "bg-accent"
-                }`}
-                aria-hidden
-              />
-            </div>
+          <div className={statusPanelClasses(ulezStatus)}>
+            <p className="kicker text-muted">ULEZ</p>
             {vehicle.fuelType ? (
               <>
                 <p
