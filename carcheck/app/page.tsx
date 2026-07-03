@@ -96,7 +96,7 @@ export default function Home() {
   return (
     <div className="bg-white text-foreground">
       {/* Editorial hero — asymmetric grid, hairlines, oversized plate input */}
-      <div className="relative mx-auto grid max-w-6xl gap-12 px-5 py-12 sm:px-8 sm:py-16 lg:grid-cols-[1.15fr_0.85fr] lg:gap-20 lg:py-20">
+      <div className="relative mx-auto grid max-w-6xl gap-8 px-5 py-8 sm:gap-12 sm:px-8 sm:py-16 lg:grid-cols-[1.15fr_0.85fr] lg:gap-20 lg:py-20">
         <div
           className="contour pointer-events-none absolute -right-32 top-8 hidden h-[480px] w-[480px] lg:block"
           style={{ ["--r" as string]: "240px" }}
@@ -104,47 +104,51 @@ export default function Home() {
         />
 
         <div className="relative max-w-xl">
-          <p className="kicker text-accent">01 — UK Number Plate Check</p>
+          <p className="kicker text-accent max-sm:tracking-[0.12em]">01 — UK Number Plate Check</p>
 
-          <h1 className="font-display mt-6 text-5xl sm:text-6xl lg:text-[4rem] font-medium leading-[1.12] text-foreground">
+          <h1 className="font-display mt-4 sm:mt-6 text-4xl sm:text-5xl lg:text-[4rem] font-medium leading-[1.12] text-foreground">
             <span className="text-foreground">Re</span>
             <span className="text-accent">veal</span> a car&apos;s
             <br />
             <span className="italic text-foreground">whole</span> story.
           </h1>
 
-          <p className="mt-6 max-w-md text-base sm:text-lg leading-relaxed text-muted-strong">
-            One number plate. Make, MOT history, mileage, tax, ULEZ and emissions —
-            drawn straight from the DVLA and the MOT register.
+          <p className="mt-4 sm:mt-6 max-w-md text-base sm:text-lg font-semibold leading-relaxed text-muted-strong">
+            Free UK Plate Check
+          </p>
+          <p className="mt-2 max-w-md text-base sm:text-lg leading-relaxed text-muted-strong">
+            Get comprehensive vehicle information instantly
           </p>
 
-          <form onSubmit={handleSubmit} className="mt-10">
+          <form onSubmit={handleSubmit} className="mt-8 sm:mt-10">
             <label htmlFor="plate" className="block text-sm font-medium text-muted-strong">
               Registration
             </label>
-            <div className="mt-3 flex items-stretch border-b-2 border-foreground/20 focus-within:border-accent transition-colors">
-              <span
-                className="mb-2 mr-3 hidden select-none flex-col items-center justify-center rounded-[3px] bg-[#003399] px-2 py-1 text-[#ffd132] sm:flex"
-                aria-hidden
-              >
-                <span className="text-[9px] leading-none">★</span>
-                <span className="font-mono text-xs font-bold leading-tight">UK</span>
-              </span>
-              <input
-                id="plate"
-                type="text"
-                value={plate}
-                onChange={(e) => setPlate(e.target.value.toUpperCase())}
-                placeholder="AB12 CDE"
-                className="flex-1 min-w-0 bg-transparent pb-3 font-mono text-2xl sm:text-3xl tracking-[0.08em] text-foreground placeholder-muted/50 focus:outline-none"
-                disabled={loading}
-                autoComplete="off"
-                autoFocus
-              />
+            <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-stretch sm:gap-0 border-b-0 sm:border-b-2 border-foreground/20 focus-within:border-accent transition-colors">
+              <div className="flex min-w-0 items-stretch border-b-2 border-foreground/20 focus-within:border-accent sm:flex-1 sm:border-b-0">
+                <span
+                  className="mb-2 mr-2 sm:mr-3 flex shrink-0 select-none flex-col items-center justify-center self-end rounded-[3px] bg-[#003399] px-1.5 py-1 text-[#ffd132] sm:px-2"
+                  aria-hidden
+                >
+                  <span className="text-[9px] leading-none">★</span>
+                  <span className="font-mono text-[10px] sm:text-xs font-bold leading-tight">UK</span>
+                </span>
+                <input
+                  id="plate"
+                  type="text"
+                  value={plate}
+                  onChange={(e) => setPlate(e.target.value.toUpperCase())}
+                  placeholder="AB12 CDE"
+                  className="flex-1 min-w-0 bg-transparent pb-3 font-mono text-xl sm:text-2xl lg:text-3xl tracking-[0.06em] sm:tracking-[0.08em] text-foreground placeholder-muted/50 focus:outline-none"
+                  disabled={loading}
+                  autoComplete="off"
+                  autoFocus
+                />
+              </div>
               <button
                 type="submit"
                 disabled={loading}
-                className="group mb-2 ml-3 inline-flex shrink-0 items-center gap-2 self-end rounded-full bg-accent px-5 py-2 text-sm font-semibold text-white hover:bg-accent-strong disabled:opacity-50 touch-manipulation transition-colors"
+                className="group inline-flex w-full shrink-0 items-center justify-center gap-2 rounded-full bg-accent px-5 py-3 text-sm font-semibold text-white hover:bg-accent-strong disabled:opacity-50 touch-manipulation transition-colors sm:mb-2 sm:ml-3 sm:w-auto sm:self-end sm:py-2"
               >
                 {loading ? "Checking…" : "Reveal"}
                 {!loading && (
@@ -186,7 +190,7 @@ export default function Home() {
           )}
         </div>
 
-        <aside className="relative lg:pt-4">
+        <aside className="relative hidden md:block lg:pt-4">
           <div className="border-t border-hairline pt-6 lg:border-t-0 lg:pt-0 lg:border-l lg:border-hairline lg:pl-10">
             <p className="kicker text-muted">Inside every check</p>
             <dl className="mt-5 divide-y divide-hairline">
@@ -210,8 +214,8 @@ export default function Home() {
       </div>
 
       <footer className="border-t border-hairline bg-white">
-        <p className="mx-auto max-w-6xl px-5 sm:px-8 py-8 text-xs text-muted">
-          Data from the DVLA Vehicle Enquiry Service and the MOT History API. For information only.
+        <p className="mx-auto max-w-6xl px-5 sm:px-8 py-8 text-xs text-muted leading-relaxed">
+          Every check covers MOT history and status, road tax, mileage records, ULEZ compliance, and current DVLA registration data.
         </p>
       </footer>
     </div>
