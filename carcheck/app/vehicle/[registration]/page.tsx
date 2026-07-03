@@ -863,13 +863,13 @@ export default function VehiclePage() {
         </Link>
 
         {sample && (
-          <div className="mb-6 border-l-2 border-blue-500/60 bg-blue-500/[0.06] px-4 py-3 text-sm text-blue-200/90">
-            <span className="kicker text-blue-300">Sample</span>
+          <div className="mb-6 border-l-2 border-blue-500 bg-blue-50 px-4 py-3 text-sm text-blue-900">
+            <span className="kicker text-blue-700">Sample</span>
             <span className="ml-2">Example data showing a typical RevVeal check.</span>
           </div>
         )}
         {demo && !sample && (
-          <div className="mb-6 border-l-2 border-accent/60 bg-accent-tint px-4 py-3 text-sm text-accent-soft">
+          <div className="mb-6 border-l-2 border-accent bg-accent-tint px-4 py-3 text-sm text-muted-strong">
             <span className="kicker text-accent">Demo</span>
             <span className="ml-2">
               Add <code className="font-mono text-xs">DVLA_API_KEY</code> and MOT credentials to your{" "}
@@ -916,7 +916,7 @@ export default function VehiclePage() {
               <p className="kicker text-muted">Tax</p>
               <span className={`h-2 w-2 rounded-full ${taxValid ? "bg-emerald-400" : "bg-red-400"}`} aria-hidden />
             </div>
-            <p className={`font-display mt-3 text-2xl ${taxValid ? "text-emerald-300" : "text-red-300"}`}>
+            <p className={`font-display mt-3 text-2xl ${taxValid ? "text-emerald-700" : "text-red-600"}`}>
               {taxDaysLeft !== null
                 ? taxDaysLeft > 0
                   ? `${taxDaysLeft} day${taxDaysLeft === 1 ? "" : "s"} left`
@@ -943,12 +943,12 @@ export default function VehiclePage() {
             </div>
             {motExemptionActive && firstMotDueIso ? (
               <>
-                <p className="font-display mt-3 text-2xl text-emerald-300">Not yet due</p>
+                <p className="font-display mt-3 text-2xl text-emerald-700">Not yet due</p>
                 <p className="mt-1 text-xs text-muted">First MOT by {formatDate(firstMotDueIso)} (3-yr rule)</p>
               </>
             ) : (
               <>
-                <p className={`font-display mt-3 text-2xl ${motValid ? "text-emerald-300" : "text-red-300"}`}>
+                <p className={`font-display mt-3 text-2xl ${motValid ? "text-emerald-700" : "text-red-600"}`}>
                   {motDaysLeft !== null
                     ? motDaysLeft > 0
                       ? `${motDaysLeft} day${motDaysLeft === 1 ? "" : "s"} left`
@@ -988,7 +988,7 @@ export default function VehiclePage() {
               <>
                 <p
                   className={`font-display mt-3 text-2xl ${
-                    ulezCompliant === true ? "text-emerald-300" : ulezCompliant === false ? "text-red-300" : "text-accent-soft"
+                    ulezCompliant === true ? "text-emerald-700" : ulezCompliant === false ? "text-red-600" : "text-accent-strong"
                   }`}
                 >
                   {ulezCompliant === true ? "Compliant" : ulezCompliant === false ? "Not compliant" : "Unknown"}
@@ -1161,7 +1161,7 @@ export default function VehiclePage() {
                     <dt className="kicker text-muted">Mileage issues</dt>
                     <dd
                       className={`font-semibold text-lg ${
-                        hasMileageIssue ? "text-red-400" : "text-emerald-400"
+                        hasMileageIssue ? "text-red-600" : "text-emerald-700"
                       }`}
                     >
                       {hasMileageIssue ? "Yes" : "No"}
@@ -1207,7 +1207,7 @@ export default function VehiclePage() {
                                   {deltaFromPrev != null && (
                                     <span
                                       className={`text-[10px] font-mono font-semibold whitespace-nowrap ${
-                                        deltaFromPrev < 0 ? "text-red-100" : "text-background"
+                                        deltaFromPrev < 0 ? "text-red-100" : "text-white"
                                       }`}
                                     >
                                       {deltaFromPrev >= 0 ? "+" : ""}
@@ -1247,11 +1247,11 @@ export default function VehiclePage() {
                 </div>
                 <div className="flex flex-col gap-0.5 py-1 px-1 sm:px-2 text-center min-w-0">
                   <dt className="kicker text-muted leading-tight">Passed</dt>
-                  <dd className="text-emerald-400 font-semibold text-base sm:text-lg tabular-nums">{motPassed}</dd>
+                  <dd className="text-emerald-700 font-semibold text-base sm:text-lg tabular-nums">{motPassed}</dd>
                 </div>
                 <div className="flex flex-col gap-0.5 py-1 px-1 sm:px-2 text-center min-w-0">
                   <dt className="kicker text-muted leading-tight">Failed</dt>
-                  <dd className="text-red-400 font-semibold text-base sm:text-lg tabular-nums">{motFailed}</dd>
+                  <dd className="text-red-600 font-semibold text-base sm:text-lg tabular-nums">{motFailed}</dd>
                 </div>
               </dl>
               {motTotal > 0 && (
@@ -1526,8 +1526,8 @@ export default function VehiclePage() {
                     <span
                       className={`kicker inline-flex items-center border-l-2 pl-2 ${
                         test.testResult === "PASSED"
-                          ? "border-emerald-500 text-emerald-300"
-                          : "border-red-500 text-red-300"
+                          ? "border-emerald-500 text-emerald-700"
+                          : "border-red-500 text-red-600"
                       }`}
                     >
                       {test.testResult ?? "—"}

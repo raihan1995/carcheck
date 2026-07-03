@@ -4,13 +4,41 @@ Project history for **RevVeal** (UK Car Check). Use this when you need to see wh
 
 ---
 
-## UI revamp 4.0 — "Garage Atelier" (current)
+## UI revamp 4.5 — Auto Trader white + orange (current)
+
+**Theme:** Clean white marketplace palette (Auto Trader–inspired) with original orange accent
+(`#f59e0b`). Keeps v4 editorial fonts and layout; retires dark/brass colours and film grain.
+
+**Status:** Local working tree (as of last update).  
+**Baseline to revert to UI 4.0:** commit `d23cbe6` on `main`.
+
+### Revert to UI 4.0
+
+```bash
+git checkout d23cbe6 -- app/globals.css app/layout.tsx app/page.tsx app/components/ app/contact/ app/dashboard/ app/login/ app/register/ app/forgot-password/ app/reset-password/ "app/vehicle/[registration]/page.tsx" public/img/revveal.png
+```
+
+### What changed (4.5)
+
+| Area | Changes |
+|------|---------|
+| **Design tokens** (`app/globals.css`) | White `#ffffff` background, slate greys for borders/muted text, original orange accent; grain overlay disabled; contour uses orange tint |
+| **Logo** (`RevVealLogo.tsx`) | Restored PNG wordmark from `public/img/revveal.png` (copied from `img/revveal.png`) |
+| **Home** (`app/page.tsx`) | Auto Trader–style hero: `revveal.png` as banner image, floating white search card with orange CTA, feature cards grid |
+| **Vehicle page** | Status colours adjusted for light backgrounds (emerald/red `-600`/`-700`) |
+| **Header** | Light frosted bar with subtle shadow |
+
+**Unchanged on purpose:** Fraunces / Space Grotesk / JetBrains Mono type system, editorial structure, UK plate styling, all app logic.
+
+---
+
+## UI revamp 4.0 — "Garage Atelier"
 
 **Theme:** Dark editorial. Warm ink background, brass/gold accent (replaces flat amber),
 hairline rules instead of glassy cards, high-contrast serif display over a grotesk body.
 Designed to read like a printed car magazine rather than a generated SaaS template.
 
-**Status:** Local working tree (as of last update).  
+**Status:** Committed on `main` (`d23cbe6`).  
 **Baseline to revert to UI 3.0:** commit `fe634f5` on `main` (last UI 3.0 commit).
 
 ### Revert to UI 3.0

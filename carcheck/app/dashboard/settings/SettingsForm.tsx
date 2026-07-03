@@ -167,7 +167,7 @@ export function SettingsForm() {
         <button
           type="submit"
           disabled={savingProfile}
-          className="min-h-[44px] px-6 rounded-md border border-accent/50 text-sm font-medium text-accent hover:bg-accent hover:text-background disabled:opacity-60 transition-colors"
+          className="min-h-[44px] px-6 rounded-md border border-accent/50 text-sm font-medium text-accent hover:bg-accent hover:text-white disabled:opacity-60 transition-colors"
         >
           {savingProfile ? "Saving…" : "Save profile"}
         </button>
@@ -189,7 +189,7 @@ export function SettingsForm() {
         <button
           type="submit"
           disabled={savingEmail}
-          className="min-h-[44px] px-6 rounded-md border border-accent/50 text-sm font-medium text-accent hover:bg-accent hover:text-background disabled:opacity-60 transition-colors"
+          className="min-h-[44px] px-6 rounded-md border border-accent/50 text-sm font-medium text-accent hover:bg-accent hover:text-white disabled:opacity-60 transition-colors"
         >
           {savingEmail ? "Saving…" : "Update email"}
         </button>
@@ -221,7 +221,7 @@ export function SettingsForm() {
         <button
           type="submit"
           disabled={savingPassword}
-          className="min-h-[44px] px-6 rounded-md border border-accent/50 text-sm font-medium text-accent hover:bg-accent hover:text-background disabled:opacity-60 transition-colors"
+          className="min-h-[44px] px-6 rounded-md border border-accent/50 text-sm font-medium text-accent hover:bg-accent hover:text-white disabled:opacity-60 transition-colors"
         >
           {savingPassword ? "Saving…" : "Update password"}
         </button>

@@ -1,29 +1,28 @@
 @import "tailwindcss";
 
 /*
-  RevVeal — UI 4.0 "Garage Atelier"
-  Dark editorial theme: warm ink background, brass/gold accent, hairline rules,
-  high-contrast serif display (Fraunces) over a grotesk body (Space Grotesk),
-  technical figures in JetBrains Mono. Designed to read like a print magazine.
+  RevVeal — UI 4.5
+  Auto Trader–inspired clean white theme with original orange accent.
+  Keeps v4 editorial type (Fraunces / Space Grotesk / JetBrains Mono) and layout.
 */
 
 :root {
-  /* Warm ink palette — like dark paper, not cold slate */
-  --background: #0b0a08;
-  --background-elevated: #100e0a;
-  --foreground: #ece7dd;
-  --card: #14110c;
-  --card-border: #2a2419;
-  --hairline: #29231a;
-  --muted: #9c9384;
-  --muted-strong: #c4baa9;
-  --surface: #1b160f;
+  /* Clean white marketplace palette */
+  --background: #ffffff;
+  --background-elevated: #f9fafb;
+  --foreground: #111827;
+  --card: #ffffff;
+  --card-border: #e5e7eb;
+  --hairline: #e5e7eb;
+  --muted: #6b7280;
+  --muted-strong: #374151;
+  --surface: #f3f4f6;
 
-  /* Evolved accent — refined brass / gold instead of flat amber */
-  --accent: #c9a35a;
-  --accent-strong: #b3863a;
-  --accent-soft: #e6cf9b;
-  --accent-tint: rgba(201, 163, 90, 0.12);
+  /* Original orange accent (v3 amber) */
+  --accent: #f59e0b;
+  --accent-strong: #d97706;
+  --accent-soft: #fbbf24;
+  --accent-tint: rgba(245, 158, 11, 0.08);
 
   /* Plate stays statutory yellow */
   --plate: #ffd132;
@@ -62,33 +61,23 @@ body {
   font-feature-settings: "ss01", "cv01";
 }
 
-/* Subtle film-grain / paper texture over the whole page — fixed, non-interactive.
-   Gives the dark surface a hand-made, printed feel rather than flat digital black. */
+/* Disabled on light theme — grain reads as dirt on white */
 .grain-overlay {
-  pointer-events: none;
-  position: fixed;
-  inset: 0;
-  z-index: 1;
-  opacity: 0.5;
-  mix-blend-mode: soft-light;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  display: none;
 }
 
-/* Editorial display type: tighter tracking, optical sizing for Fraunces */
 .font-display {
   font-family: var(--font-display);
   font-optical-sizing: auto;
   letter-spacing: -0.01em;
 }
 
-/* Oversized section index numerals used across editorial sections, e.g. "01 / Vehicle" */
 .section-index {
   font-family: var(--font-mono);
   font-variant-numeric: tabular-nums;
   letter-spacing: 0.08em;
 }
 
-/* Kicker / eyebrow label — small caps, wide tracking, brass */
 .kicker {
   font-family: var(--font-mono);
   text-transform: uppercase;
@@ -96,13 +85,11 @@ body {
   font-size: 0.6875rem;
 }
 
-/* Hairline rule helper */
 .rule {
   border: 0;
   border-top: 1px solid var(--hairline);
 }
 
-/* Thin accent underline that animates on hover for nav/links */
 .link-underline {
   background-image: linear-gradient(var(--accent), var(--accent));
   background-size: 0% 1px;
@@ -114,13 +101,12 @@ body {
   background-size: 100% 1px;
 }
 
-/* Faint engineering arc — signature motif drawn behind hero/section corners */
 .contour {
   background-image: radial-gradient(
     circle at var(--cx, 100%) var(--cy, 0%),
     transparent 0,
     transparent calc(var(--r, 240px) - 1px),
-    rgba(201, 163, 90, 0.14) var(--r, 240px),
+    rgba(245, 158, 11, 0.06) var(--r, 240px),
     transparent calc(var(--r, 240px) + 1px)
   );
 }
