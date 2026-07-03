@@ -21,7 +21,7 @@ export function EmailWithCopy() {
     <div className="mt-4 flex flex-wrap items-center gap-3 sm:gap-5">
       <a
         href={`mailto:${EMAIL}`}
-        className="font-display text-2xl sm:text-3xl text-accent hover:text-accent-soft break-all min-w-0 transition-colors"
+        className="text-2xl sm:text-3xl font-semibold text-accent hover:text-accent-strong break-all min-w-0 transition-colors"
       >
         {EMAIL}
       </a>

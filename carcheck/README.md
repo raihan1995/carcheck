@@ -50,7 +50,7 @@ To enrich results with BHP, torque, gearbox, and performance from a Kaggle-style
 
 | Version | Theme | Revert baseline |
 |---------|--------|-----------------|
-| **UI 4.5** | White — Auto Trader–style `#ffffff`, original orange `#f59e0b`, PNG hero banner | Current working tree (see CHANGELOG) |
+| **UI 4.5** | White — Auto Trader–style `#ffffff`, original orange `#f59e0b`, editorial hero, PNG header logo | `main` (see CHANGELOG) |
 | **UI 4.0 "Garage Atelier"** | Dark editorial — warm ink `#0b0a08`, brass `#c9a35a` accent, hairlines, serif display | `git checkout d23cbe6` |
 | **UI 3.0** | Dark — `#0a0a0f` background, elevated cards, amber accents | `git checkout fe634f5` for last UI 3.0 |
 | **UI 2.0** | Light — white/slate gradients, Plus Jakarta Sans | `git checkout 052b5b1` for last pushed light UI |
@@ -62,7 +62,7 @@ Full feature list and revert commands: [CHANGELOG.md](./CHANGELOG.md).
 - Next.js 16 (App Router)
 - Tailwind CSS v4 (CSS variables in `app/globals.css`)
 - TypeScript
-- **UI 4.5** — White marketplace theme; original orange accent; Fraunces / Space Grotesk / JetBrains Mono; PNG hero banner
+- **UI 4.5** — White marketplace theme; original orange accent; Fraunces / Space Grotesk / JetBrains Mono; editorial hero; PNG header logo
 - **UI 4.0** — Dark editorial; brass accent, hairline rules, grain texture
 - **UI 3.0** — Dark theme, design tokens (`background`, `card`, `surface`, `muted`, amber accent)
 - **UI 2.0** — Plus Jakarta Sans, light gradients, elevated white cards

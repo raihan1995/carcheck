@@ -27,8 +27,8 @@ export default async function ReportsPage() {
 
   return (
     <section>
-      <h2 className="font-display text-2xl">My reports</h2>
-      <p className="mt-2 text-sm text-muted">
+      <h2 className="text-2xl font-semibold">My reports</h2>
+      <p className="mt-2 text-sm text-muted-strong">
         Full vehicle reports you&apos;ve purchased — saved on your account permanently.
       </p>
 

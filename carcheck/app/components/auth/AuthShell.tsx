@@ -24,7 +24,7 @@ export function AuthShell({ title, subtitle, children }: AuthShellProps) {
         </Link>
         <div className="relative max-w-sm">
           <p className="kicker text-accent">Members</p>
-          <p className="font-display mt-5 text-4xl leading-tight tracking-tight">
+          <p className="font-display mt-5 text-4xl font-medium leading-snug">
             Every check you run, <span className="italic text-accent">kept</span> for keeps.
           </p>
           <p className="mt-4 text-sm leading-relaxed text-muted">
@@ -39,8 +39,8 @@ export function AuthShell({ title, subtitle, children }: AuthShellProps) {
       <div className="flex flex-col justify-center px-5 py-12 sm:px-10 lg:px-16">
         <div className="mx-auto w-full max-w-md">
           <p className="kicker text-accent">Account</p>
-          <h1 className="font-display mt-4 text-4xl sm:text-5xl font-semibold tracking-tight">{title}</h1>
-          {subtitle && <p className="mt-3 text-muted">{subtitle}</p>}
+          <h1 className="font-display mt-4 text-4xl sm:text-5xl font-medium leading-snug">{title}</h1>
+          {subtitle && <p className="mt-3 text-muted-strong">{subtitle}</p>}
           <div className="mt-10">{children}</div>
           <p className="mt-10 border-t border-hairline pt-6">
             <Link href="/" className="link-underline text-sm text-muted hover:text-accent">

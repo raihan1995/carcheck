@@ -9,7 +9,7 @@ Project history for **RevVeal** (UK Car Check). Use this when you need to see wh
 **Theme:** Clean white marketplace palette (Auto Trader–inspired) with original orange accent
 (`#f59e0b`). Keeps v4 editorial fonts and layout; retires dark/brass colours and film grain.
 
-**Status:** Local working tree (as of last update).  
+**Status:** Committed on `main`.  
 **Baseline to revert to UI 4.0:** commit `d23cbe6` on `main`.
 
 ### Revert to UI 4.0
@@ -22,10 +22,12 @@ git checkout d23cbe6 -- app/globals.css app/layout.tsx app/page.tsx app/componen
 
 | Area | Changes |
 |------|---------|
-| **Design tokens** (`app/globals.css`) | White `#ffffff` background, slate greys for borders/muted text, original orange accent; grain overlay disabled; contour uses orange tint |
-| **Logo** (`RevVealLogo.tsx`) | Restored PNG wordmark from `public/img/revveal.png` (copied from `img/revveal.png`) |
-| **Home** (`app/page.tsx`) | Auto Trader–style hero: `revveal.png` as banner image, floating white search card with orange CTA, feature cards grid |
-| **Vehicle page** | Status colours adjusted for light backgrounds (emerald/red `-600`/`-700`) |
+| **Design tokens** (`app/globals.css`) | White `#ffffff` background; darker muted text (`#525252` / `#262626`); body line-height 1.625; grain overlay off; looser kicker tracking (12px / 0.18em); Fraunces letter-spacing reset |
+| **Logo** (`RevVealLogo.tsx`) | PNG wordmark from `public/img/revveal.png`; compact header size `h-11 sm:h-12` |
+| **Home** (`app/page.tsx`) | Editorial asymmetric hero (no full-width banner); headline **Re** / **veal** / *whole* styling; readable form labels; tighter hero leading |
+| **Vehicle page** | Light-theme status colours; sans semibold section headings; **CO₂ chart** active row uses band-matched light tints (e.g. lime-50 for D–E) instead of dark lime overlay |
+| **Auth & dashboard** | Form labels use readable body style; `text-muted-strong` for supporting copy; section headings sans semibold |
+| **Contact** | Semibold email link (sans display) |
 | **Header** | Light frosted bar with subtle shadow |
 
 **Unchanged on purpose:** Fraunces / Space Grotesk / JetBrains Mono type system, editorial structure, UK plate styling, all app logic.

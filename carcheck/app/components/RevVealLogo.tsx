@@ -5,7 +5,7 @@ type RevVealLogoProps = {
 };
 
 const variantHeights: Record<NonNullable<RevVealLogoProps["variant"]>, string> = {
-  compact: "h-9 w-auto sm:h-10",
+  compact: "h-11 w-auto sm:h-12",
   full: "h-28 w-auto sm:h-36 md:h-44",
 };
 

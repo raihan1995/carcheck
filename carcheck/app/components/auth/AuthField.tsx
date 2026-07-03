@@ -23,7 +23,7 @@ export function AuthField({
 }: AuthFieldProps) {
   return (
     <div>
-      <label htmlFor={id} className="kicker block text-muted mb-2">
+      <label htmlFor={id} className="block text-sm font-medium text-muted-strong mb-2">
         {label}
       </label>
       <input
@@ -37,7 +37,7 @@ export function AuthField({
           error ? "border-red-500/70" : "border-foreground/25 focus:border-accent"
         }`}
       />
-      {hint && !error && <p className="mt-2 text-xs text-muted">{hint}</p>}
+      {hint && !error && <p className="mt-2 text-xs text-muted-strong">{hint}</p>}
       {error && (
         <p className="mt-2 text-xs text-red-400 font-medium" role="alert">
           {error}

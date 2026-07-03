@@ -17,10 +17,10 @@ export default function ContactPage() {
       />
       <div className="relative mx-auto max-w-3xl px-5 sm:px-8 py-16 sm:py-24">
         <p className="kicker text-accent">Get in touch</p>
-        <h1 className="font-display mt-5 text-5xl sm:text-6xl font-semibold tracking-tight">
+        <h1 className="font-display mt-5 text-5xl sm:text-6xl font-medium leading-snug">
           Talk to us.
         </h1>
-        <p className="mt-5 max-w-md text-muted leading-relaxed">
+        <p className="mt-5 max-w-md text-muted-strong leading-relaxed">
           Questions, data corrections, or anything else — the RevVeal team is happy to help.
         </p>
 

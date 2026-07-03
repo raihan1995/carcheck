@@ -35,10 +35,10 @@ export default async function DashboardLayout({
     <div className="relative bg-white">
       <div className="mx-auto max-w-3xl px-5 sm:px-8 py-12 sm:py-16">
         <p className="kicker text-accent">Dashboard</p>
-        <h1 className="font-display mt-4 text-4xl sm:text-5xl font-semibold tracking-tight">
+        <h1 className="font-display mt-4 text-4xl sm:text-5xl font-medium leading-snug">
           Hi, {firstName}
         </h1>
-        <p className="mt-3 text-muted">Your reports, receipts and account settings.</p>
+        <p className="mt-3 text-muted-strong">Your reports, receipts and account settings.</p>
 
         <div className="mt-10">
           <DashboardNav />

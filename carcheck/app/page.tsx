@@ -95,18 +95,6 @@ export default function Home() {
 
   return (
     <div className="bg-white text-foreground">
-      {/* Banner — logo image as hero */}
-      <section className="border-b border-hairline bg-white">
-        <div className="mx-auto max-w-4xl px-5 py-10 sm:py-14 flex justify-center">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src="/img/revveal.png"
-            alt="RevVeal"
-            className="h-24 w-auto sm:h-32 md:h-40 object-contain"
-          />
-        </div>
-      </section>
-
       {/* Editorial hero — asymmetric grid, hairlines, oversized plate input */}
       <div className="relative mx-auto grid max-w-6xl gap-12 px-5 py-12 sm:px-8 sm:py-16 lg:grid-cols-[1.15fr_0.85fr] lg:gap-20 lg:py-20">
         <div
@@ -118,19 +106,20 @@ export default function Home() {
         <div className="relative max-w-xl">
           <p className="kicker text-accent">01 — UK Number Plate Check</p>
 
-          <h1 className="font-display mt-6 text-5xl sm:text-6xl lg:text-[4.25rem] font-semibold leading-[0.95] tracking-tight text-foreground">
-            Reveal a car&apos;s
+          <h1 className="font-display mt-6 text-5xl sm:text-6xl lg:text-[4rem] font-medium leading-[1.12] text-foreground">
+            <span className="text-foreground">Re</span>
+            <span className="text-accent">veal</span> a car&apos;s
             <br />
-            <span className="italic text-accent">whole</span> story.
+            <span className="italic text-foreground">whole</span> story.
           </h1>
 
-          <p className="mt-6 max-w-md text-base sm:text-lg leading-relaxed text-muted">
+          <p className="mt-6 max-w-md text-base sm:text-lg leading-relaxed text-muted-strong">
             One number plate. Make, MOT history, mileage, tax, ULEZ and emissions —
             drawn straight from the DVLA and the MOT register.
           </p>
 
           <form onSubmit={handleSubmit} className="mt-10">
-            <label htmlFor="plate" className="kicker block text-muted">
+            <label htmlFor="plate" className="block text-sm font-medium text-muted-strong">
               Registration
             </label>
             <div className="mt-3 flex items-stretch border-b-2 border-foreground/20 focus-within:border-accent transition-colors">
@@ -147,7 +136,7 @@ export default function Home() {
                 value={plate}
                 onChange={(e) => setPlate(e.target.value.toUpperCase())}
                 placeholder="AB12 CDE"
-                className="flex-1 min-w-0 bg-transparent pb-3 font-mono text-3xl sm:text-4xl tracking-[0.15em] text-foreground placeholder-muted/40 focus:outline-none"
+                className="flex-1 min-w-0 bg-transparent pb-3 font-mono text-2xl sm:text-3xl tracking-[0.08em] text-foreground placeholder-muted/50 focus:outline-none"
                 disabled={loading}
                 autoComplete="off"
                 autoFocus
@@ -210,8 +199,8 @@ export default function Home() {
                 <div key={num} className="flex gap-4 py-5">
                   <span className="section-index pt-0.5 text-sm text-accent">{num}</span>
                   <div>
-                    <dt className="font-display text-xl leading-tight text-foreground">{title}</dt>
-                    <dd className="mt-1 text-sm text-muted leading-relaxed">{desc}</dd>
+                    <dt className="text-lg font-semibold leading-snug text-foreground">{title}</dt>
+                    <dd className="mt-1.5 text-sm text-muted leading-relaxed">{desc}</dd>
                   </div>
                 </div>
               ))}

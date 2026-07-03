@@ -41,8 +41,8 @@ export default async function ReceiptsPage() {
 
   return (
     <section>
-      <h2 className="font-display text-2xl">My receipts</h2>
-      <p className="mt-2 text-sm text-muted">Payment history for your full vehicle reports.</p>
+      <h2 className="text-2xl font-semibold">My receipts</h2>
+      <p className="mt-2 text-sm text-muted-strong">Payment history for your full vehicle reports.</p>
 
       {rows.length === 0 ? (
         <div className="mt-8 border-y border-hairline py-12 text-center">

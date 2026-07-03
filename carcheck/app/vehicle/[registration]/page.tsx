@@ -103,15 +103,71 @@ function formatLabel(key: string): string {
     .trim();
 }
 
-/** EU-style CO2 emission bands (g/km): range, label, and colour. Bar width is computed (A=25%, L-M=100%, rest evenly spread). */
+/** EU-style CO2 emission bands (g/km): range, label, bar colour, and light-theme active row highlight. */
 const CO2_BANDS = [
-  { min: 0, max: 101, label: "A", color: "bg-green-500", textColor: "text-green-400" },
-  { min: 101, max: 120, label: "B-C", color: "bg-green-600", textColor: "text-green-400" },
-  { min: 121, max: 140, label: "D-E", color: "bg-lime-500", textColor: "text-lime-400" },
-  { min: 141, max: 165, label: "F-G", color: "bg-yellow-500", textColor: "text-yellow-400" },
-  { min: 166, max: 185, label: "H-I", color: "bg-amber-500", textColor: "text-amber-400" },
-  { min: 186, max: 225, label: "J-K", color: "bg-orange-500", textColor: "text-orange-400" },
-  { min: 225, max: Infinity, label: "L-M", color: "bg-red-500", textColor: "text-red-400" },
+  {
+    min: 0,
+    max: 101,
+    label: "A",
+    color: "bg-green-500",
+    textColor: "text-green-600",
+    letterColor: "text-green-700",
+    activeHighlight: "bg-green-50 border-l-4 border-l-green-500",
+  },
+  {
+    min: 101,
+    max: 120,
+    label: "B-C",
+    color: "bg-green-600",
+    textColor: "text-green-600",
+    letterColor: "text-green-700",
+    activeHighlight: "bg-green-50 border-l-4 border-l-green-600",
+  },
+  {
+    min: 121,
+    max: 140,
+    label: "D-E",
+    color: "bg-lime-500",
+    textColor: "text-lime-600",
+    letterColor: "text-lime-700",
+    activeHighlight: "bg-lime-50 border-l-4 border-l-lime-500",
+  },
+  {
+    min: 141,
+    max: 165,
+    label: "F-G",
+    color: "bg-yellow-500",
+    textColor: "text-yellow-600",
+    letterColor: "text-yellow-700",
+    activeHighlight: "bg-yellow-50 border-l-4 border-l-yellow-500",
+  },
+  {
+    min: 166,
+    max: 185,
+    label: "H-I",
+    color: "bg-amber-500",
+    textColor: "text-amber-600",
+    letterColor: "text-amber-700",
+    activeHighlight: "bg-amber-50 border-l-4 border-l-amber-500",
+  },
+  {
+    min: 186,
+    max: 225,
+    label: "J-K",
+    color: "bg-orange-500",
+    textColor: "text-orange-600",
+    letterColor: "text-orange-700",
+    activeHighlight: "bg-orange-50 border-l-4 border-l-orange-500",
+  },
+  {
+    min: 225,
+    max: Infinity,
+    label: "L-M",
+    color: "bg-red-500",
+    textColor: "text-red-600",
+    letterColor: "text-red-700",
+    activeHighlight: "bg-red-50 border-l-4 border-l-red-500",
+  },
 ] as const;
 
 /** Get the band and display letter for a CO2 value (g/km). Returns null if no value. */
@@ -885,12 +941,12 @@ export default function VehiclePage() {
           <div className="mt-5 flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
             <div className="min-w-0">
               {vehicle.make && (
-                <h1 className="font-display text-4xl sm:text-6xl font-semibold leading-[0.95] tracking-tight break-words">
+                <h1 className="font-display text-4xl sm:text-6xl font-medium leading-[1.1] break-words">
                   {vehicle.make}
                 </h1>
               )}
               {vehicle.colour && (
-                <p className="mt-2 font-display text-xl italic text-muted">{vehicle.colour}</p>
+                <p className="mt-2 text-xl text-muted">{vehicle.colour}</p>
               )}
             </div>
             <div
@@ -916,7 +972,7 @@ export default function VehiclePage() {
               <p className="kicker text-muted">Tax</p>
               <span className={`h-2 w-2 rounded-full ${taxValid ? "bg-emerald-400" : "bg-red-400"}`} aria-hidden />
             </div>
-            <p className={`font-display mt-3 text-2xl ${taxValid ? "text-emerald-700" : "text-red-600"}`}>
+            <p className={`mt-3 text-2xl font-semibold ${taxValid ? "text-emerald-700" : "text-red-600"}`}>
               {taxDaysLeft !== null
                 ? taxDaysLeft > 0
                   ? `${taxDaysLeft} day${taxDaysLeft === 1 ? "" : "s"} left`
@@ -943,12 +999,12 @@ export default function VehiclePage() {
             </div>
             {motExemptionActive && firstMotDueIso ? (
               <>
-                <p className="font-display mt-3 text-2xl text-emerald-700">Not yet due</p>
+                <p className="mt-3 text-2xl font-semibold text-emerald-700">Not yet due</p>
                 <p className="mt-1 text-xs text-muted">First MOT by {formatDate(firstMotDueIso)} (3-yr rule)</p>
               </>
             ) : (
               <>
-                <p className={`font-display mt-3 text-2xl ${motValid ? "text-emerald-700" : "text-red-600"}`}>
+                <p className={`mt-3 text-2xl font-semibold ${motValid ? "text-emerald-700" : "text-red-600"}`}>
                   {motDaysLeft !== null
                     ? motDaysLeft > 0
                       ? `${motDaysLeft} day${motDaysLeft === 1 ? "" : "s"} left`
@@ -987,7 +1043,7 @@ export default function VehiclePage() {
             {vehicle.fuelType ? (
               <>
                 <p
-                  className={`font-display mt-3 text-2xl ${
+                  className={`mt-3 text-2xl font-semibold ${
                     ulezCompliant === true ? "text-emerald-700" : ulezCompliant === false ? "text-red-600" : "text-accent-strong"
                   }`}
                 >
@@ -1007,7 +1063,7 @@ export default function VehiclePage() {
                 </a>
               </>
             ) : (
-              <p className="font-display mt-3 text-2xl text-muted">Unknown</p>
+              <p className="mt-3 text-2xl font-semibold text-muted">Unknown</p>
             )}
           </div>
         </div>
@@ -1015,7 +1071,7 @@ export default function VehiclePage() {
         <div className="grid grid-cols-1 lg:grid-cols-2 lg:gap-x-6 lg:gap-y-6 mb-4 sm:mb-6">
           <div className="flex flex-col gap-4 sm:gap-6">
             <section className="rounded-lg border border-hairline bg-white overflow-hidden">
-              <h2 className="px-5 sm:px-6 py-4 border-b border-hairline font-display text-lg text-foreground">
+              <h2 className="px-5 sm:px-6 py-4 border-b border-hairline text-base font-semibold text-foreground">
                 Vehicle details
               </h2>
               <dl className="p-4 sm:p-6 grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2">
@@ -1041,7 +1097,7 @@ export default function VehiclePage() {
             </section>
 
             <section className="rounded-lg border border-hairline bg-white overflow-hidden">
-              <h2 className="px-5 sm:px-6 py-4 border-b border-hairline font-display text-lg text-foreground flex items-center gap-2 flex-wrap">
+              <h2 className="px-5 sm:px-6 py-4 border-b border-hairline text-base font-semibold text-foreground flex items-center gap-2 flex-wrap">
                 Vehicle performance
                 <span className="kicker rounded-full border border-accent/40 px-2.5 py-0.5 text-accent">
                   Beta
@@ -1145,7 +1201,7 @@ export default function VehiclePage() {
             </section>
 
             <section className="rounded-lg border border-hairline bg-white overflow-hidden">
-              <h2 className="px-5 sm:px-6 py-4 border-b border-hairline font-display text-lg text-foreground">
+              <h2 className="px-5 sm:px-6 py-4 border-b border-hairline text-base font-semibold text-foreground">
                 Mileage information
               </h2>
               {lastMotMileage != null || lastYearMileage != null || mileageSummary ? (
@@ -1237,7 +1293,7 @@ export default function VehiclePage() {
 
           <div className="flex flex-col gap-4 sm:gap-6">
             <section className="rounded-lg border border-hairline bg-white overflow-hidden">
-              <h2 className="px-5 sm:px-6 py-4 border-b border-hairline font-display text-lg text-foreground">
+              <h2 className="px-5 sm:px-6 py-4 border-b border-hairline text-base font-semibold text-foreground">
                 MOT summary
               </h2>
               <dl className="p-5 sm:p-6 grid grid-cols-3 gap-2 sm:gap-4 divide-x divide-hairline">
@@ -1283,7 +1339,7 @@ export default function VehiclePage() {
 
             {primaryMot && (primaryMot.model ?? primaryMot.engineSize ?? primaryMot.primaryColour ?? primaryMot.firstUsedDate ?? primaryMot.registrationDate ?? primaryMot.manufactureDate ?? primaryMot.hasOutstandingRecall) && (
               <section className="rounded-lg border border-hairline bg-white overflow-hidden">
-                <h2 className="px-5 sm:px-6 py-4 border-b border-hairline font-display text-lg text-foreground">
+                <h2 className="px-5 sm:px-6 py-4 border-b border-hairline text-base font-semibold text-foreground">
                   MOT vehicle info
                 </h2>
                 <dl className="p-4 sm:p-6 grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2">
@@ -1340,7 +1396,7 @@ export default function VehiclePage() {
             )}
 
             <section className="rounded-lg border border-hairline bg-white overflow-hidden">
-              <h2 className="px-5 sm:px-6 py-4 border-b border-hairline font-display text-lg text-foreground">
+              <h2 className="px-5 sm:px-6 py-4 border-b border-hairline text-base font-semibold text-foreground">
                 Road tax
               </h2>
               {roadTax ? (
@@ -1463,11 +1519,11 @@ export default function VehiclePage() {
             {co2Band && (
               <section className="rounded-lg border border-hairline bg-white overflow-hidden">
                 <div className="px-5 sm:px-6 py-4 border-b border-hairline">
-                  <h2 className="font-display text-lg text-foreground">CO₂ emission figures</h2>
-                  <p className="font-display mt-2 text-3xl sm:text-4xl text-foreground">
+                  <h2 className="text-base font-semibold text-foreground">CO₂ emission figures</h2>
+                  <p className="mt-2 text-3xl sm:text-4xl font-semibold tabular-nums text-foreground">
                     {vehicle.co2Emissions}
                     <span className="text-lg text-muted"> g/km</span>{" "}
-                    <span className="text-accent">({co2Band.letter})</span>
+                    <span className={`text-lg font-semibold ${co2Band.band.letterColor}`}>({co2Band.letter})</span>
                   </p>
                 </div>
                 <div className="p-4 sm:p-6 space-y-1">
@@ -1480,16 +1536,24 @@ export default function VehiclePage() {
                       <div
                         key={b.label}
                         className={`flex items-center gap-2 sm:gap-3 py-2 px-3 rounded-lg transition-colors ${
-                          isActive ? "bg-lime-950/40 border-l-4 border-lime-500 ring-2 ring-lime-400/40" : ""
+                          isActive ? b.activeHighlight : ""
                         }`}
                       >
-                        <span className="w-16 sm:w-20 text-xs sm:text-sm font-medium text-muted shrink-0 tabular-nums">
+                        <span
+                          className={`w-16 sm:w-20 text-xs sm:text-sm shrink-0 tabular-nums ${
+                            isActive ? "font-semibold text-foreground" : "font-medium text-muted"
+                          }`}
+                        >
                           {rangeLabel}
                         </span>
                         <div className="flex-1 h-7 sm:h-8 rounded overflow-hidden bg-surface flex">
                           <div className={`h-full ${b.color} shrink-0`} style={{ width: `${barWidth}%` }} />
                         </div>
-                        <span className="text-xs sm:text-sm font-bold text-foreground/90 shrink-0 w-6 sm:w-8 text-center">
+                        <span
+                          className={`text-xs sm:text-sm shrink-0 w-6 sm:w-8 text-center ${
+                            isActive ? `font-bold ${b.letterColor}` : "font-bold text-foreground/90"
+                          }`}
+                        >
                           {b.label}
                         </span>
                       </div>
@@ -1502,7 +1566,7 @@ export default function VehiclePage() {
         </div>
 
         <section className="rounded-lg border border-hairline bg-white overflow-hidden mb-4 sm:mb-6">
-          <h2 className="px-5 sm:px-6 py-4 border-b border-hairline font-display text-lg text-foreground">
+          <h2 className="px-5 sm:px-6 py-4 border-b border-hairline text-base font-semibold text-foreground">
             MOT history
           </h2>
           {motTests.length > 0 ? (
@@ -1510,7 +1574,7 @@ export default function VehiclePage() {
               {mileageSummary && (
                 <div className="px-5 sm:px-6 py-5 border-b border-hairline bg-accent-tint">
                   <p className="kicker text-accent">Yearly average mileage</p>
-                  <p className="font-display mt-2 text-2xl sm:text-3xl text-foreground">
+                  <p className="mt-2 text-2xl sm:text-3xl font-semibold text-foreground">
                     {mileageSummary.yearlyAverageMiles.toLocaleString()}{" "}
                     <span className="text-base text-muted">miles/year</span>
                   </p>
