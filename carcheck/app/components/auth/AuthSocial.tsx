@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-import { buildAuthCallbackUrl, getAuthOrigin } from "@/lib/auth/redirect";
+import { buildAuthCallbackUrl } from "@/lib/auth/redirect";
 import { createClient } from "@/lib/supabase/client";
 
 function GoogleIcon() {
@@ -49,51 +49,10 @@ export function AuthGoogleButton({
     try {
       const supabase = createClient();
       const redirectTo = buildAuthCallbackUrl(nextPath);
-      // #region agent log
-      fetch("http://127.0.0.1:7262/ingest/fbf9e753-63c7-4ffb-88d0-2b22eec917a8", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "5b635c" },
-        body: JSON.stringify({
-          sessionId: "5b635c",
-          hypothesisId: "A-B-C",
-          location: "AuthSocial.tsx:handleGoogleSignIn",
-          message: "Google OAuth redirectTo built",
-          data: {
-            windowOrigin: window.location.origin,
-            windowHost: window.location.host,
-            authOrigin: getAuthOrigin(),
-            redirectTo,
-            nextPath: nextPath ?? null,
-            publicAppUrl: process.env.NEXT_PUBLIC_APP_URL ?? null,
-          },
-          timestamp: Date.now(),
-          runId: "post-fix",
-        }),
-      }).catch(() => {});
-      // #endregion
-      const { data, error } = await supabase.auth.signInWithOAuth({
+      const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: { redirectTo },
       });
-      // #region agent log
-      fetch("http://127.0.0.1:7262/ingest/fbf9e753-63c7-4ffb-88d0-2b22eec917a8", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "5b635c" },
-        body: JSON.stringify({
-          sessionId: "5b635c",
-          hypothesisId: "D",
-          location: "AuthSocial.tsx:signInWithOAuth",
-          message: "signInWithOAuth response",
-          data: {
-            hasError: !!error,
-            errorMessage: error?.message ?? null,
-            oauthRedirectTo: data?.url ? new URL(data.url).searchParams.get("redirect_to") : null,
-          },
-          timestamp: Date.now(),
-          runId: "post-fix",
-        }),
-      }).catch(() => {});
-      // #endregion
       if (error) {
         onError(error.message);
         setLoading(false);

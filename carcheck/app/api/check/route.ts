@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSpecCandidates, type SpecCandidate } from "@/lib/car-specs-lookup";
+import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 import { getSampleVehicleCheck, isSampleRegistration } from "@/lib/sample-vehicle-data";
 
 const DVLA_API_URL =
@@ -244,7 +245,22 @@ async function performVehicleCheck(registrationNumber: string): Promise<{
   return { vehicle, motHistory, specCandidates, suggestedSpecId };
 }
 
+function rateLimitResponse(request: NextRequest): NextResponse | null {
+  const { allowed, retryAfterSec } = checkRateLimit(`api/check:${getClientIp(request)}`);
+  if (allowed) return null;
+  return NextResponse.json(
+    { error: "Too many requests. Please try again later." },
+    {
+      status: 429,
+      headers: retryAfterSec ? { "Retry-After": String(retryAfterSec) } : undefined,
+    }
+  );
+}
+
 export async function GET(request: NextRequest) {
+  const limited = rateLimitResponse(request);
+  if (limited) return limited;
+
   const registration = request.nextUrl.searchParams.get("registration");
   const vrn = registration?.trim() ?? "";
 
@@ -278,6 +294,9 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  const limited = rateLimitResponse(request);
+  if (limited) return limited;
+
   try {
     const body = await request.json().catch(() => ({}));
     const rawVrn = body?.registrationNumber ?? body?.plate ?? "";
