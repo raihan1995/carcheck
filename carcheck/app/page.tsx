@@ -3,6 +3,8 @@
 import { useState, useEffect, FormEvent } from "react";
 import { useRouter } from "next/navigation";
 
+import { PlateBand } from "./components/PlateBand";
+
 function normalizeRegistration(vrn: string): string {
   return vrn.replace(/\s+/g, "").toUpperCase().replace(/[^A-Z0-9]/g, "");
 }
@@ -126,13 +128,7 @@ export default function Home() {
             </label>
             <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-stretch sm:gap-0 border-b-0 sm:border-b-2 border-foreground/20 focus-within:border-accent transition-colors">
               <div className="flex min-w-0 items-stretch border-b-2 border-foreground/20 focus-within:border-accent sm:flex-1 sm:border-b-0">
-                <span
-                  className="mb-2 mr-2 sm:mr-3 flex shrink-0 select-none flex-col items-center justify-center self-end rounded-[3px] bg-[#003399] px-1.5 py-1 text-[#ffd132] sm:px-2"
-                  aria-hidden
-                >
-                  <span className="text-[9px] leading-none">★</span>
-                  <span className="font-mono text-[10px] sm:text-xs font-bold leading-tight">UK</span>
-                </span>
+                <PlateBand compact className="mb-2 mr-2 self-end sm:mr-3" />
                 <input
                   id="plate"
                   type="text"

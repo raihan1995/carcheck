@@ -4,6 +4,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 
+import { PlateBand } from "@/app/components/PlateBand";
 import { createClient } from "@/lib/supabase/client";
 
 type VehicleData = {
@@ -965,10 +966,7 @@ export default function VehiclePage() {
               className="inline-flex shrink-0 self-start overflow-hidden rounded-md border border-black/40 shadow-lg shadow-black/40 sm:self-end"
               aria-label="Registration number"
             >
-              <span className="flex flex-col items-center justify-center bg-[#003399] px-2.5 py-2 text-[#ffd132]" aria-hidden>
-                <span className="text-[10px] leading-none">★</span>
-                <span className="font-mono text-xs font-bold leading-tight">UK</span>
-              </span>
+              <PlateBand className="rounded-none" />
               <span className="bg-plate px-4 sm:px-6 py-2 sm:py-3 font-mono text-3xl sm:text-5xl font-bold uppercase tracking-[0.12em] text-black">
                 {vehicle.registrationNumber}
               </span>
