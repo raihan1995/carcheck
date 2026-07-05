@@ -1,6 +1,5 @@
 /**
- * Look up car performance specs from preprocessed per-make CSV data (primary)
- * with fallback to legacy Kaggle-derived JSON.
+ * Look up car performance specs from preprocessed UK-Cars index.
  */
 
 import fs from "fs";
@@ -16,9 +15,49 @@ export type CarSpecs = {
   matchedVariant: string | null;
 };
 
-export type SpecCandidate = CarSpecs & {
+export type VehicleSpecDetails = CarSpecs & {
   id: string;
   label: string;
+  makeLabel: string | null;
+  modelLabel: string | null;
+  seriesLabel: string | null;
+  variantLabel: string | null;
+  yearFrom: number;
+  yearTo: number | null;
+  engineCc: number | null;
+  cylinders: number | null;
+  valves: number | null;
+  fuel: string | null;
+  transmission: string | null;
+  co2Gkm: number | null;
+  euroStandard: number | null;
+  newPrice: string | null;
+  mpg: string | null;
+  insuranceGroup: string | null;
+  fuelCapacity: string | null;
+  batteryCapacity: string | null;
+  weightKg: string | null;
+  lengthMm: string | null;
+  widthMm: string | null;
+  heightMm: string | null;
+  wheelbaseMm: string | null;
+  doors: number | null;
+  seats: number | null;
+  luggageCapacity: string | null;
+};
+
+export type SpecCandidate = VehicleSpecDetails;
+
+export type SpecLookupParams = {
+  make?: string;
+  motModel?: string;
+  yearOfManufacture?: number;
+  monthOfFirstRegistration?: string;
+  motRegistrationDate?: string;
+  engineCapacityCc?: number;
+  fuelType?: string;
+  co2Emissions?: number;
+  revenueWeightKg?: number;
 };
 
 export type SpecCandidatesResult = {
@@ -28,39 +67,67 @@ export type SpecCandidatesResult = {
 
 type MakeSpecRecord = {
   id?: string;
+  make?: string;
+  makeLabel?: string | null;
   model: string;
   modelLabel?: string | null;
+  seriesLabel?: string | null;
   variant: string;
   variantLabel: string | null;
   yearFrom: number;
   yearTo: number | null;
+  productionStart?: string | null;
+  productionEnd?: string | null;
   engineCc: number | null;
+  cylinders?: number | null;
+  valves?: number | null;
   fuel: string;
   bhp: number | null;
   torqueNm: number | null;
   gearbox: string | null;
   drivetrain: string | null;
+  transmission?: string | null;
   acceleration0100: number | null;
   topSpeedMph: number | null;
   co2Gkm: number | null;
+  co2Min?: number | null;
+  co2Max?: number | null;
+  euroStandard?: number | null;
+  newPrice?: string | null;
+  mpg?: string | null;
+  insuranceGroup?: string | null;
+  fuelCapacity?: string | null;
+  batteryCapacity?: string | null;
+  weightKg?: string | null;
+  weightKgNum?: number | null;
+  lengthMm?: string | null;
+  widthMm?: string | null;
+  heightMm?: string | null;
+  wheelbaseMm?: string | null;
+  doors?: number | null;
+  seats?: number | null;
+  luggageCapacity?: string | null;
 };
 
 type MakeSpecsIndex = Record<string, MakeSpecRecord[]>;
-
-type LegacyLookupRecord = {
-  bhp?: number | null;
-  transmission?: string | null;
-  first_year_road_tax?: number | null;
-};
 
 const MAKE_INDEX_ALIASES: Record<string, string> = {
   mercedes: "mercedes-benz",
   "mercedes benz": "mercedes-benz",
   vw: "volkswagen",
+  "land rover": "land-rover",
+  "aston martin": "aston-martin",
+  "alfa romeo": "alfa-romeo",
 };
 
+/** Allow old-stock registrations shortly after catalogue production end (e.g. C 200 Jul 2018). */
+const PRODUCTION_END_GRACE_MS = Math.round(6 * 30.44 * 24 * 60 * 60 * 1000);
+
+const MS_PER_MONTH = 1000 * 60 * 60 * 24 * 30.44;
+
+type ProductionWindowFit = "strict" | "grace" | "none";
+
 let cachedMakeIndex: MakeSpecsIndex | null = null;
-let cachedLegacyLookup: Record<string, LegacyLookupRecord> | null = null;
 
 function loadMakeIndex(): MakeSpecsIndex {
   if (cachedMakeIndex) return cachedMakeIndex;
@@ -71,17 +138,6 @@ function loadMakeIndex(): MakeSpecsIndex {
   }
   cachedMakeIndex = JSON.parse(fs.readFileSync(p, "utf8")) as MakeSpecsIndex;
   return cachedMakeIndex;
-}
-
-function loadLegacyLookup(): Record<string, LegacyLookupRecord> {
-  if (cachedLegacyLookup) return cachedLegacyLookup;
-  const p = path.join(process.cwd(), "data", "car-specs-lookup.json");
-  if (!fs.existsSync(p)) {
-    cachedLegacyLookup = {};
-    return cachedLegacyLookup;
-  }
-  cachedLegacyLookup = JSON.parse(fs.readFileSync(p, "utf8")) as Record<string, LegacyLookupRecord>;
-  return cachedLegacyLookup;
 }
 
 function normalize(s: string | undefined): string {
@@ -120,6 +176,41 @@ function resolveMakeIndexKey(make: string | undefined, index: MakeSpecsIndex): s
   return null;
 }
 
+function parseDateMs(value: string | undefined): number | null {
+  if (!value) return null;
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+  const iso = trimmed.includes("T") ? trimmed : trimmed.replace(/\./g, "-");
+  const ms = new Date(iso).getTime();
+  return Number.isFinite(ms) ? ms : null;
+}
+
+/** Year: manufacture → first registration month → MOT registration date. */
+export function resolveVehicleYear(params: SpecLookupParams): number | null {
+  if (params.yearOfManufacture != null && Number.isFinite(params.yearOfManufacture)) {
+    return params.yearOfManufacture;
+  }
+  const month = params.monthOfFirstRegistration?.trim();
+  if (month) {
+    const y = parseInt(month.split("-")[0] ?? "", 10);
+    if (Number.isFinite(y)) return y;
+  }
+  const motMs = parseDateMs(params.motRegistrationDate);
+  if (motMs != null) return new Date(motMs).getFullYear();
+  return null;
+}
+
+function resolveRegistrationMs(params: SpecLookupParams): number | null {
+  const month = params.monthOfFirstRegistration?.trim();
+  if (month && /^\d{4}-\d{2}$/.test(month)) {
+    const [y, m] = month.split("-").map(Number);
+    if (Number.isFinite(y) && Number.isFinite(m)) {
+      return new Date(y, m - 1, 1).getTime();
+    }
+  }
+  return parseDateMs(params.motRegistrationDate);
+}
+
 function isCClassFamily(csvModel: string): boolean {
   const m = normalize(csvModel);
   if (!m.includes("c-class") && !m.includes("c class")) return false;
@@ -130,22 +221,108 @@ function isCClassFamily(csvModel: string): boolean {
 
 function matchesMotModel(csvModel: string, csvVariant: string, motModel: string | undefined): boolean {
   const mot = normalize(motModel ?? "");
-  const csvText = `${csvModel} ${csvVariant}`;
+  const variantNorm = normalize(csvVariant);
+  const modelNorm = normalize(csvModel);
+  const csvText = `${modelNorm} ${variantNorm}`;
 
   if (!mot) return true;
-
   if (mot === "c") return isCClassFamily(csvModel);
 
-  if (mot.length <= 3) {
-    return csvText.includes(mot) || csvModel.includes(mot);
+  if (/^\d{2,3}$/.test(mot)) {
+    const engineRe = new RegExp(`\\b${mot}[a-z]{0,2}\\b`, "i");
+    if (engineRe.test(variantNorm)) return true;
+    if (new RegExp(`\\b${mot}\\b`, "i").test(modelNorm)) return true;
+    return false;
   }
 
   const motTokens = tokenize(mot);
-  if (motTokens.length === 0) {
-    return csvText.includes(mot) || csvModel.includes(mot);
-  }
+  if (motTokens.length === 0) return csvText.includes(mot);
 
-  return motTokens.some((t) => csvText.includes(t));
+  return motTokens.every((t) => {
+    const re = new RegExp(`\\b${t.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`, "i");
+    return re.test(csvText);
+  });
+}
+
+function fuelMatchesStrict(csvFuel: string, dvlaFuel: string): boolean {
+  const c = normalize(csvFuel);
+  const d = normalize(dvlaFuel);
+  if (!d) return true;
+  if (!c) return false;
+  if (d.includes("diesel")) return c.includes("diesel");
+  if (d.includes("petrol")) return c.includes("petrol");
+  if (d.includes("electric")) return c.includes("electric") || c.includes("hybrid");
+  if (d.includes("hybrid")) return c.includes("hybrid");
+  return c === d;
+}
+
+function productionWindowFit(
+  registrationMs: number,
+  prodStart: number,
+  prodEnd: number
+): ProductionWindowFit {
+  if (registrationMs >= prodStart && registrationMs <= prodEnd) return "strict";
+  if (registrationMs > prodEnd && registrationMs - prodEnd <= PRODUCTION_END_GRACE_MS) {
+    return "grace";
+  }
+  return "none";
+}
+
+function rowProductionWindowFit(row: MakeSpecRecord, registrationMs: number | null): ProductionWindowFit {
+  if (registrationMs == null) return "strict";
+
+  const prodStart = parseDateMs(row.productionStart ?? undefined);
+  const prodEnd = parseDateMs(row.productionEnd ?? undefined);
+  if (prodStart == null || prodEnd == null) return "strict";
+
+  return productionWindowFit(registrationMs, prodStart, prodEnd);
+}
+
+function rowMatchesYear(row: MakeSpecRecord, year: number, registrationMs: number | null): boolean {
+  const inCatalogueYears = year >= row.yearFrom && (row.yearTo == null || year <= row.yearTo);
+  if (!inCatalogueYears) return false;
+
+  const fit = rowProductionWindowFit(row, registrationMs);
+  return fit !== "none";
+}
+
+function co2Matches(row: MakeSpecRecord, co2: number): boolean {
+  if (row.co2Min != null && row.co2Max != null) {
+    return co2 >= row.co2Min && co2 <= row.co2Max;
+  }
+  if (row.co2Gkm != null) return Math.abs(row.co2Gkm - co2) <= 3;
+  return false;
+}
+
+function co2Distance(row: MakeSpecRecord, co2: number): number | null {
+  if (row.co2Gkm == null) return null;
+  return Math.abs(row.co2Gkm - co2);
+}
+
+/** Same engine cc but multiple power bands (e.g. C 200 vs C 300 at 1991 cc). */
+function hasAmbiguousPowerTiers(pool: MakeSpecRecord[]): boolean {
+  const bhps = [...new Set(pool.map((r) => r.bhp).filter((b): b is number => b != null))].sort(
+    (a, b) => a - b
+  );
+  if (bhps.length < 2) return false;
+  return bhps[bhps.length - 1] - bhps[0] >= 15;
+}
+
+function applyCo2Narrowing(pool: MakeSpecRecord[], co2: number): MakeSpecRecord[] {
+  const exact = pool.filter((row) => co2Matches(row, co2));
+  if (exact.length > 0) return exact;
+
+  if (!hasAmbiguousPowerTiers(pool)) return pool;
+
+  const withCo2 = pool.filter((row) => row.co2Gkm != null);
+  if (withCo2.length === 0) return pool;
+
+  const minDist = Math.min(...withCo2.map((row) => co2Distance(row, co2)!));
+  if (minDist > 12) return pool;
+
+  const threshold = Math.max(3, minDist + 2);
+  const nearest = withCo2.filter((row) => co2Distance(row, co2)! <= threshold);
+  return nearest.length > 0 ? nearest : pool;
 }
 
 function hasPerformanceData(row: MakeSpecRecord): boolean {
@@ -170,8 +347,16 @@ function formatCandidateLabel(row: MakeSpecRecord): string {
   return `${model} — ${variant} (${formatYearRange(row.yearFrom, row.yearTo)})`;
 }
 
-function rowToCarSpecs(row: MakeSpecRecord): CarSpecs {
+function rowToSpecCandidate(row: MakeSpecRecord): SpecCandidate {
   return {
+    id: row.id ?? `${row.model}-${row.variant}-${row.yearFrom}`,
+    label: formatCandidateLabel(row),
+    makeLabel: row.makeLabel ?? null,
+    modelLabel: row.modelLabel ?? null,
+    seriesLabel: row.seriesLabel ?? null,
+    variantLabel: row.variantLabel,
+    yearFrom: row.yearFrom,
+    yearTo: row.yearTo,
     bhp: row.bhp,
     torque: row.torqueNm,
     gearbox: row.gearbox,
@@ -179,254 +364,151 @@ function rowToCarSpecs(row: MakeSpecRecord): CarSpecs {
     acceleration0100: row.acceleration0100,
     topSpeedMph: row.topSpeedMph,
     matchedVariant: row.variantLabel,
+    engineCc: row.engineCc,
+    cylinders: row.cylinders ?? null,
+    valves: row.valves ?? null,
+    fuel: row.fuel || null,
+    transmission: row.transmission ?? null,
+    co2Gkm: row.co2Gkm,
+    euroStandard: row.euroStandard ?? null,
+    newPrice: row.newPrice ?? null,
+    mpg: row.mpg ?? null,
+    insuranceGroup: row.insuranceGroup ?? null,
+    fuelCapacity: row.fuelCapacity ?? null,
+    batteryCapacity: row.batteryCapacity ?? null,
+    weightKg: row.weightKg ?? null,
+    lengthMm: row.lengthMm ?? null,
+    widthMm: row.widthMm ?? null,
+    heightMm: row.heightMm ?? null,
+    wheelbaseMm: row.wheelbaseMm ?? null,
+    doors: row.doors ?? null,
+    seats: row.seats ?? null,
+    luggageCapacity: row.luggageCapacity ?? null,
   };
 }
 
-function rowPassesCandidateFilters(
-  row: MakeSpecRecord,
-  year: number,
-  engineCapacityCc: number | undefined,
-  fuelType: string | undefined,
-  motModel: string | undefined
-): boolean {
-  const yearTo = row.yearTo ?? 9999;
-  if (year < row.yearFrom || year > yearTo) return false;
-
-  if (engineCapacityCc != null && Number.isFinite(engineCapacityCc)) {
-    if (row.engineCc == null) return false;
-    if (Math.abs(row.engineCc - engineCapacityCc) > 50) return false;
-  }
-
-  if (!fuelMatches(row.fuel, fuelType ?? "")) return false;
-
-  if (!matchesMotModel(row.model, row.variant, motModel)) return false;
-
-  return hasPerformanceData(row);
+function performanceFingerprint(row: MakeSpecRecord): string {
+  return [
+    row.bhp,
+    row.torqueNm,
+    row.engineCc,
+    row.fuel,
+    row.gearbox,
+    row.drivetrain,
+    row.acceleration0100,
+    row.topSpeedMph,
+  ].join("|");
 }
 
-function fuelMatches(csvFuel: string, dvlaFuel: string): boolean {
-  const c = normalize(csvFuel);
-  const d = normalize(dvlaFuel);
-  if (!c || !d) return true;
-  if (c === d) return true;
-  if (d.includes("diesel") && c.includes("diesel")) return true;
-  if (d.includes("petrol") && c.includes("petrol")) return true;
-  if (d.includes("electric") && (c.includes("electric") || c.includes("hybrid"))) return true;
-  if (d.includes("hybrid") && (c.includes("hybrid") || c.includes("petrol") || c === "")) return true;
-  return false;
+function dedupeByPerformance(rows: MakeSpecRecord[]): MakeSpecRecord[] {
+  const bestByKey = new Map<string, MakeSpecRecord>();
+  for (const row of rows) {
+    const key = performanceFingerprint(row);
+    if (!bestByKey.has(key)) bestByKey.set(key, row);
+  }
+  return [...bestByKey.values()];
 }
 
-function scoreMakeSpecRow(
-  row: MakeSpecRecord,
-  model: string,
-  year: number,
-  engineCapacityCc: number | undefined,
-  fuelType: string | undefined,
-  co2: number | undefined
-): number {
-  const yearTo = row.yearTo ?? 9999;
-  if (year < row.yearFrom || year > yearTo) return -1;
+function scoreRow(row: MakeSpecRecord, params: SpecLookupParams, registrationMs: number | null): number {
+  let score = 0;
 
-  let score = 25;
-
-  if (row.engineCc != null && engineCapacityCc != null && Number.isFinite(engineCapacityCc)) {
-    const diff = Math.abs(row.engineCc - engineCapacityCc);
-    if (diff > 120) return -1;
-    score += Math.max(0, 35 - diff / 3);
-  } else if (row.engineCc == null && engineCapacityCc == null) {
-    score += 8;
-  } else {
-    score -= 8;
+  if (params.co2Emissions != null) {
+    const dist = co2Distance(row, params.co2Emissions);
+    if (dist != null) {
+      if (dist <= 3) score += 40;
+      else if (dist <= 12) score += Math.max(0, 28 - dist * 2);
+    }
   }
 
-  const motTokens = tokenize(model);
-  const csvText = `${row.model} ${row.variant}`;
-  const csvTokens = new Set(tokenize(csvText));
+  const windowFit = rowProductionWindowFit(row, registrationMs);
+  if (windowFit === "grace") score -= 8;
 
-  for (const token of motTokens) {
-    if (token.length < 2 && !/^\d+$/.test(token)) continue;
-    if (csvTokens.has(token)) score += 12;
-    else if (csvText.includes(token)) score += 8;
+  if (registrationMs != null) {
+    const prodStart = parseDateMs(row.productionStart ?? undefined);
+    const prodEnd = parseDateMs(row.productionEnd ?? undefined);
+    if (prodStart != null && prodEnd != null) {
+      const mid = (prodStart + prodEnd) / 2;
+      const distMonths = Math.abs(registrationMs - mid) / MS_PER_MONTH;
+      const timingScore = Math.max(0, 18 - distMonths * 2);
+      score += windowFit === "grace" ? timingScore * 0.35 : timingScore;
+
+      const windowMonths = (prodEnd - prodStart) / MS_PER_MONTH;
+      score += Math.max(0, 12 - windowMonths / 3);
+    }
   }
 
-  const motNorm = normalize(model);
-  const variantNorm = row.variant;
-  if (/\b300\b/.test(motNorm) && /\b300\b/.test(variantNorm)) score += 20;
-  if (/\b220\b/.test(motNorm) && /\b220\b/.test(variantNorm)) score += 20;
-  if (/\b200\b/.test(motNorm) && /\b200\b/.test(variantNorm)) score += 15;
-  if (motNorm.includes("mhev") && variantNorm.includes("mhev")) score += 18;
-  if (motNorm.includes("amg") && variantNorm.includes("amg")) score += 10;
-  if (motNorm.includes("4matic") && (variantNorm.includes("4matic") || variantNorm.includes("awd")))
-    score += 12;
-
-  if (fuelMatches(row.fuel, fuelType ?? "")) score += 10;
-
-  if (
-    co2 != null &&
-    row.co2Gkm != null &&
-    Number.isFinite(co2) &&
-    Math.abs(row.co2Gkm - co2) <= 25
-  ) {
-    score += 8;
+  if (params.revenueWeightKg != null && row.weightKgNum != null) {
+    const dist = Math.abs(row.weightKgNum - params.revenueWeightKg);
+    if (dist <= 150) score += Math.max(0, 15 - dist / 10);
   }
 
   return score;
 }
 
-function getCarSpecsFromMakeIndex(
-  make: string | undefined,
-  model: string | undefined,
-  year: number | undefined,
-  engineCapacityCc: number | undefined,
-  fuelType: string | undefined,
-  co2: number | undefined
-): CarSpecs | null {
-  const index = loadMakeIndex();
-  const makeKey = resolveMakeIndexKey(make, index);
-  if (!makeKey || year == null || !Number.isFinite(year)) return null;
+function applyHierarchicalFilters(
+  rows: MakeSpecRecord[],
+  params: SpecLookupParams,
+  year: number,
+  registrationMs: number | null
+): MakeSpecRecord[] {
+  let pool = rows.filter(hasPerformanceData);
 
-  const rows = index[makeKey];
-  if (!rows?.length) return null;
-
-  const modelN = normalize(model ?? "");
-  let best: MakeSpecRecord | null = null;
-  let bestScore = 0;
-
-  for (const row of rows) {
-    const score = scoreMakeSpecRow(row, modelN, year, engineCapacityCc, fuelType, co2);
-    if (score > bestScore) {
-      bestScore = score;
-      best = row;
-    }
+  if (params.fuelType) {
+    pool = pool.filter((row) => fuelMatchesStrict(row.fuel, params.fuelType!));
   }
 
-  if (!best || bestScore < 30) return null;
+  pool = pool.filter((row) => matchesMotModel(row.model, row.variant, params.motModel));
 
-  return {
-    bhp: best.bhp,
-    torque: best.torqueNm,
-    gearbox: best.gearbox,
-    drivetrain: best.drivetrain,
-    acceleration0100: best.acceleration0100,
-    topSpeedMph: best.topSpeedMph,
-    matchedVariant: best.variantLabel,
-  };
-}
+  pool = pool.filter((row) => rowMatchesYear(row, year, registrationMs));
 
-function engineLitresForKey(engineCapacityCc: number | undefined): number {
-  if (engineCapacityCc == null || !Number.isFinite(engineCapacityCc)) return 0;
-  const litres = engineCapacityCc / 1000;
-  return Math.round(litres * 10) / 10;
-}
-
-function getCarSpecsLegacy(
-  make: string | undefined,
-  model: string | undefined,
-  year: number | undefined,
-  engineCapacityCc: number | undefined,
-  fuelType: string | undefined
-): CarSpecs | null {
-  const lookup = loadLegacyLookup();
-  if (Object.keys(lookup).length === 0) return null;
-
-  const makeN = normalize(make);
-  const modelN = normalize(model ?? "");
-  const yearN = year != null && Number.isFinite(year) ? Number(year) : null;
-  const engineLitres = engineLitresForKey(engineCapacityCc);
-  const fuelN = normalize(fuelType);
-
-  if (!makeN || yearN == null) return null;
-
-  const makesToTry = makeVariants(make ?? "");
-  const keysToTry: string[] = [];
-  for (const m of makesToTry) {
-    keysToTry.push([m, modelN, yearN, engineLitres, fuelN].join("|"));
-    keysToTry.push([m, "", yearN, engineLitres, fuelN].join("|"));
-  }
-  const exactLitres =
-    engineCapacityCc != null && Number.isFinite(engineCapacityCc)
-      ? engineCapacityCc / 1000
-      : 0;
-  if (exactLitres !== engineLitres && makesToTry.length > 0) {
-    const m = makesToTry[0];
-    keysToTry.push([m, modelN, yearN, exactLitres, fuelN].join("|"));
-    keysToTry.push([m, "", yearN, exactLitres, fuelN].join("|"));
+  if (params.engineCapacityCc != null && Number.isFinite(params.engineCapacityCc)) {
+    pool = pool.filter((row) => row.engineCc === params.engineCapacityCc);
   }
 
-  for (const key of keysToTry) {
-    const rec = lookup[key];
-    if (!rec) continue;
-    const gearbox = rec.transmission
-      ? rec.transmission.charAt(0).toUpperCase() + rec.transmission.slice(1)
-      : null;
-    return {
-      bhp: rec.bhp ?? null,
-      torque: null,
-      gearbox,
-      drivetrain: null,
-      acceleration0100: null,
-      topSpeedMph: null,
-      matchedVariant: null,
-    };
+  if (params.co2Emissions != null && Number.isFinite(params.co2Emissions)) {
+    pool = applyCo2Narrowing(pool, params.co2Emissions);
   }
-  return null;
+
+  if (params.revenueWeightKg != null && Number.isFinite(params.revenueWeightKg)) {
+    const withWeight = pool.filter((row) => row.weightKgNum != null);
+    const closeWeight = withWeight.filter(
+      (row) => Math.abs(row.weightKgNum! - params.revenueWeightKg!) <= 150
+    );
+    if (closeWeight.length > 0) pool = closeWeight;
+  }
+
+  return pool;
 }
 
 /**
  * Return CSV variants narrowed by registration data for user selection.
  */
-export function getSpecCandidates(
-  make: string | undefined,
-  model: string | undefined,
-  year: number | undefined,
-  engineCapacityCc: number | undefined,
-  fuelType: string | undefined,
-  co2Emissions?: number
-): SpecCandidatesResult {
+export function getSpecCandidates(params: SpecLookupParams): SpecCandidatesResult {
   const index = loadMakeIndex();
-  const makeKey = resolveMakeIndexKey(make, index);
-  if (!makeKey || year == null || !Number.isFinite(year)) {
+  const makeKey = resolveMakeIndexKey(params.make, index);
+  const year = resolveVehicleYear(params);
+
+  if (!makeKey || year == null) {
     return { candidates: [], suggestedId: null };
   }
 
   const rows = index[makeKey];
   if (!rows?.length) return { candidates: [], suggestedId: null };
 
-  const modelN = normalize(model ?? "");
-  const filtered = rows.filter((row) =>
-    rowPassesCandidateFilters(row, year, engineCapacityCc, fuelType, model)
-  );
+  const registrationMs = resolveRegistrationMs(params);
+  const filtered = applyHierarchicalFilters(rows, params, year, registrationMs);
 
-  const scored = filtered.map((row) => ({
-    row,
-    score: scoreMakeSpecRow(row, modelN, year, engineCapacityCc, fuelType, co2Emissions),
-  }));
+  const scored = dedupeByPerformance(filtered)
+    .map((row) => ({ row, score: scoreRow(row, params, registrationMs) }))
+    .sort((a, b) => b.score - a.score);
 
-  scored.sort((a, b) => {
-    const scoreDiff = b.score - a.score;
-    if (scoreDiff !== 0) return scoreDiff;
-    return formatCandidateLabel(a.row).localeCompare(formatCandidateLabel(b.row));
-  });
-
-  const candidates: SpecCandidate[] = scored.map(({ row }) => ({
-    id: row.id ?? `${makeKey}-${row.model}-${row.variant}-${row.yearFrom}`,
-    label: formatCandidateLabel(row),
-    ...rowToCarSpecs(row),
-  }));
-
-  const best = scored[0];
-  const suggestedId =
-    best && best.score >= 30 && best.row.id
-      ? best.row.id
-      : (candidates[0]?.id ?? null);
+  const candidates: SpecCandidate[] = scored.map(({ row }) => rowToSpecCandidate(row));
+  const suggestedId = scored[0]?.row.id ?? candidates[0]?.id ?? null;
 
   return { candidates, suggestedId };
 }
 
-/**
- * Look up performance specs for a user-selected candidate id.
- */
-export function getSpecsById(make: string | undefined, candidateId: string): CarSpecs | null {
+export function getSpecsById(make: string | undefined, candidateId: string): SpecCandidate | null {
   const index = loadMakeIndex();
   const makeKey = resolveMakeIndexKey(make, index);
   if (!makeKey || !candidateId) return null;
@@ -434,23 +516,20 @@ export function getSpecsById(make: string | undefined, candidateId: string): Car
   const row = index[makeKey]?.find((r) => r.id === candidateId);
   if (!row || !hasPerformanceData(row)) return null;
 
-  return rowToCarSpecs(row);
+  return rowToSpecCandidate(row);
 }
 
-/**
- * Get specs using per-make CSV index (primary) or legacy Kaggle JSON (fallback).
- */
-export function getCarSpecs(
-  make: string | undefined,
-  model: string | undefined,
-  year: number | undefined,
-  engineCapacityCc: number | undefined,
-  fuelType: string | undefined,
-  co2Emissions?: number
-): CarSpecs | null {
-  const fromMake =
-    getCarSpecsFromMakeIndex(make, model, year, engineCapacityCc, fuelType, co2Emissions) ??
-    null;
-  if (fromMake) return fromMake;
-  return getCarSpecsLegacy(make, model, year, engineCapacityCc, fuelType);
+export function getCarSpecs(params: SpecLookupParams): CarSpecs | null {
+  const { candidates, suggestedId } = getSpecCandidates(params);
+  const best = candidates.find((c) => c.id === suggestedId) ?? candidates[0];
+  if (!best) return null;
+  return {
+    bhp: best.bhp,
+    torque: best.torque,
+    gearbox: best.gearbox,
+    drivetrain: best.drivetrain,
+    acceleration0100: best.acceleration0100,
+    topSpeedMph: best.topSpeedMph,
+    matchedVariant: best.matchedVariant,
+  };
 }

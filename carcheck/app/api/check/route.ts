@@ -233,14 +233,17 @@ async function performVehicleCheck(registrationNumber: string): Promise<{
     logApiCheckError(motErr, "MOT");
   }
 
-  const { candidates: specCandidates, suggestedId: suggestedSpecId } = getSpecCandidates(
-    vehicle.make,
-    motHistory?.[0]?.model,
-    vehicle.yearOfManufacture,
-    vehicle.engineCapacity,
-    vehicle.fuelType,
-    vehicle.co2Emissions
-  );
+  const { candidates: specCandidates, suggestedId: suggestedSpecId } = getSpecCandidates({
+    make: vehicle.make,
+    motModel: motHistory?.[0]?.model,
+    yearOfManufacture: vehicle.yearOfManufacture,
+    monthOfFirstRegistration: vehicle.monthOfFirstRegistration,
+    motRegistrationDate: motHistory?.[0]?.registrationDate,
+    engineCapacityCc: vehicle.engineCapacity,
+    fuelType: vehicle.fuelType,
+    co2Emissions: vehicle.co2Emissions,
+    revenueWeightKg: vehicle.revenueWeight,
+  });
 
   return { vehicle, motHistory, specCandidates, suggestedSpecId };
 }

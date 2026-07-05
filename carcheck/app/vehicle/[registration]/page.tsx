@@ -6,6 +6,7 @@ import Link from "next/link";
 
 import { PlateBand } from "@/app/components/PlateBand";
 import { createClient } from "@/lib/supabase/client";
+import type { SpecCandidate } from "@/lib/car-specs-lookup";
 
 type VehicleData = {
   registrationNumber: string;
@@ -59,18 +60,6 @@ type MotHistoryVehicle = {
   motTests?: MotTestItem[];
 };
 
-type SpecCandidate = {
-  id: string;
-  label: string;
-  bhp: number | null;
-  torque: number | null;
-  gearbox: string | null;
-  drivetrain: string | null;
-  acceleration0100: number | null;
-  topSpeedMph: number | null;
-  matchedVariant: string | null;
-};
-
 type ApiResponse = {
   vehicle: VehicleData;
   motHistory: MotHistoryVehicle[] | null;
@@ -102,6 +91,59 @@ function formatLabel(key: string): string {
     .replace(/([A-Z])/g, " $1")
     .replace(/^./, (s) => s.toUpperCase())
     .trim();
+}
+
+function SpecDetail({
+  label,
+  value,
+}: {
+  label: string;
+  value: string | number | null | undefined;
+}) {
+  if (value == null || value === "" || value === "—") return null;
+  return (
+    <div className="flex flex-col gap-0.5 py-1">
+      <dt className="kicker text-muted">{label}</dt>
+      <dd className="text-foreground font-semibold break-words">{value}</dd>
+    </div>
+  );
+}
+
+function VehiclePerformancePanel({ specs }: { specs: SpecCandidate }) {
+  return (
+    <dl className="grid gap-3 sm:gap-4 grid-cols-2 sm:grid-cols-3">
+      <SpecDetail label="BHP" value={specs.bhp} />
+      <SpecDetail label="Torque" value={specs.torque != null ? `${specs.torque} Nm` : null} />
+      <SpecDetail label="0–60 mph" value={specs.acceleration0100 != null ? `${specs.acceleration0100}s` : null} />
+      <SpecDetail label="Top speed" value={specs.topSpeedMph != null ? `${specs.topSpeedMph} mph` : null} />
+      <SpecDetail label="Engine size" value={specs.engineCc != null ? `${specs.engineCc} cc` : null} />
+      <SpecDetail label="Fuel" value={specs.fuel ? specs.fuel.charAt(0).toUpperCase() + specs.fuel.slice(1) : null} />
+      <SpecDetail label="Cylinders" value={specs.cylinders} />
+      <SpecDetail label="Valves" value={specs.valves} />
+      <SpecDetail label="Transmission" value={specs.transmission} />
+      <SpecDetail label="Drivetrain" value={specs.drivetrain} />
+    </dl>
+  );
+}
+
+function VehicleMiscPanel({ specs }: { specs: SpecCandidate }) {
+  return (
+    <dl className="grid gap-3 sm:gap-4 grid-cols-2 sm:grid-cols-3">
+      <SpecDetail label="New price" value={specs.newPrice} />
+      <SpecDetail label="MPG" value={specs.mpg} />
+      <SpecDetail label="Insurance group" value={specs.insuranceGroup} />
+      <SpecDetail label="Fuel capacity" value={specs.fuelCapacity} />
+      <SpecDetail label="Battery" value={specs.batteryCapacity} />
+      <SpecDetail label="Weight" value={specs.weightKg} />
+      <SpecDetail label="Length" value={specs.lengthMm} />
+      <SpecDetail label="Width" value={specs.widthMm} />
+      <SpecDetail label="Height" value={specs.heightMm} />
+      <SpecDetail label="Wheelbase" value={specs.wheelbaseMm} />
+      <SpecDetail label="Doors" value={specs.doors} />
+      <SpecDetail label="Seats" value={specs.seats} />
+      <SpecDetail label="Boot" value={specs.luggageCapacity} />
+    </dl>
+  );
 }
 
 /** EU-style CO2 emission bands (g/km): range, label, bar colour, and light-theme active row highlight. */
@@ -379,23 +421,47 @@ function parseEuroNumber(euroStatus: string | undefined): number {
   return NaN;
 }
 
-/** Light background tint for Tax / MOT / ULEZ status panels (true = ok, false = bad, null = unknown). */
-function statusPanelClasses(state: boolean | null): string {
-  const base = "px-4 py-5 sm:px-6";
-  if (state === true) return `${base} bg-emerald-50`;
-  if (state === false) return `${base} bg-red-50`;
-  return `${base} bg-accent-tint`;
+function isDvlaEuroStatusEmpty(euroStatus: string | undefined): boolean {
+  if (euroStatus == null) return true;
+  const trimmed = euroStatus.trim();
+  return !trimmed || trimmed === "—" || trimmed === "-";
 }
 
-/** TfL-style ULEZ compliance using DVLA VES data. Returns null when unknown. */
-function getUlezCompliance(vehicle: {
-  fuelType?: string;
-  euroStatus?: string;
-  monthOfFirstRegistration?: string;
-  typeApproval?: string;
-}): boolean | null {
+/** DVLA Euro status, or matched spec Euro standard when DVLA is empty. */
+function displayEuroStatus(
+  dvlaEuroStatus: string | undefined,
+  specEuroStandard: number | null | undefined
+): string {
+  if (!isDvlaEuroStatusEmpty(dvlaEuroStatus)) return dvlaEuroStatus!.trim();
+  if (specEuroStandard != null && Number.isFinite(specEuroStandard)) {
+    return `EURO ${specEuroStandard}`;
+  }
+  return "—";
+}
+
+/** DVLA Euro status first, then matched spec Euro standard, else NaN. */
+function resolveEuroForUlez(
+  dvlaEuroStatus: string | undefined,
+  specEuroStandard: number | null | undefined
+): number {
+  const fromDvla = parseEuroNumber(dvlaEuroStatus);
+  if (!Number.isNaN(fromDvla)) return fromDvla;
+  if (specEuroStandard != null && Number.isFinite(specEuroStandard)) return specEuroStandard;
+  return NaN;
+}
+
+/** TfL-style ULEZ compliance. Euro: DVLA → vehicle performance → registration fallbacks. */
+function getUlezCompliance(
+  vehicle: {
+    fuelType?: string;
+    euroStatus?: string;
+    monthOfFirstRegistration?: string;
+    typeApproval?: string;
+  },
+  specEuroStandard?: number | null
+): boolean | null {
   const fuel = (vehicle.fuelType ?? "").toUpperCase();
-  const euro = parseEuroNumber(vehicle.euroStatus);
+  const euro = resolveEuroForUlez(vehicle.euroStatus, specEuroStandard);
   const hasEuro = !Number.isNaN(euro);
   const reg = vehicle.monthOfFirstRegistration ?? ""; // YYYY-MM
 
@@ -425,6 +491,14 @@ function getUlezCompliance(vehicle: {
   // Other fuel (e.g. hybrid without electric): use Euro 6 if known, else unknown
   if (hasEuro) return euro >= 6;
   return null;
+}
+
+/** Light background tint for Tax / MOT / ULEZ status panels (true = ok, false = bad, null = unknown). */
+function statusPanelClasses(state: boolean | null): string {
+  const base = "px-4 py-5 sm:px-6";
+  if (state === true) return `${base} bg-emerald-50`;
+  if (state === false) return `${base} bg-red-50`;
+  return `${base} bg-accent-tint`;
 }
 
 /** Parse date string (ISO or YYYY-MM) to timestamp; returns NaN if invalid */
@@ -676,12 +750,15 @@ export default function VehiclePage() {
     );
   }
 
-  const { vehicle, motHistory, specCandidates = [], demo, sample } = data;
+  const { vehicle, motHistory, specCandidates = [], suggestedSpecId, demo, sample } = data;
   const performanceLocked = !isLoggedIn && !sample;
   const primaryMot = motHistory?.[0];
   const motTests = primaryMot?.motTests ?? [];
   const mileageSummary = computeYearlyAverageMileage(vehicle.monthOfFirstRegistration, motTests);
-  const ulezCompliant = getUlezCompliance(vehicle);
+  const suggestedSpec =
+    specCandidates.find((c) => c.id === suggestedSpecId) ?? specCandidates[0] ?? null;
+  const specEuroStandard = suggestedSpec?.euroStandard ?? null;
+  const ulezCompliant = getUlezCompliance(vehicle, specEuroStandard);
   const co2Band = getCo2Band(vehicle.co2Emissions);
   const roadTax = getRoadTax(
     vehicle.co2Emissions,
@@ -1053,15 +1130,6 @@ export default function VehiclePage() {
                 >
                   {ulezCompliant === true ? "Compliant" : ulezCompliant === false ? "Not compliant" : "Unknown"}
                 </p>
-                <p className="mt-1 text-xs text-muted">
-                  {vehicle.euroStatus
-                    ? `Euro status: ${vehicle.euroStatus}`
-                    : ulezCompliant === null &&
-                        (vehicle.fuelType ?? "").toUpperCase().includes("DIESEL") &&
-                        (vehicle.monthOfFirstRegistration ?? "") < "2015-09"
-                      ? "No Euro status held, most pre-2015 diesels are Euro 5"
-                      : "Based on DVLA data"}
-                </p>
                 <a href="https://tfl.gov.uk/modes/driving/check-your-vehicle/" target="_blank" rel="noopener noreferrer" className="link-underline mt-2 inline-block text-xs font-medium text-accent">
                   Confirm on TfL
                 </a>
@@ -1080,14 +1148,17 @@ export default function VehiclePage() {
               </h2>
               <dl className="p-4 sm:p-6 grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2">
                 {displayFields.map((key) => {
-                  const value = vehicle[key];
+                  const value =
+                    key === "euroStatus"
+                      ? displayEuroStatus(vehicle.euroStatus, specEuroStandard)
+                      : formatValue(vehicle[key]);
                   return (
                     <div key={key} className="flex flex-col gap-0.5 py-1">
                       <dt className="kicker text-muted">
                         {formatLabel(key)}
                       </dt>
                       <dd className="text-foreground font-medium break-words">
-                        {formatValue(value)}
+                        {value}
                       </dd>
                     </div>
                   );
@@ -1101,107 +1172,48 @@ export default function VehiclePage() {
             </section>
 
             <section className="rounded-lg border border-hairline bg-white overflow-hidden">
-              <h2 className="px-5 sm:px-6 py-4 border-b border-hairline text-base font-semibold text-foreground flex items-center gap-2 flex-wrap">
-                Vehicle performance
-                <span className="kicker rounded-full border border-accent/40 px-2.5 py-0.5 text-accent">
-                  Beta
-                </span>
+              <h2 className="px-5 sm:px-6 py-4 border-b border-hairline text-base font-semibold text-foreground">
+                MOT summary
               </h2>
-              <div className="p-4 sm:p-6 space-y-4 relative">
-                <div
-                  className={
-                    performanceLocked
-                      ? "blur-md select-none pointer-events-none space-y-4"
-                      : "space-y-4"
-                  }
-                  aria-hidden={performanceLocked}
-                >
-                  {specCandidates.length > 0 ? (
-                    <>
-                      {lookedUpSpecs &&
-                      (lookedUpSpecs.bhp != null ||
-                        lookedUpSpecs.torque != null ||
-                        lookedUpSpecs.gearbox ||
-                        lookedUpSpecs.drivetrain ||
-                        lookedUpSpecs.acceleration0100 != null ||
-                        lookedUpSpecs.topSpeedMph != null) ? (
-                        <dl className="grid gap-3 sm:gap-4 grid-cols-2 sm:grid-cols-3">
-                          <div className="flex flex-col gap-0.5 py-1">
-                            <dt className="kicker text-muted">BHP</dt>
-                            <dd className="text-foreground font-semibold">
-                              {lookedUpSpecs.bhp != null ? lookedUpSpecs.bhp : "—"}
-                            </dd>
-                          </div>
-                          <div className="flex flex-col gap-0.5 py-1">
-                            <dt className="kicker text-muted">Torque</dt>
-                            <dd className="text-foreground font-semibold">
-                              {lookedUpSpecs.torque != null ? `${lookedUpSpecs.torque} Nm` : "—"}
-                            </dd>
-                          </div>
-                          <div className="flex flex-col gap-0.5 py-1">
-                            <dt className="kicker text-muted">Gearbox</dt>
-                            <dd className="text-foreground font-semibold">{lookedUpSpecs.gearbox || "—"}</dd>
-                          </div>
-                          <div className="flex flex-col gap-0.5 py-1">
-                            <dt className="kicker text-muted">Drivetrain</dt>
-                            <dd className="text-foreground font-semibold">{lookedUpSpecs.drivetrain || "—"}</dd>
-                          </div>
-                          <div className="flex flex-col gap-0.5 py-1">
-                            <dt className="kicker text-muted">0–60 mph</dt>
-                            <dd className="text-foreground font-semibold">
-                              {lookedUpSpecs.acceleration0100 != null
-                                ? `${lookedUpSpecs.acceleration0100}s`
-                                : "—"}
-                            </dd>
-                          </div>
-                          <div className="flex flex-col gap-0.5 py-1">
-                            <dt className="kicker text-muted">Top speed</dt>
-                            <dd className="text-foreground font-semibold">
-                              {lookedUpSpecs.topSpeedMph != null ? `${lookedUpSpecs.topSpeedMph} mph` : "—"}
-                            </dd>
-                          </div>
-                        </dl>
-                      ) : null}
-                      <label className="block min-w-0 pt-4 border-t border-hairline">
-                        <span className="kicker mb-2 block text-muted">Select trim</span>
-                        <select
-                          value={selectedSpecId}
-                          onChange={(e) => {
-                            const id = e.target.value;
-                            setSelectedSpecId(id);
-                            const match = specCandidates.find((c) => c.id === id);
-                            setLookedUpSpecs(match ?? null);
-                          }}
-                          className="w-full rounded-md border border-hairline bg-surface px-3 py-2.5 text-sm text-foreground focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent/40"
-                        >
-                          {specCandidates.map((c) => (
-                            <option key={c.id} value={c.id}>
-                              {c.label}
-                            </option>
-                          ))}
-                        </select>
-                      </label>
-                    </>
-                  ) : (
-                    <p className="text-muted text-sm">
-                      No matching variants in our database for this vehicle.
-                    </p>
-                  )}
+              <dl className="p-5 sm:p-6 grid grid-cols-3 gap-2 sm:gap-4 divide-x divide-hairline">
+                <div className="flex flex-col gap-0.5 py-1 px-1 sm:px-2 text-center min-w-0">
+                  <dt className="kicker text-muted leading-tight">Total tests</dt>
+                  <dd className="text-foreground font-semibold text-base sm:text-lg tabular-nums">{motTotal}</dd>
                 </div>
-                {performanceLocked && (
-                  <div className="absolute inset-0 z-10 flex items-center justify-center px-4 sm:px-6">
-                    <p className="text-center text-sm sm:text-base text-muted max-w-md">
-                      <Link
-                        href={`/login?next=${encodeURIComponent(`/vehicle/${registration}`)}`}
-                        className="link-underline font-medium text-accent"
-                      >
-                        Log in now
-                      </Link>{" "}
-                      to unlock this feature.
-                    </p>
+                <div className="flex flex-col gap-0.5 py-1 px-1 sm:px-2 text-center min-w-0">
+                  <dt className="kicker text-muted leading-tight">Passed</dt>
+                  <dd className="text-emerald-700 font-semibold text-base sm:text-lg tabular-nums">{motPassed}</dd>
+                </div>
+                <div className="flex flex-col gap-0.5 py-1 px-1 sm:px-2 text-center min-w-0">
+                  <dt className="kicker text-muted leading-tight">Failed</dt>
+                  <dd className="text-red-600 font-semibold text-base sm:text-lg tabular-nums">{motFailed}</dd>
+                </div>
+              </dl>
+              {motTotal > 0 && (
+                <div className="px-4 sm:px-6 pb-4 sm:pb-5">
+                  <div className="h-2 w-full rounded-full bg-surface overflow-hidden flex">
+                    <div
+                      className="h-full bg-emerald-500"
+                      style={{ width: `${motPassRate * 100}%` }}
+                      aria-hidden="true"
+                    />
+                    <div
+                      className="h-full bg-red-400"
+                      style={{ width: `${(1 - motPassRate) * 100}%` }}
+                      aria-hidden="true"
+                    />
                   </div>
-                )}
-              </div>
+                  <div className="mt-1.5 flex flex-col items-center justify-center gap-0.5 text-[10px] text-muted">
+                    <span>{Math.round(motPassRate * 100)}% passed</span>
+                    <span>
+                      {motPassed}/{motTotal} tests
+                    </span>
+                  </div>
+                </div>
+              )}
+              {motTotal === 0 && (
+                <p className="px-4 sm:px-6 pb-4 sm:pb-6 text-muted text-sm">No MOT history retrieved.</p>
+              )}
             </section>
 
             <section className="rounded-lg border border-hairline bg-white overflow-hidden">
@@ -1293,53 +1305,128 @@ export default function VehiclePage() {
                 </p>
               )}
             </section>
+
+            {co2Band && (
+              <section className="rounded-lg border border-hairline bg-white overflow-hidden">
+                <div className="px-5 sm:px-6 py-4 border-b border-hairline">
+                  <h2 className="text-base font-semibold text-foreground">CO₂ emission figures</h2>
+                  <p className="mt-2 text-3xl sm:text-4xl font-semibold tabular-nums text-foreground">
+                    {vehicle.co2Emissions}
+                    <span className="text-lg text-muted"> g/km</span>{" "}
+                    <span className={`text-lg font-semibold ${co2Band.band.letterColor}`}>({co2Band.letter})</span>
+                  </p>
+                </div>
+                <div className="p-4 sm:p-6 space-y-1">
+                  {CO2_BANDS.map((b, i) => {
+                    const isActive = b.min === co2Band.band.min && b.max === co2Band.band.max;
+                    const rangeLabel = b.max === Infinity ? "225+" : b.min === 0 ? "0-101" : `${b.min}-${b.max}`;
+                    const barWidth =
+                      i === 0 ? 25 : i === CO2_BANDS.length - 1 ? 100 : 25 + (i / (CO2_BANDS.length - 1)) * 75;
+                    return (
+                      <div
+                        key={b.label}
+                        className={`flex items-center gap-2 sm:gap-3 py-2 px-3 rounded-lg transition-colors ${
+                          isActive ? b.activeHighlight : ""
+                        }`}
+                      >
+                        <span
+                          className={`w-16 sm:w-20 text-xs sm:text-sm shrink-0 tabular-nums ${
+                            isActive ? "font-semibold text-foreground" : "font-medium text-muted"
+                          }`}
+                        >
+                          {rangeLabel}
+                        </span>
+                        <div className="flex-1 h-7 sm:h-8 rounded overflow-hidden bg-surface flex">
+                          <div className={`h-full ${b.color} shrink-0`} style={{ width: `${barWidth}%` }} />
+                        </div>
+                        <span
+                          className={`text-xs sm:text-sm shrink-0 w-6 sm:w-8 text-center ${
+                            isActive ? `font-bold ${b.letterColor}` : "font-bold text-foreground/90"
+                          }`}
+                        >
+                          {b.label}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </section>
+            )}
           </div>
 
           <div className="flex flex-col gap-4 sm:gap-6">
-            <section className="rounded-lg border border-hairline bg-white overflow-hidden">
-              <h2 className="px-5 sm:px-6 py-4 border-b border-hairline text-base font-semibold text-foreground">
-                MOT summary
-              </h2>
-              <dl className="p-5 sm:p-6 grid grid-cols-3 gap-2 sm:gap-4 divide-x divide-hairline">
-                <div className="flex flex-col gap-0.5 py-1 px-1 sm:px-2 text-center min-w-0">
-                  <dt className="kicker text-muted leading-tight">Total tests</dt>
-                  <dd className="text-foreground font-semibold text-base sm:text-lg tabular-nums">{motTotal}</dd>
+          <div className="relative flex flex-col gap-4 sm:gap-6">
+            <div
+              className={
+                performanceLocked
+                  ? "blur-md select-none pointer-events-none flex flex-col gap-4 sm:gap-6"
+                  : "flex flex-col gap-4 sm:gap-6"
+              }
+              aria-hidden={performanceLocked}
+            >
+              <section className="rounded-lg border border-hairline bg-white overflow-hidden">
+                <h2 className="px-5 sm:px-6 py-4 border-b border-hairline text-base font-semibold text-foreground">
+                  Vehicle performance
+                </h2>
+                <div className="p-4 sm:p-6">
+                  {specCandidates.length > 0 && lookedUpSpecs ? (
+                    <>
+                      <VehiclePerformancePanel specs={lookedUpSpecs} />
+                      {/* Trim picker kept for logic; hidden until trim matching is re-enabled */}
+                      <label className="sr-only">
+                        <span>Select trim</span>
+                        <select
+                          value={selectedSpecId}
+                          onChange={(e) => {
+                            const id = e.target.value;
+                            setSelectedSpecId(id);
+                            const match = specCandidates.find((c) => c.id === id);
+                            setLookedUpSpecs(match ?? null);
+                          }}
+                          tabIndex={-1}
+                          aria-hidden
+                        >
+                          {specCandidates.map((c) => (
+                            <option key={c.id} value={c.id}>
+                              {c.label}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                    </>
+                  ) : (
+                    <p className="text-muted text-sm">
+                      No matching variants in our database for this vehicle.
+                    </p>
+                  )}
                 </div>
-                <div className="flex flex-col gap-0.5 py-1 px-1 sm:px-2 text-center min-w-0">
-                  <dt className="kicker text-muted leading-tight">Passed</dt>
-                  <dd className="text-emerald-700 font-semibold text-base sm:text-lg tabular-nums">{motPassed}</dd>
-                </div>
-                <div className="flex flex-col gap-0.5 py-1 px-1 sm:px-2 text-center min-w-0">
-                  <dt className="kicker text-muted leading-tight">Failed</dt>
-                  <dd className="text-red-600 font-semibold text-base sm:text-lg tabular-nums">{motFailed}</dd>
-                </div>
-              </dl>
-              {motTotal > 0 && (
-                <div className="px-4 sm:px-6 pb-4 sm:pb-5">
-                  <div className="h-2 w-full rounded-full bg-surface overflow-hidden flex">
-                    <div
-                      className="h-full bg-emerald-500"
-                      style={{ width: `${motPassRate * 100}%` }}
-                      aria-hidden="true"
-                    />
-                    <div
-                      className="h-full bg-red-400"
-                      style={{ width: `${(1 - motPassRate) * 100}%` }}
-                      aria-hidden="true"
-                    />
+              </section>
+
+              {specCandidates.length > 0 && lookedUpSpecs ? (
+                <section className="rounded-lg border border-hairline bg-white overflow-hidden">
+                  <h2 className="px-5 sm:px-6 py-4 border-b border-hairline text-base font-semibold text-foreground">
+                    Misc
+                  </h2>
+                  <div className="p-4 sm:p-6">
+                    <VehicleMiscPanel specs={lookedUpSpecs} />
                   </div>
-                  <div className="mt-1.5 flex flex-col items-center justify-center gap-0.5 text-[10px] text-muted">
-                    <span>{Math.round(motPassRate * 100)}% passed</span>
-                    <span>
-                      {motPassed}/{motTotal} tests
-                    </span>
-                  </div>
-                </div>
-              )}
-              {motTotal === 0 && (
-                <p className="px-4 sm:px-6 pb-4 sm:pb-6 text-muted text-sm">No MOT history retrieved.</p>
-              )}
-            </section>
+                </section>
+              ) : null}
+            </div>
+            {performanceLocked && (
+              <div className="absolute inset-0 z-10 flex items-center justify-center px-4 sm:px-6">
+                <p className="text-center text-sm sm:text-base text-muted max-w-md">
+                  <Link
+                    href={`/login?next=${encodeURIComponent(`/vehicle/${registration}`)}`}
+                    className="link-underline font-medium text-accent"
+                  >
+                    Log in now
+                  </Link>{" "}
+                  to unlock this feature.
+                </p>
+              </div>
+            )}
+          </div>
 
             {primaryMot && (primaryMot.model ?? primaryMot.engineSize ?? primaryMot.primaryColour ?? primaryMot.firstUsedDate ?? primaryMot.registrationDate ?? primaryMot.manufactureDate ?? primaryMot.hasOutstandingRecall) && (
               <section className="rounded-lg border border-hairline bg-white overflow-hidden">
@@ -1519,53 +1606,6 @@ export default function VehiclePage() {
                 </p>
               )}
             </section>
-
-            {co2Band && (
-              <section className="rounded-lg border border-hairline bg-white overflow-hidden">
-                <div className="px-5 sm:px-6 py-4 border-b border-hairline">
-                  <h2 className="text-base font-semibold text-foreground">CO₂ emission figures</h2>
-                  <p className="mt-2 text-3xl sm:text-4xl font-semibold tabular-nums text-foreground">
-                    {vehicle.co2Emissions}
-                    <span className="text-lg text-muted"> g/km</span>{" "}
-                    <span className={`text-lg font-semibold ${co2Band.band.letterColor}`}>({co2Band.letter})</span>
-                  </p>
-                </div>
-                <div className="p-4 sm:p-6 space-y-1">
-                  {CO2_BANDS.map((b, i) => {
-                    const isActive = b.min === co2Band.band.min && b.max === co2Band.band.max;
-                    const rangeLabel = b.max === Infinity ? "225+" : b.min === 0 ? "0-101" : `${b.min}-${b.max}`;
-                    const barWidth =
-                      i === 0 ? 25 : i === CO2_BANDS.length - 1 ? 100 : 25 + (i / (CO2_BANDS.length - 1)) * 75;
-                    return (
-                      <div
-                        key={b.label}
-                        className={`flex items-center gap-2 sm:gap-3 py-2 px-3 rounded-lg transition-colors ${
-                          isActive ? b.activeHighlight : ""
-                        }`}
-                      >
-                        <span
-                          className={`w-16 sm:w-20 text-xs sm:text-sm shrink-0 tabular-nums ${
-                            isActive ? "font-semibold text-foreground" : "font-medium text-muted"
-                          }`}
-                        >
-                          {rangeLabel}
-                        </span>
-                        <div className="flex-1 h-7 sm:h-8 rounded overflow-hidden bg-surface flex">
-                          <div className={`h-full ${b.color} shrink-0`} style={{ width: `${barWidth}%` }} />
-                        </div>
-                        <span
-                          className={`text-xs sm:text-sm shrink-0 w-6 sm:w-8 text-center ${
-                            isActive ? `font-bold ${b.letterColor}` : "font-bold text-foreground/90"
-                          }`}
-                        >
-                          {b.label}
-                        </span>
-                      </div>
-                    );
-                  })}
-                </div>
-              </section>
-            )}
           </div>
         </div>
 
