@@ -9,7 +9,8 @@
     "lint": "eslint",
     "preprocess-cars": "node scripts/preprocess-car-data.mjs",
     "preprocess-specs": "node scripts/preprocess-make-specs.mjs",
-    "preprocess-uk-cars": "node scripts/preprocess-uk-cars.mjs"
+    "preprocess-uk-cars": "node scripts/preprocess-uk-cars.mjs",
+    "preprocess-model-lines": "node scripts/preprocess-model-lines.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.0",

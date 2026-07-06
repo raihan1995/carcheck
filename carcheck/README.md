@@ -33,18 +33,50 @@ The app uses two APIs:
 1. Copy `.env.example` to `.env` and add your keys (from your DVLA/DVSA approval emails).
 2. Restart the dev server. Results appear on `/vehicle/[registration]`.
 
-## Car specs lookup (optional, beta)
+## Car specs & model lines (local data)
 
-To enrich results with BHP, torque, gearbox, and performance from a Kaggle-style CSV:
+Performance specs (BHP, torque, gearbox, dimensions, etc.) come from a preprocessed **UK-Cars** catalogue. **Model lines** (generation + body family, e.g. A3 Sportback vs Saloon) come from a separate Honest John–style list and narrow matching before trim selection.
 
-1. Place the CSV somewhere (e.g. `C:\Users\Raihan\Downloads\kaggle\all_car_adverts.csv`).
-2. Run the preprocess script:
-   ```bash
-   npm install
-   npm run preprocess-cars
-   ```
-   Or with a custom path: `INPUT_CSV="C:\path\to\all_car_adverts.csv" npm run preprocess-cars`
-3. This writes `data/make-specs-index.json` and `data/specs/*.csv`. The vehicle page shows a **Vehicle performance (Beta)** section with a trim dropdown when candidates exist.
+### Data files
+
+| File | Role |
+|------|------|
+| `data/UK-Cars.csv` | Source catalogue (local; not in git). Teoalida / Parkers-style UK specs. |
+| `data/make-specs-index.json` | Built specs index (~90 MB). **Required at runtime** for performance lookup. |
+| `data/model-lines/source/car-reviews-2026.txt` | Source model-line list (make → model + year ranges). |
+| `data/model-lines-index.json` | Built model-line index (~500 KB). **Required at runtime** for generation/body filtering. |
+
+### Preprocess commands
+
+```bash
+# 1. UK-Cars CSV → make-specs-index.json (run when UK-Cars.csv changes)
+npm run preprocess-uk-cars
+
+# 2. Model-line txt → model-lines-index.json (run when source txt or specs index changes)
+npm run preprocess-model-lines
+```
+
+**When to regenerate**
+
+| Situation | Command |
+|-----------|---------|
+| Normal dev / vehicle lookups | Nothing — use existing JSON files. |
+| You update `data/UK-Cars.csv` | `npm run preprocess-uk-cars` then `npm run preprocess-model-lines` |
+| You edit `data/model-lines/source/car-reviews-2026.txt` | `npm run preprocess-model-lines` |
+| Fresh clone without the built JSON files | Both commands (and place `UK-Cars.csv` first). |
+| You only change matcher/UI code | No preprocess needed. |
+
+`preprocess-model-lines` attaches **CSV series hints** from `make-specs-index.json`, so run it again after rebuilding the specs index.
+
+Legacy scripts (`preprocess-cars`, `preprocess-specs`) are unused; the active pipeline is `preprocess-uk-cars` + `preprocess-model-lines`.
+
+### Matching flow (summary)
+
+1. DVLA + MOT → make, model, year, fuel, cc, CO₂, etc.
+2. **Model lines** — filter by make, MOT model, year, fuel (e.g. drop wrong generation or e-tron for petrol).
+3. **UK-Cars index** — fuel → MOT model → year/production window → cc → CO₂ → score → suggested trim.
+
+Transmission and exact trim are still limited when DVLA/MOT do not provide gearbox or derivative data.
 
 ## UI versions (quick reference)
 

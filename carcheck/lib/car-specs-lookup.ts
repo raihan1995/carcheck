@@ -5,6 +5,11 @@
 import fs from "fs";
 import path from "path";
 
+import {
+  filterRowsByModelLines,
+  resolveEligibleModelLines,
+} from "@/lib/model-lines-lookup";
+
 export type CarSpecs = {
   bhp: number | null;
   torque: number | null;
@@ -458,6 +463,9 @@ function applyHierarchicalFilters(
   }
 
   pool = pool.filter((row) => matchesMotModel(row.model, row.variant, params.motModel));
+
+  const modelLines = resolveEligibleModelLines(params.make, params.motModel, year, params.fuelType);
+  pool = filterRowsByModelLines(pool, modelLines);
 
   pool = pool.filter((row) => rowMatchesYear(row, year, registrationMs));
 

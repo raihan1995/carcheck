@@ -1,10 +1,11 @@
 "use client";
 
 import { useParams, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 
 import { PlateBand } from "@/app/components/PlateBand";
+import { SpecRefinementWizard } from "@/app/components/SpecRefinementWizard";
 import { createClient } from "@/lib/supabase/client";
 import type { SpecCandidate } from "@/lib/car-specs-lookup";
 
@@ -623,9 +624,12 @@ export default function VehiclePage() {
   const [data, setData] = useState<ApiResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [selectedSpecId, setSelectedSpecId] = useState("");
   const [lookedUpSpecs, setLookedUpSpecs] = useState<SpecCandidate | null>(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  const handleSpecSelection = useCallback((spec: SpecCandidate) => {
+    setLookedUpSpecs(spec);
+  }, []);
 
   useEffect(() => {
     const supabase = createClient();
@@ -680,14 +684,12 @@ export default function VehiclePage() {
     const candidates = data?.specCandidates;
     const suggestedId = data?.suggestedSpecId;
     if (!candidates?.length) {
-      setSelectedSpecId("");
       setLookedUpSpecs(null);
       return;
     }
     const match = suggestedId
       ? (candidates.find((c) => c.id === suggestedId) ?? candidates[0])
       : candidates[0];
-    setSelectedSpecId(match.id);
     setLookedUpSpecs(match);
   }, [data?.specCandidates, data?.suggestedSpecId]);
 
@@ -1369,30 +1371,19 @@ export default function VehiclePage() {
                   Vehicle performance
                 </h2>
                 <div className="p-4 sm:p-6">
-                  {specCandidates.length > 0 && lookedUpSpecs ? (
+                  {specCandidates.length > 0 ? (
                     <>
-                      <VehiclePerformancePanel specs={lookedUpSpecs} />
-                      {/* Trim picker kept for logic; hidden until trim matching is re-enabled */}
-                      <label className="sr-only">
-                        <span>Select trim</span>
-                        <select
-                          value={selectedSpecId}
-                          onChange={(e) => {
-                            const id = e.target.value;
-                            setSelectedSpecId(id);
-                            const match = specCandidates.find((c) => c.id === id);
-                            setLookedUpSpecs(match ?? null);
-                          }}
-                          tabIndex={-1}
-                          aria-hidden
-                        >
-                          {specCandidates.map((c) => (
-                            <option key={c.id} value={c.id}>
-                              {c.label}
-                            </option>
-                          ))}
-                        </select>
-                      </label>
+                      {lookedUpSpecs ? (
+                        <VehiclePerformancePanel specs={lookedUpSpecs} />
+                      ) : null}
+                      {specCandidates.length > 1 && (
+                        <SpecRefinementWizard
+                          registration={registration}
+                          candidates={specCandidates}
+                          suggestedId={suggestedSpecId}
+                          onSelectionChange={handleSpecSelection}
+                        />
+                      )}
                     </>
                   ) : (
                     <p className="text-muted text-sm">

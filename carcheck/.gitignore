@@ -41,8 +41,9 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# Large CSV / raw data (keep outside repo)
-# data/*.csv
+# Preprocess sources (local only — JSON indexes in data/ are committed for runtime)
+data/UK-Cars.csv
+data/model-lines/source/
 
 # Auth database (local SQLite)
 data/revveal.db
