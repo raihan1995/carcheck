@@ -91,7 +91,7 @@ export function SiteHeader() {
   function navLinkClass(href: string) {
     return `link-underline py-1 text-sm transition-colors ${
       isNavActive(href)
-        ? "text-accent"
+        ? "text-accent-text"
         : "text-muted hover:text-foreground"
     }`;
   }
@@ -102,7 +102,7 @@ export function SiteHeader() {
         <Link
           href="/"
           title="Home"
-          className="flex items-center shrink-0 text-foreground focus:outline-none focus-visible:ring-1 focus-visible:ring-accent rounded-sm min-h-[44px]"
+          className="flex items-center shrink-0 text-foreground focus:outline-none focus-visible:ring-1 focus-visible:ring-accent-text rounded-sm min-h-[44px]"
         >
           <RevVealLogo variant="compact" />
         </Link>
@@ -119,7 +119,7 @@ export function SiteHeader() {
               <Link
                 href="/dashboard/reports"
                 className={`link-underline py-1 text-sm transition-colors ${
-                  isDashboardPath(pathname) ? "text-accent" : "text-muted hover:text-foreground"
+                  isDashboardPath(pathname) ? "text-accent-text" : "text-muted hover:text-foreground"
                 }`}
               >
                 <span className="hidden lg:inline">Hi, {user.firstName}</span>
@@ -141,7 +141,7 @@ export function SiteHeader() {
               </Link>
               <Link
                 href="/register"
-                className="rounded-full border border-accent/50 px-5 py-2 text-sm font-medium text-accent hover:bg-accent hover:text-white transition-colors"
+                className="rounded-full border border-accent-text/50 px-5 py-2 text-sm font-medium text-accent-text hover:bg-accent hover:text-white transition-colors"
               >
                 Register
               </Link>
@@ -152,7 +152,7 @@ export function SiteHeader() {
         <button
           type="button"
           onClick={() => setMenuOpen((o) => !o)}
-          className="flex h-10 w-10 md:hidden items-center justify-center rounded-sm text-muted hover:text-foreground focus:outline-none focus-visible:ring-1 focus-visible:ring-accent"
+          className="flex h-10 w-10 md:hidden items-center justify-center rounded-sm text-muted hover:text-foreground focus:outline-none focus-visible:ring-1 focus-visible:ring-accent-text"
           aria-expanded={menuOpen}
           aria-label="Toggle menu"
         >
@@ -182,8 +182,8 @@ export function SiteHeader() {
                   key={href}
                   href={href}
                   onClick={() => setMenuOpen(false)}
-                  className={`flex items-baseline gap-3 py-3.5 text-lg font-display ${
-                    isNavActive(href) ? "text-accent" : "text-foreground/90"
+                  className={`flex items-baseline gap-3 py-3.5 text-lg font-semibold ${
+                    isNavActive(href) ? "text-accent-text" : "text-foreground/90"
                   }`}
                 >
                   <span className="section-index text-xs text-muted/60">
@@ -197,8 +197,8 @@ export function SiteHeader() {
                   <Link
                     href="/dashboard/reports"
                     onClick={() => setMenuOpen(false)}
-                    className={`py-3.5 text-lg font-display border-t border-hairline mt-1 ${
-                      isDashboardPath(pathname) ? "text-accent" : "text-foreground/90"
+                    className={`py-3.5 text-lg font-semibold border-t border-hairline mt-1 ${
+                      isDashboardPath(pathname) ? "text-accent-text" : "text-foreground/90"
                     }`}
                   >
                     {user.firstName} {user.surname} — Dashboard
@@ -207,7 +207,7 @@ export function SiteHeader() {
                     type="button"
                     onClick={handleLogout}
                     disabled={loggingOut}
-                    className="py-3.5 text-lg font-display text-left text-muted disabled:opacity-60"
+                    className="py-3.5 text-lg font-semibold text-left text-muted disabled:opacity-60"
                   >
                     {loggingOut ? "Logging out…" : "Log out"}
                   </button>
@@ -217,14 +217,14 @@ export function SiteHeader() {
                   <Link
                     href="/login"
                     onClick={() => setMenuOpen(false)}
-                    className="py-2 text-lg font-display text-foreground/90"
+                    className="py-2 text-lg font-semibold text-foreground/90"
                   >
                     Login
                   </Link>
                   <Link
                     href="/register"
                     onClick={() => setMenuOpen(false)}
-                    className="rounded-full border border-accent/50 px-5 py-3 text-center text-base font-medium text-accent"
+                    className="rounded-full border border-accent-text/50 px-5 py-3 text-center text-base font-medium text-accent-text"
                   >
                     Register
                   </Link>

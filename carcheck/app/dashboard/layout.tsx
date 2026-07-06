@@ -34,8 +34,8 @@ export default async function DashboardLayout({
   return (
     <div className="relative bg-white">
       <div className="mx-auto max-w-3xl px-5 sm:px-8 py-12 sm:py-16">
-        <p className="kicker text-accent">Dashboard</p>
-        <h1 className="font-display mt-4 text-4xl sm:text-5xl font-medium leading-snug">
+        <p className="kicker text-accent-text">Dashboard</p>
+        <h1 className="text-title mt-4 text-4xl sm:text-5xl">
           Hi, {firstName}
         </h1>
         <p className="mt-3 text-muted-strong">Your reports, receipts and account settings.</p>
@@ -46,7 +46,7 @@ export default async function DashboardLayout({
         </div>
 
         <p className="mt-12 border-t border-hairline pt-6">
-          <Link href="/" className="link-underline text-muted hover:text-accent text-sm">
+          <Link href="/" className="link-underline text-muted hover:text-accent-text text-sm">
             ← Back to home
           </Link>
         </p>

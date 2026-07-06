@@ -65,7 +65,7 @@ export default async function ReceiptsPage() {
                     })}
                   </p>
                 </div>
-                <p className="font-display text-lg text-foreground tabular-nums">
+                <p className="text-data text-lg text-foreground">
                   {formatMoney(row.amount_pence, row.currency)}
                 </p>
               </div>

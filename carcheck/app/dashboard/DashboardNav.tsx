@@ -22,7 +22,7 @@ export function DashboardNav() {
             href={href}
             className={`-mb-px border-b-2 pb-3 text-sm transition-colors ${
               active
-                ? "border-accent text-accent"
+                ? "border-accent-text text-accent-text"
                 : "border-transparent text-muted hover:text-foreground"
             }`}
           >

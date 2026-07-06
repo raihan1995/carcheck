@@ -6,7 +6,6 @@ import type { SpecCandidate } from "@/lib/car-specs-lookup";
 import {
   applyRefinementFilters,
   clearRefinementPrefs,
-  formatRefinementSummary,
   getBodyShapeOptions,
   getTransmissionOptions,
   getTrimOptions,
@@ -39,7 +38,25 @@ function ChoiceButton({
     <button
       type="button"
       onClick={onClick}
-      className="rounded-full border border-hairline bg-white px-4 py-2 text-sm font-medium text-muted-strong transition-colors touch-manipulation hover:border-accent hover:text-accent"
+      className="rounded-full border border-hairline bg-white px-4 py-2 text-sm font-medium text-muted-strong transition-colors touch-manipulation hover:border-accent-text hover:text-accent-text"
+    >
+      {children}
+    </button>
+  );
+}
+
+function LinkButton({
+  children,
+  onClick,
+}: {
+  children: React.ReactNode;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="text-sm font-semibold text-accent-text hover:underline touch-manipulation"
     >
       {children}
     </button>
@@ -76,7 +93,10 @@ export function SpecRefinementWizard({
     [candidates, sanitizedPrefs, suggestedId]
   );
 
-  const summary = useMemo(() => formatRefinementSummary(sanitizedPrefs), [sanitizedPrefs]);
+  const defaultSpec = useMemo(
+    () => resolveSpecFromRefinement(candidates, {}, suggestedId),
+    [candidates, suggestedId]
+  );
 
   const persistPrefs = useCallback(
     (next: SpecRefinementPrefs) => {
@@ -86,22 +106,21 @@ export function SpecRefinementWizard({
     [registration]
   );
 
+  const restoreDefault = useCallback(() => {
+    if (defaultSpec) onSelectionChange(defaultSpec);
+  }, [defaultSpec, onSelectionChange]);
+
+  const resetToIdle = useCallback(() => {
+    clearRefinementPrefs(registration);
+    setPrefs({});
+    setMode("idle");
+    restoreDefault();
+  }, [registration, restoreDefault]);
+
   const startRefinement = useCallback(() => {
     persistPrefs({});
     setMode("active");
   }, [persistPrefs]);
-
-  const cancelRefinement = useCallback(() => {
-    clearRefinementPrefs(registration);
-    setPrefs({});
-    setMode("idle");
-  }, [registration]);
-
-  const restartRefinement = useCallback(() => {
-    clearRefinementPrefs(registration);
-    setPrefs({});
-    setMode("active");
-  }, [registration]);
 
   const handleTransmission = useCallback(
     (choice: TransmissionChoice) => {
@@ -188,155 +207,87 @@ export function SpecRefinementWizard({
   const showBodyShapeStep = mode === "active" && step === "bodyShape";
   const showTrimStep = mode === "active" && step === "trim";
 
-  if (!hydrated || candidates.length <= 1) return null;
+  if (!hydrated || candidates.length === 0) return null;
 
   if (mode === "idle") {
     return (
       <div className="mt-4 flex justify-end">
-        <button
-          type="button"
-          onClick={startRefinement}
-          className="text-sm font-semibold text-accent hover:underline touch-manipulation"
-        >
-          Refine match
-        </button>
+        <LinkButton onClick={startRefinement}>Refine match</LinkButton>
+      </div>
+    );
+  }
+
+  if (mode === "done") {
+    return (
+      <div className="mt-4 flex justify-end">
+        <LinkButton onClick={resetToIdle}>Start over</LinkButton>
       </div>
     );
   }
 
   return (
-    <div className="mt-4">
-      {mode === "done" && (summary.length > 0 || sanitizedPrefs.trimId) && (
-        <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="kicker text-muted">Your choices</span>
-            {summary.map((part) => (
-              <span
-                key={part}
-                className="rounded-full border border-hairline bg-white px-3 py-1 text-xs font-medium text-muted-strong"
-              >
-                {part}
-              </span>
-            ))}
-            {sanitizedPrefs.trimId && resolvedSpec?.variantLabel && (
-              <span className="rounded-full border border-hairline bg-white px-3 py-1 text-xs font-medium text-muted-strong">
-                {resolvedSpec.variantLabel}
-              </span>
+    <div className="mt-4 flex flex-col gap-4">
+      <div className="flex justify-end">
+        <button
+          type="button"
+          onClick={resetToIdle}
+          className="text-xs font-medium text-muted hover:text-accent-text touch-manipulation"
+        >
+          Cancel
+        </button>
+      </div>
+
+      {showTransmissionStep && (
+        <div>
+          <p className="text-sm font-semibold text-foreground mb-3">
+            Is the transmission automatic or manual?
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {getTransmissionOptions(candidates).includes("automatic") && (
+              <ChoiceButton onClick={() => handleTransmission("automatic")}>
+                Automatic
+              </ChoiceButton>
             )}
+            {getTransmissionOptions(candidates).includes("manual") && (
+              <ChoiceButton onClick={() => handleTransmission("manual")}>
+                Manual
+              </ChoiceButton>
+            )}
+            <ChoiceButton onClick={() => handleTransmission("unknown")}>
+              Not sure
+            </ChoiceButton>
           </div>
-          <button
-            type="button"
-            onClick={restartRefinement}
-            className="shrink-0 text-sm font-semibold text-accent hover:underline touch-manipulation"
-          >
-            Start over
-          </button>
         </div>
       )}
 
-      {mode === "active" && (
-        <div className="rounded-lg border border-hairline bg-muted/30 p-4 sm:p-5 flex flex-col gap-4">
-          <div className="flex items-center justify-between gap-3">
-            <p className="kicker text-muted">
-              Narrow down
-              {filtered.length > 1 && (
-                <span className="ml-2 font-normal normal-case tracking-normal text-muted">
-                  · {filtered.length} matches left
-                </span>
-              )}
-            </p>
-            <button
-              type="button"
-              onClick={cancelRefinement}
-              className="text-xs font-medium text-muted hover:text-accent touch-manipulation"
-            >
-              Cancel
-            </button>
+      {showBodyShapeStep && (
+        <div>
+          <p className="text-sm font-semibold text-foreground mb-3">Which Body type?</p>
+          <div className="flex flex-wrap gap-2">
+            {getBodyShapeOptions(transmissionPool).map(({ key, label }) => (
+              <ChoiceButton key={key} onClick={() => handleBodyShape(key)}>
+                {label}
+              </ChoiceButton>
+            ))}
           </div>
+        </div>
+      )}
 
-          {showTransmissionStep && (
-            <div>
-              <p className="text-sm font-semibold text-foreground mb-3">
-                Is the transmission automatic or manual?
-              </p>
-              <div className="flex flex-wrap gap-2">
-                {getTransmissionOptions(candidates).includes("automatic") && (
-                  <ChoiceButton onClick={() => handleTransmission("automatic")}>
-                    Automatic
-                  </ChoiceButton>
-                )}
-                {getTransmissionOptions(candidates).includes("manual") && (
-                  <ChoiceButton onClick={() => handleTransmission("manual")}>
-                    Manual
-                  </ChoiceButton>
-                )}
-                <ChoiceButton onClick={() => handleTransmission("unknown")}>
-                  Not sure
-                </ChoiceButton>
-              </div>
-            </div>
-          )}
-
-          {showBodyShapeStep && (
-            <div>
-              <p className="text-sm font-semibold text-foreground mb-3">
-                Which body style is it?
-              </p>
-              <div className="flex flex-wrap gap-2">
-                {getBodyShapeOptions(transmissionPool).map(({ key, label }) => (
-                  <ChoiceButton key={key} onClick={() => handleBodyShape(key)}>
-                    {label}
-                  </ChoiceButton>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {showTrimStep && (
-            <div>
-              <p className="text-sm font-semibold text-foreground mb-3">
-                Which trim best matches?
-              </p>
-              <div className="flex flex-col gap-2">
-                {getTrimOptions(shapePool).map(({ id, label }) => (
-                  <button
-                    key={id}
-                    type="button"
-                    onClick={() => handleTrim(id)}
-                    className="rounded-lg border border-hairline bg-white px-4 py-3 text-left text-sm text-muted-strong hover:border-accent hover:text-accent transition-colors touch-manipulation"
-                  >
-                    {label}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {step === "complete" && filtered.length > 1 && (
-            <p className="text-sm text-muted">
-              We could not narrow this to one match. Pick the closest trim above, or{" "}
+      {showTrimStep && (
+        <div>
+          <p className="text-sm font-semibold text-foreground mb-3">Which trim best matches?</p>
+          <div className="flex flex-col gap-2">
+            {getTrimOptions(shapePool).map(({ id, label }) => (
               <button
+                key={id}
                 type="button"
-                onClick={restartRefinement}
-                className="font-semibold text-accent hover:underline"
+                onClick={() => handleTrim(id)}
+                className="rounded-lg border border-hairline bg-white px-4 py-3 text-left text-sm text-muted-strong hover:border-accent-text hover:text-accent-text transition-colors touch-manipulation"
               >
-                start over
+                {label}
               </button>
-              .
-            </p>
-          )}
-        </div>
-      )}
-
-      {mode === "done" && !(summary.length > 0 || sanitizedPrefs.trimId) && (
-        <div className="flex justify-end">
-          <button
-            type="button"
-            onClick={restartRefinement}
-            className="text-sm font-semibold text-accent hover:underline touch-manipulation"
-          >
-            Refine match
-          </button>
+            ))}
+          </div>
         </div>
       )}
     </div>

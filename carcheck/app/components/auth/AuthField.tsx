@@ -34,7 +34,7 @@ export function AuthField({
         autoComplete={autoComplete}
         disabled={disabled}
         className={`w-full min-h-[48px] border-b bg-transparent px-1 py-2.5 text-foreground placeholder-muted/40 focus:outline-none transition-colors ${
-          error ? "border-red-500/70" : "border-foreground/25 focus:border-accent"
+          error ? "border-red-500/70" : "border-foreground/25 focus:border-accent-text"
         }`}
       />
       {hint && !error && <p className="mt-2 text-xs text-muted-strong">{hint}</p>}

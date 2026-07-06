@@ -37,7 +37,7 @@ export default async function ReportsPage() {
           <p className="text-muted text-sm">No purchased reports yet.</p>
           <Link
             href="/"
-            className="link-underline mt-3 inline-flex text-sm font-medium text-accent"
+            className="link-underline mt-3 inline-flex text-sm font-medium text-accent-text"
           >
             Check a vehicle
           </Link>
@@ -50,7 +50,7 @@ export default async function ReportsPage() {
               className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 py-5"
             >
               <div>
-                <p className="font-mono text-lg font-bold tracking-[0.12em] text-foreground">
+                <p className="font-plate text-lg font-bold tracking-[0.12em] text-foreground">
                   {formatPlate(report.registration)}
                 </p>
                 <p className="kicker text-muted mt-1">
@@ -64,7 +64,7 @@ export default async function ReportsPage() {
               </div>
               <Link
                 href={`/vehicle/${encodeURIComponent(formatPlate(report.registration))}`}
-                className="link-underline inline-flex items-center gap-2 self-start text-sm font-medium text-accent sm:self-auto"
+                className="link-underline inline-flex items-center gap-2 self-start text-sm font-medium text-accent-text sm:self-auto"
               >
                 View report
                 <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>

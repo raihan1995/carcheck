@@ -1,30 +1,14 @@
 import type { Metadata, Viewport } from "next";
-import { Fraunces, Space_Grotesk, JetBrains_Mono } from "next/font/google";
+import { Montserrat } from "next/font/google";
 import { SiteHeader } from "./components/SiteHeader";
 import { UmamiAnalytics } from "./components/UmamiAnalytics";
 import "./globals.css";
 
-/* UI 4.0 "Garage Atelier" type system:
-   Fraunces  — high-contrast serif for editorial display / headings
-   Space Grotesk — warm grotesk for body and UI
-   JetBrains Mono — technical figures, plates, dates */
-const fraunces = Fraunces({
+const montserrat = Montserrat({
   subsets: ["latin"],
   display: "swap",
-  variable: "--font-fraunces",
-  axes: ["opsz", "SOFT", "WONK"],
-});
-
-const spaceGrotesk = Space_Grotesk({
-  subsets: ["latin"],
-  display: "swap",
-  variable: "--font-space-grotesk",
-});
-
-const jetbrainsMono = JetBrains_Mono({
-  subsets: ["latin"],
-  display: "swap",
-  variable: "--font-jetbrains-mono",
+  variable: "--font-montserrat",
+  weight: ["400", "500", "600", "700"],
 });
 
 export const metadata: Metadata = {
@@ -46,10 +30,10 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`overflow-x-hidden bg-white text-foreground ${fraunces.variable} ${spaceGrotesk.variable} ${jetbrainsMono.variable}`}
+      className={`overflow-x-hidden bg-white text-foreground ${montserrat.variable}`}
       style={{ colorScheme: "light" }}
     >
-      <body className="antialiased overflow-x-hidden min-h-screen flex flex-col bg-white text-foreground">
+      <body className="antialiased overflow-x-hidden min-h-screen flex flex-col bg-white text-foreground font-sans">
         <div className="grain-overlay" aria-hidden />
         <SiteHeader />
         <main className="relative z-10 flex-1">{children}</main>

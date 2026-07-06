@@ -720,8 +720,8 @@ export default function VehiclePage() {
     return (
       <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center px-5">
         <div className="text-center">
-          <p className="kicker text-accent">Revealing</p>
-          <p className="font-display mt-3 text-2xl text-muted-strong">Reading the records…</p>
+          <p className="kicker text-accent-text">Revealing</p>
+          <p className="text-heading mt-3 text-2xl text-muted-strong">Reading the records…</p>
           <div className="mx-auto mt-6 h-px w-48 overflow-hidden bg-hairline">
             <div className="h-full w-1/3 animate-pulse bg-accent" />
           </div>
@@ -735,12 +735,12 @@ export default function VehiclePage() {
       <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center px-5 py-10">
         <div className="w-full max-w-md text-center">
           <p className="kicker text-red-400">Not found</p>
-          <p className="font-display mt-4 text-3xl leading-tight text-foreground">
+          <p className="text-title mt-4 text-3xl text-foreground">
             {error || "We couldn't find that vehicle."}
           </p>
           <Link
             href="/"
-            className="mt-8 inline-flex items-center gap-2 border-b-2 border-accent pb-1 text-accent font-medium hover:gap-3 transition-all touch-manipulation"
+            className="mt-8 inline-flex items-center gap-2 border-b-2 border-accent-text pb-1 text-accent-text font-medium hover:gap-3 transition-all touch-manipulation"
           >
             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M19 12H5M11 18l-6-6 6-6" />
@@ -1004,7 +1004,7 @@ export default function VehiclePage() {
       <div className="mx-auto max-w-3xl lg:max-w-6xl px-5 sm:px-8 py-8 sm:py-12 pb-16">
         <Link
           href="/"
-          className="link-underline inline-flex items-center gap-2 text-sm text-muted hover:text-accent mb-8 py-1 transition-colors min-h-[44px] sm:min-h-0"
+          className="link-underline inline-flex items-center gap-2 text-sm text-muted hover:text-accent-text mb-8 py-1 transition-colors min-h-[44px] sm:min-h-0"
         >
           <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19 12H5M11 18l-6-6 6-6" /></svg>
           Check another vehicle
@@ -1017,11 +1017,11 @@ export default function VehiclePage() {
           </div>
         )}
         {demo && !sample && (
-          <div className="mb-6 border-l-2 border-accent bg-accent-tint px-4 py-3 text-sm text-muted-strong">
-            <span className="kicker text-accent">Demo</span>
+          <div className="mb-6 border-l-2 border-accent-text bg-accent-tint px-4 py-3 text-sm text-muted-strong">
+            <span className="kicker text-accent-text">Demo</span>
             <span className="ml-2">
-              Add <code className="font-mono text-xs">DVLA_API_KEY</code> and MOT credentials to your{" "}
-              <code className="font-mono text-xs">.env</code> for live results.
+              Add <code className="font-plate text-xs">DVLA_API_KEY</code> and MOT credentials to your{" "}
+              <code className="font-plate text-xs">.env</code> for live results.
             </span>
           </div>
         )}
@@ -1029,11 +1029,11 @@ export default function VehiclePage() {
         {/* Editorial masthead: the plate is the hero object */}
         <header className="relative mb-10 sm:mb-14">
           <div className="contour pointer-events-none absolute -right-24 -top-20 hidden h-96 w-96 opacity-60 sm:block" style={{ ["--r" as string]: "190px" }} aria-hidden />
-          <p className="kicker text-accent">Vehicle record</p>
+          <p className="kicker text-accent-text">Vehicle record</p>
           <div className="mt-5 flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
             <div className="min-w-0">
               {vehicle.make && (
-                <h1 className="font-display text-4xl sm:text-6xl font-medium leading-[1.1] break-words">
+                <h1 className="text-title text-4xl sm:text-6xl leading-[1.1] break-words">
                   {vehicle.make}
                 </h1>
               )}
@@ -1046,7 +1046,7 @@ export default function VehiclePage() {
               aria-label="Registration number"
             >
               <PlateBand className="rounded-none" />
-              <span className="bg-plate px-4 sm:px-6 py-2 sm:py-3 font-mono text-3xl sm:text-5xl font-bold uppercase tracking-[0.12em] text-black">
+              <span className="bg-plate px-4 sm:px-6 py-2 sm:py-3 font-plate text-3xl sm:text-5xl font-bold uppercase tracking-[0.12em] text-black">
                 {vehicle.registrationNumber}
               </span>
             </div>
@@ -1060,7 +1060,7 @@ export default function VehiclePage() {
             <p className="kicker text-muted">Tax</p>
             <p
               className={`mt-3 text-2xl font-semibold ${
-                taxStatus === true ? "text-emerald-700" : taxStatus === false ? "text-red-600" : "text-accent-strong"
+                taxStatus === true ? "text-emerald-700" : taxStatus === false ? "text-red-600" : "text-accent-text"
               }`}
             >
               {taxDaysLeft !== null
@@ -1075,7 +1075,7 @@ export default function VehiclePage() {
               {vehicle.taxDueDate ? `Expires ${formatDate(vehicle.taxDueDate)}` : "No due date held"}
             </p>
             {!taxValid && (
-              <a href="https://www.gov.uk/vehicle-tax" target="_blank" rel="noopener noreferrer" className="link-underline mt-2 inline-block text-xs font-medium text-accent">
+              <a href="https://www.gov.uk/vehicle-tax" target="_blank" rel="noopener noreferrer" className="link-underline mt-2 inline-block text-xs font-medium text-accent-text">
                 Tax it on GOV.UK
               </a>
             )}
@@ -1093,7 +1093,7 @@ export default function VehiclePage() {
               <>
                 <p
                   className={`mt-3 text-2xl font-semibold ${
-                    motStatus === true ? "text-emerald-700" : motStatus === false ? "text-red-600" : "text-accent-strong"
+                    motStatus === true ? "text-emerald-700" : motStatus === false ? "text-red-600" : "text-accent-text"
                   }`}
                 >
                   {motDaysLeft !== null
@@ -1112,7 +1112,7 @@ export default function VehiclePage() {
                       : "No expiry held"}
                 </p>
                 {motDaysLeft !== null && motDaysLeft < 0 && (
-                  <a href="https://bookmygarage.com/mot/" target="_blank" rel="noopener noreferrer" className="link-underline mt-2 inline-block text-xs font-medium text-accent">
+                  <a href="https://bookmygarage.com/mot/" target="_blank" rel="noopener noreferrer" className="link-underline mt-2 inline-block text-xs font-medium text-accent-text">
                     Book an MOT
                   </a>
                 )}
@@ -1127,12 +1127,12 @@ export default function VehiclePage() {
               <>
                 <p
                   className={`mt-3 text-2xl font-semibold ${
-                    ulezCompliant === true ? "text-emerald-700" : ulezCompliant === false ? "text-red-600" : "text-accent-strong"
+                    ulezCompliant === true ? "text-emerald-700" : ulezCompliant === false ? "text-red-600" : "text-accent-text"
                   }`}
                 >
                   {ulezCompliant === true ? "Compliant" : ulezCompliant === false ? "Not compliant" : "Unknown"}
                 </p>
-                <a href="https://tfl.gov.uk/modes/driving/check-your-vehicle/" target="_blank" rel="noopener noreferrer" className="link-underline mt-2 inline-block text-xs font-medium text-accent">
+                <a href="https://tfl.gov.uk/modes/driving/check-your-vehicle/" target="_blank" rel="noopener noreferrer" className="link-underline mt-2 inline-block text-xs font-medium text-accent-text">
                   Confirm on TfL
                 </a>
               </>
@@ -1167,7 +1167,7 @@ export default function VehiclePage() {
                 })}
               </dl>
               {likelyImported && (
-                <p className="px-5 sm:px-6 pb-5 sm:pb-6 text-accent font-medium text-sm">
+                <p className="px-5 sm:px-6 pb-5 sm:pb-6 text-accent-text font-medium text-sm">
                   Vehicle likely imported
                 </p>
               )}
@@ -1280,7 +1280,7 @@ export default function VehiclePage() {
                                 >
                                   {deltaFromPrev != null && (
                                     <span
-                                      className={`text-[10px] font-mono font-semibold whitespace-nowrap ${
+                                      className={`text-[10px] font-plate font-semibold whitespace-nowrap ${
                                         deltaFromPrev < 0 ? "text-red-100" : "text-white"
                                       }`}
                                     >
@@ -1290,7 +1290,7 @@ export default function VehiclePage() {
                                   )}
                                 </div>
                               </div>
-                              <div className="w-24 text-right text-xs font-mono text-muted">
+                              <div className="w-24 text-right text-xs font-plate text-muted">
                                 {p.miles.toLocaleString()}
                               </div>
                             </div>
@@ -1376,7 +1376,7 @@ export default function VehiclePage() {
                       {lookedUpSpecs ? (
                         <VehiclePerformancePanel specs={lookedUpSpecs} />
                       ) : null}
-                      {specCandidates.length > 1 && (
+                      {specCandidates.length > 0 && (
                         <SpecRefinementWizard
                           registration={registration}
                           candidates={specCandidates}
@@ -1409,7 +1409,7 @@ export default function VehiclePage() {
                 <p className="text-center text-sm sm:text-base text-muted max-w-md">
                   <Link
                     href={`/login?next=${encodeURIComponent(`/vehicle/${registration}`)}`}
-                    className="link-underline font-medium text-accent"
+                    className="link-underline font-medium text-accent-text"
                   >
                     Log in now
                   </Link>{" "}
@@ -1470,7 +1470,7 @@ export default function VehiclePage() {
                   {primaryMot.vehicleId && (
                     <div className="flex flex-col gap-0.5 sm:col-span-2">
                       <dt className="kicker text-muted">Vehicle ID (MOT)</dt>
-                      <dd className="text-foreground font-mono text-sm">{primaryMot.vehicleId}</dd>
+                      <dd className="text-foreground font-plate text-sm">{primaryMot.vehicleId}</dd>
                     </div>
                   )}
                 </dl>
@@ -1584,7 +1584,7 @@ export default function VehiclePage() {
                       href="https://www.gov.uk/vehicle-tax-rate-tables"
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="link-underline text-accent"
+                      className="link-underline text-accent-text"
                     >
                       GOV.UK
                     </a>
@@ -1608,7 +1608,7 @@ export default function VehiclePage() {
             <>
               {mileageSummary && (
                 <div className="px-5 sm:px-6 py-5 border-b border-hairline bg-accent-tint">
-                  <p className="kicker text-accent">Yearly average mileage</p>
+                  <p className="kicker text-accent-text">Yearly average mileage</p>
                   <p className="mt-2 text-2xl sm:text-3xl font-semibold text-foreground">
                     {mileageSummary.yearlyAverageMiles.toLocaleString()}{" "}
                     <span className="text-base text-muted">miles/year</span>

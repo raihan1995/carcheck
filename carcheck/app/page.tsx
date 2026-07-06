@@ -106,11 +106,11 @@ export default function Home() {
         />
 
         <div className="relative max-w-xl">
-          <p className="kicker text-accent max-sm:tracking-[0.12em]">01 — UK Number Plate Check</p>
+          <p className="kicker text-accent-text max-sm:tracking-[0.12em]">01 — UK Number Plate Check</p>
 
-          <h1 className="font-display mt-4 sm:mt-6 text-4xl sm:text-5xl lg:text-[4rem] font-medium leading-[1.12] text-foreground">
+          <h1 className="text-title mt-4 sm:mt-6 text-4xl sm:text-5xl lg:text-[4rem] leading-[1.12] text-foreground">
             <span className="text-foreground">Re</span>
-            <span className="text-accent">veal</span> a car&apos;s
+            <span className="text-accent-text">veal</span> a car&apos;s
             <br />
             <span className="italic text-foreground">whole</span> story.
           </h1>
@@ -126,8 +126,8 @@ export default function Home() {
             <label htmlFor="plate" className="block text-sm font-medium text-muted-strong">
               Registration
             </label>
-            <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-stretch sm:gap-0 border-b-0 sm:border-b-2 border-foreground/20 focus-within:border-accent transition-colors">
-              <div className="flex min-w-0 items-stretch border-b-2 border-foreground/20 focus-within:border-accent sm:flex-1 sm:border-b-0">
+            <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-stretch sm:gap-0 border-b-0 sm:border-b-2 border-foreground/20 focus-within:border-accent-text transition-colors">
+              <div className="flex min-w-0 items-stretch border-b-2 border-foreground/20 focus-within:border-accent-text sm:flex-1 sm:border-b-0">
                 <PlateBand compact className="mb-2 mr-2 self-end sm:mr-3" />
                 <input
                   id="plate"
@@ -135,7 +135,7 @@ export default function Home() {
                   value={plate}
                   onChange={(e) => setPlate(e.target.value.toUpperCase())}
                   placeholder="AB12 CDE"
-                  className="flex-1 min-w-0 bg-transparent pb-3 font-mono text-xl sm:text-2xl lg:text-3xl tracking-[0.06em] sm:tracking-[0.08em] text-foreground placeholder-muted/50 focus:outline-none"
+                  className="flex-1 min-w-0 bg-transparent pb-3 font-plate text-xl sm:text-2xl lg:text-3xl tracking-[0.06em] sm:tracking-[0.08em] text-foreground placeholder-muted/50 focus:outline-none"
                   disabled={loading}
                   autoComplete="off"
                   autoFocus
@@ -144,7 +144,7 @@ export default function Home() {
               <button
                 type="submit"
                 disabled={loading}
-                className="group inline-flex w-full shrink-0 items-center justify-center gap-2 rounded-full bg-accent px-5 py-3 text-sm font-semibold text-white hover:bg-accent-strong disabled:opacity-50 touch-manipulation transition-colors sm:mb-2 sm:ml-3 sm:w-auto sm:self-end sm:py-2"
+                className="group inline-flex w-full shrink-0 items-center justify-center gap-2 rounded-full bg-accent px-5 py-3 text-sm font-semibold text-white hover:bg-accent-hover disabled:opacity-50 touch-manipulation transition-colors sm:mb-2 sm:ml-3 sm:w-auto sm:self-end sm:py-2"
               >
                 {loading ? "Checking…" : "Reveal"}
                 {!loading && (
@@ -176,7 +176,7 @@ export default function Home() {
                     key={reg}
                     type="button"
                     onClick={() => handleRecentClick(reg)}
-                    className="inline-flex items-center border border-hairline bg-white px-3 py-1.5 font-mono text-xs sm:text-sm tracking-[0.15em] text-muted-strong hover:border-accent hover:text-accent transition-colors"
+                    className="inline-flex items-center border border-hairline bg-white px-3 py-1.5 font-plate text-xs sm:text-sm tracking-[0.15em] text-muted-strong hover:border-accent-text hover:text-accent-text transition-colors"
                   >
                     {reg}
                   </button>
@@ -197,7 +197,7 @@ export default function Home() {
                 ["04", "Mileage insight", "Yearly averages and anomaly detection"],
               ].map(([num, title, desc]) => (
                 <div key={num} className="flex gap-4 py-5">
-                  <span className="section-index pt-0.5 text-sm text-accent">{num}</span>
+                  <span className="section-index pt-0.5 text-sm text-accent-text">{num}</span>
                   <div>
                     <dt className="text-lg font-semibold leading-snug text-foreground">{title}</dt>
                     <dd className="mt-1.5 text-sm text-muted leading-relaxed">{desc}</dd>

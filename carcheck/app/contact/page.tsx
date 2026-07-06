@@ -16,8 +16,8 @@ export default function ContactPage() {
         aria-hidden
       />
       <div className="relative mx-auto max-w-3xl px-5 sm:px-8 py-16 sm:py-24">
-        <p className="kicker text-accent">Get in touch</p>
-        <h1 className="font-display mt-5 text-5xl sm:text-6xl font-medium leading-snug">
+        <p className="kicker text-accent-text">Get in touch</p>
+        <h1 className="text-title mt-5 text-5xl sm:text-6xl">
           Talk to us.
         </h1>
         <p className="mt-5 max-w-md text-muted-strong leading-relaxed">
@@ -30,7 +30,7 @@ export default function ContactPage() {
         </div>
 
         <p className="mt-12 border-t border-hairline pt-6">
-          <Link href="/" className="link-underline text-muted hover:text-accent text-sm">
+          <Link href="/" className="link-underline text-muted hover:text-accent-text text-sm">
             ← Back to home
           </Link>
         </p>

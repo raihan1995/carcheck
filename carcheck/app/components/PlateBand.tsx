@@ -38,7 +38,7 @@ export function PlateBand({ className = "", compact = false }: PlateBandProps) {
         clipId={clipId}
         className={compact ? "mb-0.5 h-2 w-3.5 sm:h-2.5 sm:w-4" : "mb-1 h-3 w-5 sm:h-3.5 sm:w-6"}
       />
-      <span className={`font-mono font-bold leading-tight ${compact ? "text-[10px] sm:text-xs" : "text-xs"}`}>
+      <span className={`font-bold leading-tight ${compact ? "text-[10px] sm:text-xs" : "text-xs"}`}>
         GB
       </span>
     </span>

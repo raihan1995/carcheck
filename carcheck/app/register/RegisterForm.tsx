@@ -144,13 +144,13 @@ export function RegisterForm() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full min-h-[48px] rounded-md bg-accent text-white font-medium hover:bg-accent-strong disabled:opacity-60 transition-colors"
+            className="w-full min-h-[48px] rounded-md bg-accent text-white font-medium hover:bg-accent-hover disabled:opacity-60 transition-colors"
           >
             {loading ? "Creating account…" : "Register with password"}
           </button>
           <p className="text-center text-sm text-muted pt-2">
             Already have an account?{" "}
-            <Link href={loginHref} className="link-underline text-accent font-medium">
+            <Link href={loginHref} className="link-underline text-accent-text font-medium">
               Log in
             </Link>
           </p>
