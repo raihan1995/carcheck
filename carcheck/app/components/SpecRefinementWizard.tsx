@@ -25,7 +25,7 @@ type SpecRefinementWizardProps = {
   onSelectionChange: (spec: SpecCandidate) => void;
 };
 
-type WizardMode = "idle" | "active" | "done";
+type WizardMode = "idle" | "active";
 
 function ChoiceButton({
   children,
@@ -39,24 +39,6 @@ function ChoiceButton({
       type="button"
       onClick={onClick}
       className="rounded-full border border-hairline bg-white px-4 py-2 text-sm font-medium text-muted-strong transition-colors touch-manipulation hover:border-accent-text hover:text-accent-text"
-    >
-      {children}
-    </button>
-  );
-}
-
-function LinkButton({
-  children,
-  onClick,
-}: {
-  children: React.ReactNode;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="text-sm font-semibold text-accent-text hover:underline touch-manipulation"
     >
       {children}
     </button>
@@ -110,7 +92,7 @@ export function SpecRefinementWizard({
     if (defaultSpec) onSelectionChange(defaultSpec);
   }, [defaultSpec, onSelectionChange]);
 
-  const resetToIdle = useCallback(() => {
+  const cancelRefinement = useCallback(() => {
     clearRefinementPrefs(registration);
     setPrefs({});
     setMode("idle");
@@ -131,7 +113,7 @@ export function SpecRefinementWizard({
       };
       const pool = applyRefinementFilters(candidates, next);
       persistPrefs(next);
-      if (pool.length <= 1) setMode("done");
+      if (pool.length <= 1) setMode("idle");
     },
     [candidates, persistPrefs]
   );
@@ -145,7 +127,7 @@ export function SpecRefinementWizard({
       };
       const pool = applyRefinementFilters(candidates, next);
       persistPrefs(next);
-      if (pool.length <= 1) setMode("done");
+      if (pool.length <= 1) setMode("idle");
     },
     [candidates, sanitizedPrefs, persistPrefs]
   );
@@ -157,7 +139,7 @@ export function SpecRefinementWizard({
         trimId: id,
       };
       persistPrefs(next);
-      setMode("done");
+      setMode("idle");
     },
     [sanitizedPrefs, persistPrefs]
   );
@@ -166,9 +148,6 @@ export function SpecRefinementWizard({
     const stored = loadRefinementPrefs(registration);
     const clean = sanitizeRefinementPrefs(candidates, stored);
     setPrefs(clean);
-    if (Object.keys(clean).length > 0) {
-      setMode("done");
-    }
     setHydrated(true);
   }, [registration, candidates]);
 
@@ -182,7 +161,7 @@ export function SpecRefinementWizard({
   useEffect(() => {
     if (!hydrated || mode !== "active") return;
     if (step === "complete" || filtered.length <= 1) {
-      setMode("done");
+      setMode("idle");
     }
   }, [hydrated, mode, step, filtered.length]);
 
@@ -212,15 +191,13 @@ export function SpecRefinementWizard({
   if (mode === "idle") {
     return (
       <div className="mt-4 flex justify-end">
-        <LinkButton onClick={startRefinement}>Refine match</LinkButton>
-      </div>
-    );
-  }
-
-  if (mode === "done") {
-    return (
-      <div className="mt-4 flex justify-end">
-        <LinkButton onClick={resetToIdle}>Start over</LinkButton>
+        <button
+          type="button"
+          onClick={startRefinement}
+          className="text-sm font-semibold text-accent-text hover:underline touch-manipulation"
+        >
+          Refine match
+        </button>
       </div>
     );
   }
@@ -230,7 +207,7 @@ export function SpecRefinementWizard({
       <div className="flex justify-end">
         <button
           type="button"
-          onClick={resetToIdle}
+          onClick={cancelRefinement}
           className="text-xs font-medium text-muted hover:text-accent-text touch-manipulation"
         >
           Cancel
@@ -275,7 +252,7 @@ export function SpecRefinementWizard({
 
       {showTrimStep && (
         <div>
-          <p className="text-sm font-semibold text-foreground mb-3">Which trim best matches?</p>
+          <p className="text-sm font-semibold text-foreground mb-3">Pick matching trim</p>
           <div className="flex flex-col gap-2">
             {getTrimOptions(shapePool).map(({ id, label }) => (
               <button
