@@ -45,6 +45,49 @@ function ChoiceButton({
   );
 }
 
+function RefineMatchIdleControls({ onRefine }: { onRefine: () => void }) {
+  const tooltipId = "refine-match-hint";
+
+  return (
+    <div className="mt-4 flex justify-end items-center gap-2">
+      <button
+        type="button"
+        onClick={onRefine}
+        className="rounded-md border border-hairline bg-white px-3 py-1.5 text-sm font-semibold text-accent-text transition-colors touch-manipulation hover:border-accent-text hover:bg-accent-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-text focus-visible:ring-offset-2"
+      >
+        Refine match
+      </button>
+      <div className="relative group">
+        <button
+          type="button"
+          aria-label="About refine match"
+          aria-describedby={tooltipId}
+          className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-hairline bg-white text-muted transition-colors touch-manipulation hover:border-accent-text hover:text-accent-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-text focus-visible:ring-offset-2"
+        >
+          <svg
+            className="h-3.5 w-3.5"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={2}
+            aria-hidden
+          >
+            <circle cx="12" cy="12" r="10" />
+            <path strokeLinecap="round" d="M12 16v-4M12 8h.01" />
+          </svg>
+        </button>
+        <div
+          id={tooltipId}
+          role="tooltip"
+          className="pointer-events-none absolute bottom-full right-0 z-10 mb-2 w-52 rounded-md border border-hairline bg-white px-3 py-2 text-xs font-normal normal-case tracking-normal text-muted-strong opacity-0 shadow-sm transition-opacity group-hover:opacity-100 group-focus-within:opacity-100 sm:w-60"
+        >
+          Doesn&apos;t seem correct? try to refine details manually
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function SpecRefinementWizard({
   registration,
   candidates,
@@ -189,17 +232,7 @@ export function SpecRefinementWizard({
   if (!hydrated || candidates.length === 0) return null;
 
   if (mode === "idle") {
-    return (
-      <div className="mt-4 flex justify-end">
-        <button
-          type="button"
-          onClick={startRefinement}
-          className="text-sm font-semibold text-accent-text hover:underline touch-manipulation"
-        >
-          Refine match
-        </button>
-      </div>
-    );
+    return <RefineMatchIdleControls onRefine={startRefinement} />;
   }
 
   return (
