@@ -47,4 +47,7 @@ data/model-lines/source/
 
 # Auth database (local SQLite)
 data/revveal.db
+
+# Cursor IDE debug output
+.cursor/
 data/revveal.db-*
