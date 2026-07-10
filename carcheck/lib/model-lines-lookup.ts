@@ -177,7 +177,20 @@ export function rowOverlapsEligibleModelLines(
   if (rowFrom == null || !Number.isFinite(rowFrom)) return false;
   const rowTo = row.yearTo ?? rowFrom;
 
-  return lines.some((line) => yearsOverlap(line.yearFrom, line.yearTo, rowFrom, rowTo));
+  return lines.some((line) => {
+    if (!yearsOverlap(line.yearFrom, line.yearTo, rowFrom, rowTo)) return false;
+
+    // Prefer rows that belong to this generation, not earlier series that only
+    // touch the start year (e.g. Astra 1998–2004 vs Astra 2004–2009).
+    if (rowFrom >= line.yearFrom) return true;
+
+    const lineEnd = line.yearTo ?? 9999;
+    const overlapStart = Math.max(line.yearFrom, rowFrom);
+    const overlapEnd = Math.min(lineEnd, rowTo);
+    const overlapYears = overlapEnd - overlapStart + 1;
+    const rowYears = rowTo - rowFrom + 1;
+    return overlapYears >= Math.ceil(rowYears / 2);
+  });
 }
 
 export function filterRowsByModelLines<T extends CatalogueYearRow>(

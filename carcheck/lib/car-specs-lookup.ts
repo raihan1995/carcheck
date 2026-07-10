@@ -291,6 +291,24 @@ function rowMatchesYear(row: MakeSpecRecord, year: number, registrationMs: numbe
   return fit !== "none";
 }
 
+/** When model lines already gated the generation, only reject regs before production start. */
+function rowPlausibleInGeneration(
+  row: MakeSpecRecord,
+  registrationMs: number | null
+): boolean {
+  if (registrationMs == null) return true;
+  const prodStart = parseDateMs(row.productionStart ?? undefined);
+  if (prodStart != null && registrationMs < prodStart) return false;
+  return true;
+}
+
+function catalogueYearDistance(row: MakeSpecRecord, year: number): number {
+  if (year >= row.yearFrom && (row.yearTo == null || year <= row.yearTo)) return 0;
+  if (year < row.yearFrom) return row.yearFrom - year;
+  const end = row.yearTo ?? row.yearFrom;
+  return year - end;
+}
+
 function co2Matches(row: MakeSpecRecord, co2: number): boolean {
   if (row.co2Min != null && row.co2Max != null) {
     return co2 >= row.co2Min && co2 <= row.co2Max;
@@ -405,16 +423,28 @@ function performanceFingerprint(row: MakeSpecRecord): string {
   ].join("|");
 }
 
-function dedupeByPerformance(rows: MakeSpecRecord[]): MakeSpecRecord[] {
-  const bestByKey = new Map<string, MakeSpecRecord>();
+function dedupeByPerformance(
+  rows: MakeSpecRecord[],
+  scoreFor: (row: MakeSpecRecord) => number
+): MakeSpecRecord[] {
+  const bestByKey = new Map<string, { row: MakeSpecRecord; score: number }>();
   for (const row of rows) {
     const key = performanceFingerprint(row);
-    if (!bestByKey.has(key)) bestByKey.set(key, row);
+    const score = scoreFor(row);
+    const existing = bestByKey.get(key);
+    if (!existing || score > existing.score) {
+      bestByKey.set(key, { row, score });
+    }
   }
-  return [...bestByKey.values()];
+  return [...bestByKey.values()].map((entry) => entry.row);
 }
 
-function scoreRow(row: MakeSpecRecord, params: SpecLookupParams, registrationMs: number | null): number {
+function scoreRow(
+  row: MakeSpecRecord,
+  params: SpecLookupParams,
+  registrationMs: number | null,
+  vehicleYear: number | null
+): number {
   let score = 0;
 
   if (params.co2Emissions != null) {
@@ -425,8 +455,15 @@ function scoreRow(row: MakeSpecRecord, params: SpecLookupParams, registrationMs:
     }
   }
 
+  if (vehicleYear != null) {
+    const yearDist = catalogueYearDistance(row, vehicleYear);
+    if (yearDist === 0) score += 22;
+    else score += Math.max(0, 14 - yearDist * 5);
+  }
+
   const windowFit = rowProductionWindowFit(row, registrationMs);
   if (windowFit === "grace") score -= 8;
+  else if (windowFit === "none" && registrationMs != null) score -= 14;
 
   if (registrationMs != null) {
     const prodStart = parseDateMs(row.productionStart ?? undefined);
@@ -435,7 +472,9 @@ function scoreRow(row: MakeSpecRecord, params: SpecLookupParams, registrationMs:
       const mid = (prodStart + prodEnd) / 2;
       const distMonths = Math.abs(registrationMs - mid) / MS_PER_MONTH;
       const timingScore = Math.max(0, 18 - distMonths * 2);
-      score += windowFit === "grace" ? timingScore * 0.35 : timingScore;
+      if (windowFit === "strict") score += timingScore;
+      else if (windowFit === "grace") score += timingScore * 0.35;
+      else score += timingScore * 0.15;
 
       const windowMonths = (prodEnd - prodStart) / MS_PER_MONTH;
       score += Math.max(0, 12 - windowMonths / 3);
@@ -467,7 +506,14 @@ function applyHierarchicalFilters(
   const modelLines = resolveEligibleModelLines(params.make, params.motModel, year, params.fuelType);
   pool = filterRowsByModelLines(pool, modelLines);
 
-  pool = pool.filter((row) => rowMatchesYear(row, year, registrationMs));
+  // Model lines open the generation era (e.g. Astra 2004–2009). Do not hard-kill on
+  // exact vehicle year — Parkers Year end is often shorter than real registrations.
+  // Without model lines, keep the stricter catalogue year + production window filter.
+  if (modelLines.length > 0) {
+    pool = pool.filter((row) => rowPlausibleInGeneration(row, registrationMs));
+  } else {
+    pool = pool.filter((row) => rowMatchesYear(row, year, registrationMs));
+  }
 
   if (params.engineCapacityCc != null && Number.isFinite(params.engineCapacityCc)) {
     pool = pool.filter((row) => row.engineCc === params.engineCapacityCc);
@@ -506,8 +552,10 @@ export function getSpecCandidates(params: SpecLookupParams): SpecCandidatesResul
   const registrationMs = resolveRegistrationMs(params);
   const filtered = applyHierarchicalFilters(rows, params, year, registrationMs);
 
-  const scored = dedupeByPerformance(filtered)
-    .map((row) => ({ row, score: scoreRow(row, params, registrationMs) }))
+  const scored = dedupeByPerformance(filtered, (row) =>
+    scoreRow(row, params, registrationMs, year)
+  )
+    .map((row) => ({ row, score: scoreRow(row, params, registrationMs, year) }))
     .sort((a, b) => b.score - a.score);
 
   const candidates: SpecCandidate[] = scored.map(({ row }) => rowToSpecCandidate(row));
