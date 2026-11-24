@@ -6,6 +6,8 @@ A UK number plate lookup site. Enter a registration to see vehicle details (make
 
 ## Run locally
 
+Use Node.js 24.22.3 or a newer 24.x release (the supported runtime is declared in `package.json`).
+
 ```bash
 npm install
 cp .env.example .env
