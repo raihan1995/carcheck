@@ -62,6 +62,24 @@ const paths = {
       <path d="M4 22v-3a8 8 0 0 1 16 0v3" />
     </>
   ),
+  users: (
+    <>
+      <circle cx="9" cy="7" r="3" />
+      <path d="M3 21v-3a6 6 0 0 1 12 0v3M17 4a3 3 0 0 1 0 6M18 13a5 5 0 0 1 3 5v3" />
+    </>
+  ),
+  gauge: (
+    <>
+      <path d="M4 18a9 9 0 1 1 16 0M12 13l5-5" />
+      <circle cx="12" cy="13" r="1.5" />
+    </>
+  ),
+  tag: (
+    <>
+      <path d="M3 3h7l11 11-7 7L3 10z" />
+      <circle cx="7.5" cy="7.5" r="1.5" />
+    </>
+  ),
   logout: (
     <>
       <path d="M9 3H4v18h5M10 12h11m-4-4 4 4-4 4" />

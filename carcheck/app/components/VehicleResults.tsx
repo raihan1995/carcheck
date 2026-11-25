@@ -22,15 +22,18 @@ import { MileageChart } from "./MileageChart";
 import { Co2EmissionsChart } from "./Co2EmissionsChart";
 import { PrintReportButton } from "./PrintReportButton";
 import { ReportUpsell } from "./ReportUpsell";
+import { ReportCoverage } from "./ReportCoverage";
 
 function StatusCard({
   title,
   status,
   verification,
+  showDetail = true,
 }: {
   title: string;
   status: SummaryStatus;
   verification?: { href: string; label: string };
+  showDetail?: boolean;
 }) {
   return (
     <section
@@ -52,10 +55,10 @@ function StatusCard({
         {status.label}
       </strong>
       <p>
-        {status.detail}
+        {showDetail && status.detail}
         {verification && (
           <>
-            {" · "}
+            {showDetail && status.detail ? " · " : null}
             <a
               href={verification.href}
               target="_blank"
@@ -292,8 +295,9 @@ export function VehicleResults({ registration }: { registration: string }) {
           <StatusCard title="MOT status" status={motSummary(vehicle)} />
           <StatusCard title="Vehicle tax" status={taxSummary(vehicle)} />
           <StatusCard
-            title="London ULEZ estimate"
+            title="London ULEZ"
             status={data.ulezEstimate ?? ulezSummary(vehicle)}
+            showDetail={false}
             verification={{
               href: "https://tfl.gov.uk/modes/driving/check-your-vehicle/",
               label: "Verify on TfL",
@@ -305,9 +309,6 @@ export function VehicleResults({ registration }: { registration: string }) {
             <section className="card">
               <div className="card-heading">
                 <h2>Vehicle details</h2>
-                <span className="badge">
-                  DVLA {sample ? "sample" : "record"}
-                </span>
               </div>
               <div className="card-body data-columns">
                 <dl className="detail-list">
@@ -662,12 +663,15 @@ export function VehicleResults({ registration }: { registration: string }) {
                 </dl>
                 <div className="tax-estimate">
                   <div className="tax-estimate-heading">
-                    <h3>Estimated road tax</h3>
+                    <h3>Road tax</h3>
                     <span className="badge">{ROAD_TAX_RATE_YEAR} rates</span>
                   </div>
                   {roadTax ? (
                     <>
-                      <p className="small muted">{roadTax.basis}</p>
+                      {roadTax.basis !==
+                        "Standard rate from the second tax payment" && (
+                        <p className="small muted">{roadTax.basis}</p>
+                      )}
                       <dl className="spec-grid tax-cost-grid">
                         <Detail
                           label="12 month payment"
@@ -710,9 +714,8 @@ export function VehicleResults({ registration }: { registration: string }) {
                   )}
                 </div>
                 <p className="small muted" style={{ marginTop: 24 }}>
-                  The V5C issue date is not proof of a keeper change. Tax costs
-                  are base estimates; exemptions and supplements can change what
-                  you pay.
+                  Tax costs are base estimates; exemptions and supplements can
+                  change what you pay.
                 </p>
                 <div className="button-row">
                   <a
@@ -726,34 +729,7 @@ export function VehicleResults({ registration }: { registration: string }) {
                 </div>
               </div>
             </section>
-            <section className="card">
-              <div className="card-body">
-                <span className="eyebrow">Not included in this check</span>
-                <h2 style={{ fontSize: "var(--text-28)" }}>
-                  What the free records cannot tell you
-                </h2>
-                <div className="locked-checks">
-                  {[
-                    "Outstanding finance",
-                    "Stolen records",
-                    "Insurance write-offs",
-                    "Plate history & valuation",
-                  ].map((label) => (
-                    <div className="locked-check" key={label}>
-                      <Icon name="lock" size={18} />
-                      <h3>{label}</h3>
-                      <p>
-                        Not checked. No conclusion can be drawn from this free
-                        report.
-                      </p>
-                    </div>
-                  ))}
-                </div>
-                <Link href="/pricing" className="text-link">
-                  Read about the £5.99 incl. VAT full report
-                </Link>
-              </div>
-            </section>
+            <ReportCoverage />
             <div className="notice">
               <Icon name="info" />
               <div>
@@ -797,11 +773,11 @@ export function VehicleResults({ registration }: { registration: string }) {
                     </strong>
                   </div>
                 ))}
-                <p className="small muted" style={{ marginTop: 16 }}>
-                  {motHistory === null
-                    ? "MOT history is unavailable. Counts cannot be calculated."
-                    : "Counts across all available tests, including past issues."}
-                </p>
+                {motHistory === null && (
+                  <p className="small muted" style={{ marginTop: 16 }}>
+                    MOT history is unavailable. Counts cannot be calculated.
+                  </p>
+                )}
                 <Link href="#mot-history" className="text-link small">
                   Read the test history
                 </Link>

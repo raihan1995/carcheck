@@ -44,8 +44,9 @@ export function MileageChart({ tests }: { tests: MotTestItem[] }) {
         <div>
           <strong
             className={`mileage-check ${rollback ? "is-danger" : "is-success"}`}
+            aria-describedby={rollback ? `${id}-note` : undefined}
           >
-            {rollback ? "Review readings" : "No decrease found"}
+            {rollback ? "Review readings" : "No Mileage Alteration Detected"}
           </strong>
           <span>Comparison of all available mileage readings</span>
         </div>
@@ -103,17 +104,12 @@ export function MileageChart({ tests }: { tests: MotTestItem[] }) {
           })}
         </ol>
       </figure>
-      <p className={`small ${rollback ? "form-error" : "muted"}`}>
-        {rollback
-          ? "A recorded reading is lower than an earlier one. This can reflect an error or a replacement odometer; check the original records."
-          : "No decrease between the available readings. This does not rule out mileage alteration."}
-      </p>
-      <p className="small muted">
-        Bars use the latest reading in each year. Changes are between recorded
-        years; gaps may span more than one year. Kilometres are converted to
-        miles. Very short bars are widened to keep changes readable. Original
-        readings appear in the MOT history.
-      </p>
+      {rollback && (
+        <p id={`${id}-note`} className="small form-error">
+          A recorded reading is lower than an earlier one. This can reflect an
+          error or a replacement odometer; check the original records.
+        </p>
+      )}
     </>
   );
 }

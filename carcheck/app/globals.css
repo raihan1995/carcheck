@@ -1376,6 +1376,7 @@ svg {
 }
 .tax-cost-grid {
   grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin-top: 16px;
 }
 @container report-content (max-width: 640px) {
   .tax-cost-grid {
@@ -1445,29 +1446,96 @@ svg {
   letter-spacing: 0;
   color: var(--muted);
 }
-.locked-checks {
+.report-coverage {
+  background: var(--bg);
+}
+.report-coverage h2 {
+  max-width: 560px;
+  margin-bottom: 12px;
+  font-size: var(--text-28);
+}
+.report-coverage-intro,
+.report-coverage-note {
+  color: var(--muted);
+  font-size: var(--text-14);
+}
+.report-coverage-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 16px;
   margin-block: 24px;
 }
-.locked-check {
+.report-coverage-card {
+  min-width: 0;
   border: 1px solid var(--line);
-  border-radius: 8px;
+  border-radius: 10px;
   padding: 16px;
+  background: var(--surface);
 }
-.locked-check svg {
-  color: var(--muted);
-  margin-bottom: 16px;
+.report-coverage-icon {
+  color: var(--accent);
+  margin-bottom: 12px;
 }
-.locked-check h3 {
-  font-size: var(--text-16);
-  margin-bottom: 8px;
+.report-coverage-card h3 {
+  font-size: var(--text-20);
+  margin-bottom: 4px;
 }
-.locked-check p {
+.report-coverage-summary {
   color: var(--muted);
   font-size: var(--text-14);
-  margin: 0;
+  line-height: 1.45;
+  margin: 0 0 12px;
+}
+.report-coverage-availability {
+  display: inline-block;
+  color: var(--accent-dark);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+.report-coverage-card ul {
+  list-style: none;
+  border-top: 1px dashed color-mix(in srgb, var(--accent) 35%, var(--surface));
+  padding: 16px 0 0;
+  margin: 16px 0 0;
+}
+.report-coverage-card li {
+  position: relative;
+  padding-left: 14px;
+  margin-top: 10px;
+  color: var(--muted);
+  font-size: var(--text-14);
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+.report-coverage-card li:first-child {
+  margin-top: 0;
+}
+.report-coverage-card li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.55em;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+.report-coverage-card li small {
+  display: block;
+  margin-top: 4px;
+  color: var(--accent-dark);
+  font-size: 12px;
+}
+@container report-content (max-width: 700px) {
+  .report-coverage-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@container report-content (max-width: 440px) {
+  .report-coverage-grid {
+    grid-template-columns: 1fr;
+  }
 }
 .chart-stats {
   display: grid;
@@ -2565,9 +2633,6 @@ svg {
   }
   .guide-art {
     height: 112px;
-  }
-  .locked-checks {
-    grid-template-columns: 1fr;
   }
 }
 @media (prefers-reduced-motion: reduce) {
