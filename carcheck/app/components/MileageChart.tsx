@@ -84,10 +84,13 @@ export function MileageChart({ tests }: { tests: MotTestItem[] }) {
                   <span
                     className={`mileage-year-fill${delta !== null && delta < -1 ? " is-decrease" : ""}`}
                     style={{ width: `${(point.miles / max) * 100}%` }}
-                  />
-                  {delta !== null && (
-                    <span className="mileage-year-change">{change(delta)}</span>
-                  )}
+                  >
+                    {delta !== null && (
+                      <span className="mileage-year-change">
+                        {change(delta)}
+                      </span>
+                    )}
+                  </span>
                 </div>
                 <span className="mileage-year-value">
                   {number(point.miles)}
@@ -108,7 +111,8 @@ export function MileageChart({ tests }: { tests: MotTestItem[] }) {
       <p className="small muted">
         Bars use the latest reading in each year. Changes are between recorded
         years; gaps may span more than one year. Kilometres are converted to
-        miles. Original readings appear in the MOT history.
+        miles. Very short bars are widened to keep changes readable. Original
+        readings appear in the MOT history.
       </p>
     </>
   );

@@ -34,6 +34,7 @@ export function Co2EmissionsChart({ emissions }: { emissions?: number }) {
               <li
                 key={band.label}
                 className={`emissions-row${selected ? " is-active" : ""}`}
+                aria-current={selected ? "true" : undefined}
               >
                 <span className="emissions-range">
                   {band.range}
@@ -48,17 +49,13 @@ export function Co2EmissionsChart({ emissions }: { emissions?: number }) {
                   />
                 </div>
                 <strong className="emissions-band">{band.label}</strong>
-                <span className="emissions-marker">
-                  {selected ? "Your car" : ""}
-                </span>
               </li>
             );
           })}
         </ol>
       </figure>
       <p className="small muted">
-        Grouped A–M bands compare recorded emissions, not your tax bill or ULEZ
-        status. Tax rules also depend on when the car was registered.{" "}
+        For emissions comparison. Tax and ULEZ use different rules.{" "}
         <a
           href="https://www.gov.uk/vehicle-tax-rate-tables"
           className="text-link"

@@ -13,6 +13,7 @@ import {
   type SummaryStatus,
 } from "@/lib/vehicle-summary";
 import { recordCheck } from "@/lib/browser-garage";
+import { getRoadTax, ROAD_TAX_RATE_YEAR } from "@/lib/vehicle-tax";
 import { Icon } from "./ui/Icon";
 import { RegistrationPlate } from "./RegistrationPlate";
 import { RegistrationSearch } from "./RegistrationSearch";
@@ -77,6 +78,32 @@ function Detail({ label, value }: { label: string; value: React.ReactNode }) {
     </div>
   );
 }
+function SpecificationLock({
+  registration,
+  title,
+  children,
+}: {
+  registration: string;
+  title: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="performance-lock">
+      <Icon name="lock" size={28} />
+      <h3>Sign in to unlock {title}</h3>
+      <p>{children}</p>
+      <Link
+        href={`/login?next=${encodeURIComponent(`/vehicle/${registration}`)}`}
+        className="button button-primary"
+      >
+        Sign in to unlock
+      </Link>
+    </div>
+  );
+}
+const money = (value: number) =>
+  value.toLocaleString("en-GB", { style: "currency", currency: "GBP" });
+
 export function VehicleResults({ registration }: { registration: string }) {
   const [data, setData] = useState<VehicleCheckResult | null>(null);
   const [error, setError] = useState("");
@@ -183,6 +210,7 @@ export function VehicleResults({ registration }: { registration: string }) {
     (a, b) => testTime(b) - testTime(a),
   );
   const selected = specCandidates.find((c) => c.id === specId);
+  const roadTax = getRoadTax(vehicle, new Date(data.retrievedAt));
   const defects = tests.flatMap((t) => t.rfrAndComments || t.defects || []);
   const passedTests = tests.filter(
     (test) => test.testResult?.trim().toUpperCase() === "PASSED",
@@ -273,7 +301,7 @@ export function VehicleResults({ registration }: { registration: string }) {
           />
         </div>
         <div className="report-layout">
-          <div className="stack">
+          <div className="stack report-main">
             <section className="card">
               <div className="card-heading">
                 <h2>Vehicle details</h2>
@@ -336,6 +364,160 @@ export function VehicleResults({ registration }: { registration: string }) {
                 <MileageChart tests={tests} />
               </div>
             </section>
+            <div className="vehicle-insights">
+              <section className="card" id="vehicle-performance">
+                <div className="card-heading">
+                  <h2>Vehicle Performance</h2>
+                  <span className="badge">
+                    {performanceUnlocked
+                      ? "Possible match"
+                      : "Sign-in required"}
+                  </span>
+                </div>
+                <div className="card-body">
+                  {!performanceUnlocked ? (
+                    <SpecificationLock
+                      registration={registration}
+                      title="Vehicle Performance"
+                    >
+                      View power, torque, 0–60 mph and more with your free
+                      RevVeal account.
+                    </SpecificationLock>
+                  ) : selected ? (
+                    <>
+                      <div className="field">
+                        <label htmlFor="spec-match">
+                          Check the suggested variant
+                        </label>
+                        <select
+                          id="spec-match"
+                          value={specId}
+                          onChange={(e) => setSpecId(e.target.value)}
+                        >
+                          {specCandidates.map((spec) => (
+                            <option value={spec.id} key={spec.id}>
+                              {spec.label}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <dl className="spec-grid">
+                        <Detail
+                          label="Power"
+                          value={
+                            selected.bhp != null ? `${selected.bhp} bhp` : null
+                          }
+                        />
+                        <Detail
+                          label="Torque"
+                          value={
+                            selected.torque != null
+                              ? `${selected.torque} Nm`
+                              : null
+                          }
+                        />
+                        <Detail
+                          label="0–60 mph"
+                          value={
+                            selected.acceleration0100 != null
+                              ? `${selected.acceleration0100.toFixed(1)} seconds`
+                              : null
+                          }
+                        />
+                        <Detail
+                          label="Top speed"
+                          value={
+                            selected.topSpeedMph
+                              ? `${selected.topSpeedMph} mph`
+                              : null
+                          }
+                        />
+                        <Detail
+                          label="Engine size"
+                          value={
+                            selected.engineCc != null
+                              ? `${selected.engineCc.toLocaleString("en-GB")} cc`
+                              : null
+                          }
+                        />
+                        <Detail label="Fuel" value={selected.fuel} />
+                        <Detail label="Cylinders" value={selected.cylinders} />
+                        <Detail label="Valves" value={selected.valves} />
+                        <Detail
+                          label="Transmission"
+                          value={selected.transmission || selected.gearbox}
+                        />
+                        <Detail
+                          label="Drivetrain"
+                          value={selected.drivetrain}
+                        />
+                      </dl>
+                      <p className="small muted" style={{ marginTop: 24 }}>
+                        Catalogue data is a guide. This is not a confirmed
+                        specification or insurance quotation for this
+                        registration.
+                      </p>
+                    </>
+                  ) : (
+                    <p className="muted">
+                      No matching catalogue specifications are available for
+                      this vehicle.
+                    </p>
+                  )}
+                </div>
+              </section>
+              <section className="card" id="vehicle-misc">
+                <div className="card-heading">
+                  <h2>Misc information</h2>
+                  <span className="badge">
+                    {performanceUnlocked
+                      ? "Possible match"
+                      : "Sign-in required"}
+                  </span>
+                </div>
+                <div className="card-body">
+                  {!performanceUnlocked ? (
+                    <SpecificationLock
+                      registration={registration}
+                      title="Misc information"
+                    >
+                      View economy, insurance group, dimensions and capacities
+                      with your free RevVeal account.
+                    </SpecificationLock>
+                  ) : selected ? (
+                    <dl className="spec-grid">
+                      <Detail label="New price" value={selected.newPrice} />
+                      <Detail label="MPG" value={selected.mpg} />
+                      <Detail
+                        label="Insurance group"
+                        value={selected.insuranceGroup}
+                      />
+                      <Detail
+                        label="Fuel capacity"
+                        value={selected.fuelCapacity}
+                      />
+                      <Detail
+                        label="Battery"
+                        value={selected.batteryCapacity}
+                      />
+                      <Detail label="Weight" value={selected.weightKg} />
+                      <Detail label="Length" value={selected.lengthMm} />
+                      <Detail label="Width" value={selected.widthMm} />
+                      <Detail label="Height" value={selected.heightMm} />
+                      <Detail label="Wheelbase" value={selected.wheelbaseMm} />
+                      <Detail label="Doors" value={selected.doors} />
+                      <Detail label="Seats" value={selected.seats} />
+                      <Detail label="Boot" value={selected.luggageCapacity} />
+                    </dl>
+                  ) : (
+                    <p className="muted">
+                      No matching catalogue information is available for this
+                      vehicle.
+                    </p>
+                  )}
+                </div>
+              </section>
+            </div>
             <section className="card" id="co2-emissions">
               <div className="card-heading">
                 <h2>CO₂ emission figures</h2>
@@ -462,7 +644,7 @@ export function VehicleResults({ registration }: { registration: string }) {
                 </div>
               )}
             </section>
-            <section className="card">
+            <section className="card" id="tax-registration">
               <div className="card-heading">
                 <h2>Tax & registration</h2>
               </div>
@@ -478,10 +660,59 @@ export function VehicleResults({ registration }: { registration: string }) {
                     value={formatDate(vehicle.dateOfLastV5CIssued)}
                   />
                 </dl>
+                <div className="tax-estimate">
+                  <div className="tax-estimate-heading">
+                    <h3>Estimated road tax</h3>
+                    <span className="badge">{ROAD_TAX_RATE_YEAR} rates</span>
+                  </div>
+                  {roadTax ? (
+                    <>
+                      <p className="small muted">{roadTax.basis}</p>
+                      <dl className="spec-grid tax-cost-grid">
+                        <Detail
+                          label="12 month payment"
+                          value={money(roadTax.annual)}
+                        />
+                        <Detail
+                          label="6 month payment"
+                          value={
+                            roadTax.sixMonth == null
+                              ? "Not available"
+                              : money(roadTax.sixMonth)
+                          }
+                        />
+                        <Detail
+                          label="12 monthly payments (DD total)"
+                          value={money(roadTax.monthlyTotal)}
+                        />
+                        {roadTax.firstYear != null && (
+                          <Detail
+                            label="First registration (12 months)"
+                            value={money(roadTax.firstYear)}
+                          />
+                        )}
+                      </dl>
+                      {roadTax.supplementThreshold != null && (
+                        <p className="small muted" style={{ marginTop: 16 }}>
+                          A list price over {money(roadTax.supplementThreshold)}{" "}
+                          may add £440 a year for five years, from the second
+                          tax payment. Check the original list price with the
+                          seller.
+                        </p>
+                      )}
+                    </>
+                  ) : (
+                    <p className="small muted">
+                      A car tax estimate is not available for this record. Check
+                      the registration date, vehicle class and emissions or
+                      engine details against the DVLA rates.
+                    </p>
+                  )}
+                </div>
                 <p className="small muted" style={{ marginTop: 24 }}>
-                  The V5C issue date is not proof of a keeper change. Tax rates
-                  depend on registration date, emissions and possible
-                  supplements.
+                  The V5C issue date is not proof of a keeper change. Tax costs
+                  are base estimates; exemptions and supplements can change what
+                  you pay.
                 </p>
                 <div className="button-row">
                   <a
@@ -492,96 +723,7 @@ export function VehicleResults({ registration }: { registration: string }) {
                   >
                     Check current DVLA tax rates
                   </a>
-                  <a
-                    href="https://tfl.gov.uk/modes/driving/check-your-vehicle/"
-                    className="text-link small"
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    Confirm ULEZ with TfL
-                  </a>
                 </div>
-              </div>
-            </section>
-            <section className="card" id="vehicle-performance">
-              <div className="card-heading">
-                <h2>Vehicle Performance</h2>
-                <span className="badge">
-                  {performanceUnlocked ? "Possible match" : "Sign-in required"}
-                </span>
-              </div>
-              <div className="card-body">
-                {!performanceUnlocked ? (
-                  <div className="performance-lock">
-                    <Icon name="lock" size={28} />
-                    <h3>Sign in to unlock Vehicle Performance</h3>
-                    <p>
-                      View the suggested variant, power, transmission and top
-                      speed with your free RevVeal account.
-                    </p>
-                    <Link
-                      href={`/login?next=${encodeURIComponent(`/vehicle/${registration}`)}`}
-                      className="button button-primary"
-                    >
-                      Sign in to unlock
-                    </Link>
-                  </div>
-                ) : selected ? (
-                  <>
-                    <div className="field">
-                      <label htmlFor="spec-match">
-                        Check the suggested variant
-                      </label>
-                      <select
-                        id="spec-match"
-                        value={specId}
-                        onChange={(e) => setSpecId(e.target.value)}
-                      >
-                        {specCandidates.map((spec) => (
-                          <option value={spec.id} key={spec.id}>
-                            {spec.label}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                    <dl className="detail-list">
-                      <Detail
-                        label="Power"
-                        value={selected.bhp ? `${selected.bhp} bhp` : null}
-                      />
-                      <Detail
-                        label="Transmission"
-                        value={selected.transmission || selected.gearbox}
-                      />
-                      <Detail
-                        label="Top speed"
-                        value={
-                          selected.topSpeedMph
-                            ? `${selected.topSpeedMph} mph`
-                            : null
-                        }
-                      />
-                      <Detail
-                        label="Insurance group"
-                        value={selected.insuranceGroup}
-                      />
-                      <Detail
-                        label="Doors / seats"
-                        value={`${selected.doors || "—"} / ${selected.seats || "—"}`}
-                      />
-                    </dl>
-                    <p className="small muted" style={{ marginTop: 24 }}>
-                      Catalogue data is a guide. This is not a confirmed
-                      specification or insurance quotation for this
-                      registration.
-                    </p>
-                  </>
-                ) : (
-                  <p className="muted">
-                    No matching catalogue specifications are available for this
-                    vehicle.
-                  </p>
-                )}
               </div>
             </section>
             <section className="card">

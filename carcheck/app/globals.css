@@ -1265,6 +1265,44 @@ svg {
   gap: 24px;
   align-items: start;
 }
+.report-main {
+  min-width: 0;
+  container: report-content / inline-size;
+}
+.vehicle-insights {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px;
+}
+.vehicle-insights > .card {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+.vehicle-insights .card-heading {
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 16px 20px;
+}
+.vehicle-insights .card-heading h2 {
+  font-size: var(--text-16);
+}
+.vehicle-insights .card-body {
+  flex: 1;
+  padding: 20px;
+}
+.vehicle-insights .card-body:has(.performance-lock) {
+  display: grid;
+  align-items: center;
+}
+.vehicle-insights .performance-lock {
+  padding: 12px 0;
+}
+@container report-content (max-width: 640px) {
+  .vehicle-insights {
+    grid-template-columns: 1fr;
+  }
+}
 .report-sidebar {
   position: sticky;
   top: 24px;
@@ -1298,6 +1336,51 @@ svg {
   text-align: right;
   font-weight: 500;
   font-size: var(--text-14);
+}
+.spec-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px 20px;
+  margin: 0;
+}
+.spec-grid > div {
+  min-width: 0;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--line);
+}
+.spec-grid dt {
+  color: var(--muted);
+  font-size: var(--text-14);
+}
+.spec-grid dd {
+  margin: 4px 0 0;
+  font-size: var(--text-14);
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+.tax-estimate {
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 1px solid var(--line);
+}
+.tax-estimate-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.tax-estimate-heading h3 {
+  margin: 0;
+  font-size: var(--text-16);
+}
+.tax-cost-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+@container report-content (max-width: 640px) {
+  .tax-cost-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 .data-columns {
   display: grid;
@@ -1455,19 +1538,24 @@ svg {
   background: #f0f1f3;
 }
 .mileage-year-fill {
-  display: block;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  min-width: max-content;
   height: 100%;
+  padding-inline: 6px;
   border-radius: 6px;
   background: var(--accent);
+}
+.mileage-year-fill:empty {
+  min-width: 0;
+  padding: 0;
 }
 .mileage-year-fill.is-decrease {
   background: var(--danger);
 }
 .mileage-year-change {
-  position: absolute;
-  right: 6px;
-  top: 50%;
-  transform: translateY(-50%);
+  flex-shrink: 0;
   padding: 2px 5px;
   border-radius: 3px;
   background: #fff;
@@ -1475,6 +1563,7 @@ svg {
   font-size: var(--text-14);
   font-weight: 600;
   line-height: 1.3;
+  white-space: nowrap;
 }
 .mileage-year-value {
   text-align: right;
@@ -1485,15 +1574,15 @@ svg {
   align-items: center;
   justify-content: space-between;
   flex-wrap: wrap;
-  gap: 12px;
-  margin-bottom: 24px;
+  gap: 8px;
+  margin-bottom: 16px;
 }
 .emissions-summary p {
   margin: 0;
 }
 .emissions-summary strong {
   font:
-    600 var(--text-40)/1.2 var(--font-outfit),
+    600 var(--text-28)/1.2 var(--font-outfit),
     sans-serif;
   letter-spacing: -0.04em;
 }
@@ -1501,18 +1590,22 @@ svg {
   color: var(--muted);
 }
 .emissions-chart {
-  margin: 0 0 24px;
+  margin: 0 0 16px;
+}
+.emissions-chart figcaption {
+  margin-bottom: 8px;
 }
 .emissions-row {
   display: grid;
-  grid-template-columns: 64px minmax(0, 1fr) 36px;
-  gap: 4px 8px;
+  grid-template-columns: 64px minmax(0, 1fr) 32px;
+  gap: 6px;
   align-items: center;
-  padding: 8px;
-  margin-top: 4px;
-  border: 2px solid transparent;
+  padding: 4px 6px;
+  margin-top: 2px;
+  border: 1px solid transparent;
   border-radius: 6px;
   font-size: var(--text-14);
+  line-height: 1.25;
   font-variant-numeric: tabular-nums;
 }
 .emissions-row.is-active {
@@ -1520,8 +1613,11 @@ svg {
   background: var(--bg);
   font-weight: 600;
 }
+.emissions-range {
+  white-space: nowrap;
+}
 .emissions-track {
-  height: 24px;
+  height: 18px;
 }
 .emissions-track > span {
   display: block;
@@ -1530,13 +1626,6 @@ svg {
 }
 .emissions-band {
   text-align: center;
-}
-.emissions-marker {
-  grid-column: 2 / -1;
-  font-weight: 600;
-}
-.emissions-marker:empty {
-  display: none;
 }
 .mot-timeline {
   list-style: none;
