@@ -4,6 +4,17 @@ Project history for **RevVeal** (UK Car Check). Use this when you need to see wh
 
 ---
 
+## Documentation refresh — 25 November 2026
+
+- Reviewed all project Markdown documentation against the current source. Added the app package version (`0.1.0`), UI generation (`5.1`) and resolved versions of all fourteen top-level dependencies to the app README. Versions match the lockfile and installed packages; no dependency upgrades were made.
+- Expanded setup, environment, auth, database-bootstrap, API, storage and catalogue instructions. Documented the `proxy.ts` entry point, process-local rate-limit scope, provider timeouts and explicit sample behaviour.
+- Kept `IMPROVEMENTS.md` inside the app folder, replacing the old outer-folder plan with prioritised remaining work and an evidence-linked table of completed improvements. Updated current document links while preserving historical UI entries and commit references.
+- Updated the design document to match the final report order, current copy, browser-local garage, pricing/coverage sections and verification limits. Added missing optional setup variables to `.env.example` without changing local credentials or application code.
+
+**Validation:** All 24 regression tests passed. Checked 43 local Markdown links, matched all 14 documented dependency versions against the lockfile and installed packages, and confirmed all 15 environment-variable names used by the application are documented. The outer improvements file is absent and the updated copy is inside the app folder.
+
+---
+
 ## UI revamp 5.1 — 25 November 2026 (current)
 
 Restores the distinctive registration and vehicle-history visuals within the refreshed RevVeal layout.
@@ -22,7 +33,7 @@ Restores the distinctive registration and vehicle-history visuals within the ref
 - **MOT at a glance wording:** removed “Counts across all available tests, including past issues.” The unavailable-history message remains when counts cannot be calculated.
 - **Vehicle Performance and Misc information:** renamed Catalogue specifications, restored 0–60 mph, torque, engine size, fuel, cylinders, valves and drivetrain alongside power, transmission and top speed. Restored the Misc information panel with new price, MPG, insurance group, capacities, weight, dimensions, doors, seats and boot space. Both panels follow the selected variant and retain the sign-in lock. Both API methods withhold catalogue candidates until the Supabase user is verified, including for the sample check; the sign-in button returns to the vehicle being viewed.
 - **Report layout:** Vehicle details is followed by Mileage information, then Vehicle Performance with Misc information on its right, then the full-width CO₂ emission figures card and MOT history. The Performance/Misc pair stacks when the available report column is narrow. CO₂ retains the compact figures/bars and active-band outline, without the visible “Your car” label.
-- **Tax & registration:** restored estimated 6-month, 12-month and monthly Direct Debit totals using the original registration-period logic, extracted to `lib/vehicle-tax.ts` and updated to 2026–27 GOV.UK rates. Includes first-registration rates for recent cars and a conditional supplement note. Missing data, unsupported vehicle classes and the unresolved March 2006 high-emissions cutoff do not produce guessed prices. Removed the extra “Confirm ULEZ with TfL” link from this section; the verification link remains in London ULEZ estimate.
+- **Tax & registration:** restored estimated 6-month, 12-month and monthly Direct Debit totals using the original registration-period logic, extracted to `lib/vehicle-tax.ts` and updated to 2026–27 GOV.UK rates. Includes first-registration rates for recent cars and a conditional supplement note. Missing data, unsupported vehicle classes and the unresolved March 2006 high-emissions cutoff do not produce guessed prices. Removed the extra “Confirm ULEZ with TfL” link from this section; the verification link remains in London ULEZ.
 - **Homepage recent checks:** plain bordered registration text is listed beneath “Recent checks”. Removed the “See a sample report / Know what to look for” line below the search field.
 - **Header navigation:** moved the desktop links slightly right, closer to the account controls, with responsive spacing that eases off on narrower screens.
 - **Homepage car visual:** replaced the static photograph frame with a transparent burnt-orange car illustration, orange contours, gentle car movement, pointer parallax and a reveal sweep that reacts to the registration search. Added pause/resume, offscreen pausing and reduced-motion support. Removed both lines of the caption beneath the image. Artwork and generation prompt are recorded in `docs/DESIGN.md`.
@@ -58,6 +69,8 @@ See [docs/DESIGN.md](./docs/DESIGN.md) for the shared design and data rules.
 ---
 
 ## RevVeal UI redesign — 25 November 2026
+
+This entry records the initial redesign. Later 5.1 follow-ups above restore the account lock, road tax/CO₂ panels and distinctive charts, change the header copy and replace the static homepage image. Use [docs/DESIGN.md](./docs/DESIGN.md) for the current design.
 
 **Theme:** Restrained vehicle-check interface inspired by the supplied reference screenshots: navy text, white/off-white surfaces, burnt orange actions, yellow UK registration plates and a dark footer.
 
@@ -281,7 +294,7 @@ The tables below describe the earlier UI generations, including UI 2.0 (`052b5b1
 
 ---
 
-## Commit reference (recent)
+## Historical commit reference
 
 | Commit | Summary |
 |--------|---------|
@@ -293,10 +306,10 @@ The tables below describe the earlier UI generations, including UI 2.0 (`052b5b1
 | `674090e` | Contact page + email copy |
 | `5313d15` | Yearly odometer chart |
 | `51dea65` | UI 2.0 kickoff — logo, columns, layout |
-| `fdf7665` | `IMPROVEMENTS.md` (planning doc, repo root) |
+| `fdf7665` | Original `IMPROVEMENTS.md` planning document, then at the outer repository root |
 
 ---
 
-## Planning / not implemented
+## Current planning and delivery status
 
-See `../IMPROVEMENTS.md` (repo root) for security and functionality ideas (rate limiting, shared types, error boundaries, etc.).
+See [IMPROVEMENTS.md](./IMPROVEMENTS.md) inside this app folder for remaining integration/security work and completed improvements. Rate limiting, shared response types and recoverable error states are already implemented; the roadmap records their current limits rather than listing them as entirely missing.
