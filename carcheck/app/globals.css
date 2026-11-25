@@ -1532,7 +1532,7 @@ svg {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
-@container report-content (max-width: 440px) {
+@container report-content (max-width: 400px) {
   .report-coverage-grid {
     grid-template-columns: 1fr;
   }
@@ -2270,6 +2270,66 @@ svg {
 }
 .pricing-card-featured {
   border-top: 3px solid var(--accent);
+}
+.provider-price-comparison {
+  background: color-mix(in srgb, var(--accent) 4%, var(--surface));
+  border-block: 1px solid var(--line);
+}
+.provider-price-inner {
+  max-width: 900px;
+}
+.provider-price-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 24px;
+}
+.provider-price-card {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  padding: 24px;
+}
+.provider-price-card .badge {
+  align-self: flex-start;
+}
+.provider-price-card h3 {
+  margin: 24px 0 8px;
+  font-size: var(--text-28);
+}
+.provider-price-product,
+.provider-price-unit,
+.provider-price-note {
+  color: var(--muted);
+  font-size: var(--text-14);
+}
+.provider-price-product {
+  margin: 0;
+}
+.provider-price-card .price {
+  margin-top: 20px;
+}
+.provider-price-unit {
+  margin: 0 0 24px;
+}
+.provider-price-card > .text-link,
+.provider-price-availability {
+  margin: auto 0 0;
+  font-size: var(--text-14);
+}
+.provider-price-availability {
+  color: var(--accent-dark);
+}
+.provider-price-featured {
+  border-top: 3px solid var(--accent);
+}
+.provider-price-note {
+  margin: 24px 0 0;
+}
+@media (max-width: 700px) {
+  .provider-price-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
 }
 .loading-shimmer {
   animation: loading-pulse 1.5s ease-in-out infinite;

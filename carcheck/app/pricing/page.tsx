@@ -1,7 +1,9 @@
 import Link from "next/link";
 import { FeatureComparison } from "@/app/components/FeatureComparison";
+import { PriceComparison } from "@/app/components/PriceComparison";
 import { FaqList } from "@/app/components/FaqList";
 import { Icon } from "@/app/components/ui/Icon";
+import { FULL_REPORT_PRICE_AMOUNT } from "@/lib/site";
 export const metadata = {
   title: "Pricing",
   description:
@@ -53,7 +55,8 @@ export default function PricingPage() {
             <h2 style={{ marginTop: 24 }}>The separate risk checks</h2>
             <p>Additional records to consider before you buy.</p>
             <div className="price">
-              £5.99 <small>incl. VAT · one-time payment</small>
+              {FULL_REPORT_PRICE_AMOUNT}{" "}
+              <small>incl. VAT · one-time payment</small>
             </div>
             <ul>
               {[
@@ -85,6 +88,7 @@ export default function PricingPage() {
           </div>
         </div>
       </section>
+      <PriceComparison />
       <section className="section bg-subtle">
         <div className="container">
           <div className="section-intro">

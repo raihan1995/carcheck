@@ -1,4 +1,5 @@
-export const FULL_REPORT_PRICE = "£5.99 incl. VAT";
+export const FULL_REPORT_PRICE_AMOUNT = "£5.99";
+export const FULL_REPORT_PRICE = `${FULL_REPORT_PRICE_AMOUNT} incl. VAT`;
 
 export const reportFeatures = [
   ["Vehicle details", "DVLA registration information", true],
