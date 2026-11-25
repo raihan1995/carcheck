@@ -8,8 +8,8 @@ type AuthFieldProps = {
   hint?: string;
   autoComplete?: string;
   disabled?: boolean;
+  required?: boolean;
 };
-
 export function AuthField({
   id,
   label,
@@ -20,28 +20,35 @@ export function AuthField({
   hint,
   autoComplete,
   disabled,
+  required,
 }: AuthFieldProps) {
   return (
-    <div>
-      <label htmlFor={id} className="block text-sm font-medium text-muted-strong mb-2">
-        {label}
-      </label>
+    <div className="field">
+      <label htmlFor={id}>{label}</label>
       <input
+        className="auth-input"
         id={id}
+        name={id}
         type={type}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         autoComplete={autoComplete}
         disabled={disabled}
-        className={`w-full min-h-[48px] border-b bg-transparent px-1 py-2.5 text-foreground placeholder-muted/40 focus:outline-none transition-colors ${
-          error ? "border-red-500/70" : "border-foreground/25 focus:border-accent-text"
-        }`}
+        required={required}
+        aria-invalid={!!error}
+        aria-describedby={
+          error ? `${id}-error` : hint ? `${id}-hint` : undefined
+        }
       />
-      {hint && !error && <p className="mt-2 text-xs text-muted-strong">{hint}</p>}
+      {hint && !error && (
+        <span className="small muted" id={`${id}-hint`}>
+          {hint}
+        </span>
+      )}
       {error && (
-        <p className="mt-2 text-xs text-red-400 font-medium" role="alert">
+        <span className="form-error" role="alert" id={`${id}-error`}>
           {error}
-        </p>
+        </span>
       )}
     </div>
   );

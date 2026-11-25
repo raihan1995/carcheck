@@ -1,68 +1,35 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSpecCandidates, type SpecCandidate } from "@/lib/car-specs-lookup";
 import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
-import { getSampleVehicleCheck, isSampleRegistration } from "@/lib/sample-vehicle-data";
+import { createClient } from "@/lib/supabase/server";
+import { ulezSummary } from "@/lib/vehicle-summary";
+import {
+  getSampleVehicleCheck,
+  isSampleRegistration,
+} from "@/lib/sample-vehicle-data";
 
 const DVLA_API_URL =
   "https://driver-vehicle-licensing.api.gov.uk/vehicle-enquiry/v1/vehicles";
 
 const MOT_API_BASE = "https://history.mot.api.gov.uk";
 
-export interface VehicleData {
-  registrationNumber: string;
-  make?: string;
-  colour?: string;
-  fuelType?: string;
-  co2Emissions?: number;
-  engineCapacity?: number;
-  yearOfManufacture?: number;
-  monthOfFirstRegistration?: string;
-  monthOfFirstDvlaRegistration?: string;
-  motStatus?: string;
-  motExpiryDate?: string;
-  taxStatus?: string;
-  taxDueDate?: string;
-  artEndDate?: string;
-  markedForExport?: boolean;
-  typeApproval?: string;
-  revenueWeight?: number;
-  wheelplan?: string;
-  euroStatus?: string;
-  realDrivingEmissions?: string;
-  dateOfLastV5CIssued?: string;
-}
-
-export interface MotTestItem {
-  completedDate?: string;
-  testResult?: string;
-  expiryDate?: string;
-  odometerValue?: string;
-  odometerUnit?: string;
-  odometerResultType?: string;
-  motTestNumber?: string;
-  dataSource?: string;
-  rfrAndComments?: Array<{ text: string; type: string; dangerous?: boolean }>;
-  /** New API uses defects; mapped to rfrAndComments in fetch */
-  defects?: Array<{ text: string; type: string; dangerous?: boolean }>;
-}
-
-export interface MotHistoryVehicle {
-  registration?: string;
-  make?: string;
-  model?: string;
-  firstUsedDate?: string;
-  fuelType?: string;
-  primaryColour?: string;
-  vehicleId?: string;
-  registrationDate?: string;
-  manufactureDate?: string;
-  engineSize?: string;
-  hasOutstandingRecall?: string;
-  motTests?: MotTestItem[];
-}
+import type {
+  VehicleData,
+  MotTestItem,
+  MotHistoryVehicle,
+  SummaryStatus,
+} from "@/lib/vehicle-types";
+export type {
+  VehicleData,
+  MotTestItem,
+  MotHistoryVehicle,
+} from "@/lib/vehicle-types";
 
 function normalizeRegistration(vrn: string): string {
-  return vrn.replace(/\s+/g, "").toUpperCase().replace(/[^A-Z0-9]/g, "");
+  return vrn
+    .replace(/\s+/g, "")
+    .toUpperCase()
+    .replace(/[^A-Z0-9]/g, "");
 }
 
 const isDebug = () =>
@@ -92,7 +59,8 @@ function getDiagnostic(err: unknown): { message: string; stack?: string } {
 async function getMotAccessToken(): Promise<string | null> {
   const clientId = process.env.MOT_CLIENT_ID;
   const clientSecret = process.env.MOT_CLIENT_SECRET;
-  const scope = process.env.MOT_SCOPE_URL ?? "https://tapi.dvsa.gov.uk/.default";
+  const scope =
+    process.env.MOT_SCOPE_URL ?? "https://tapi.dvsa.gov.uk/.default";
   const tokenUrl = process.env.MOT_TOKEN_URL;
 
   if (!clientId || !clientSecret || !tokenUrl) return null;
@@ -105,6 +73,7 @@ async function getMotAccessToken(): Promise<string | null> {
   });
 
   const res = await fetch(tokenUrl, {
+    signal: AbortSignal.timeout(6000),
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
     body: body.toString(),
@@ -117,13 +86,14 @@ async function getMotAccessToken(): Promise<string | null> {
 
 async function fetchMotHistory(
   registrationNumber: string,
-  accessToken: string
+  accessToken: string,
 ): Promise<MotHistoryVehicle[] | null> {
   const apiKey = process.env.MOT_API_KEY;
   if (!apiKey) return null;
 
   const url = `${MOT_API_BASE}/v1/trade/vehicles/registration/${encodeURIComponent(registrationNumber)}`;
   const res = await fetch(url, {
+    signal: AbortSignal.timeout(6000),
     method: "GET",
     headers: {
       Authorization: `Bearer ${accessToken}`,
@@ -138,24 +108,31 @@ async function fetchMotHistory(
 
   // New API returns a single vehicle object with motTests; map to MotHistoryVehicle[] shape
   const motTests = Array.isArray(raw.motTests) ? raw.motTests : [];
-  const mappedTests: MotTestItem[] = motTests.map((t: Record<string, unknown>) => {
-    const defects = (t.defects as Array<{ text?: string; type?: string; dangerous?: boolean }>) ?? [];
-    return {
-      completedDate: t.completedDate as string | undefined,
-      testResult: t.testResult as string | undefined,
-      expiryDate: t.expiryDate as string | undefined,
-      odometerValue: t.odometerValue as string | undefined,
-      odometerUnit: t.odometerUnit as string | undefined,
-      odometerResultType: t.odometerResultType as string | undefined,
-      motTestNumber: t.motTestNumber as string | undefined,
-      dataSource: t.dataSource as string | undefined,
-      rfrAndComments: defects.map((d) => ({
-        text: d.text ?? "",
-        type: d.type ?? "ADVISORY",
-        dangerous: d.dangerous,
-      })),
-    };
-  });
+  const mappedTests: MotTestItem[] = motTests.map(
+    (t: Record<string, unknown>) => {
+      const defects =
+        (t.defects as Array<{
+          text?: string;
+          type?: string;
+          dangerous?: boolean;
+        }>) ?? [];
+      return {
+        completedDate: t.completedDate as string | undefined,
+        testResult: t.testResult as string | undefined,
+        expiryDate: t.expiryDate as string | undefined,
+        odometerValue: t.odometerValue as string | undefined,
+        odometerUnit: t.odometerUnit as string | undefined,
+        odometerResultType: t.odometerResultType as string | undefined,
+        motTestNumber: t.motTestNumber as string | undefined,
+        dataSource: t.dataSource as string | undefined,
+        rfrAndComments: defects.map((d) => ({
+          text: d.text ?? "",
+          type: d.type ?? "ADVISORY",
+          dangerous: d.dangerous,
+        })),
+      };
+    },
+  );
 
   const vehicle: MotHistoryVehicle = {
     registration: raw.registration as string | undefined,
@@ -174,31 +151,57 @@ async function fetchMotHistory(
   return [vehicle];
 }
 
+async function canViewPerformance(): Promise<boolean> {
+  try {
+    const supabase = await createClient();
+    const {
+      data: { user },
+      error,
+    } = await supabase.auth.getUser();
+    return !error && !!user;
+  } catch {
+    return false;
+  }
+}
+
 async function performVehicleCheck(registrationNumber: string): Promise<{
   vehicle: VehicleData;
   motHistory: MotHistoryVehicle[] | null;
   specCandidates: SpecCandidate[];
   suggestedSpecId: string | null;
+  performanceUnlocked: boolean;
+  ulezEstimate: SummaryStatus;
   demo?: boolean;
   sample?: boolean;
 }> {
+  const performanceUnlocked = await canViewPerformance();
   if (isSampleRegistration(registrationNumber)) {
-    return getSampleVehicleCheck();
+    const sample = getSampleVehicleCheck();
+    const suggested =
+      sample.specCandidates.find(
+        (spec) => spec.id === sample.suggestedSpecId,
+      ) ?? sample.specCandidates[0];
+    return {
+      ...sample,
+      performanceUnlocked,
+      ulezEstimate: ulezSummary(sample.vehicle, suggested?.euroStandard),
+      specCandidates: performanceUnlocked ? sample.specCandidates : [],
+      suggestedSpecId: performanceUnlocked ? sample.suggestedSpecId : null,
+    };
   }
 
   const apiKey = process.env.DVLA_API_KEY;
 
   if (!apiKey) {
-    return {
-      vehicle: getMockVehicleData(registrationNumber),
-      motHistory: null,
-      specCandidates: [],
-      suggestedSpecId: null,
-      demo: true,
+    throw {
+      status: 503,
+      message:
+        "Vehicle checks are temporarily unavailable. Please try again later or view the sample report.",
     };
   }
 
   const res = await fetch(DVLA_API_URL, {
+    signal: AbortSignal.timeout(8000),
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -211,10 +214,16 @@ async function performVehicleCheck(registrationNumber: string): Promise<{
 
   if (!res.ok) {
     if (res.status === 404) {
-      throw { status: 404, message: "Vehicle not found for this registration." };
+      throw {
+        status: 404,
+        message: "Vehicle not found for this registration.",
+      };
     }
     if (res.status === 400 && data?.errors?.[0]) {
-      throw { status: 400, message: data.errors[0].detail || "Invalid request." };
+      throw {
+        status: 400,
+        message: data.errors[0].detail || "Invalid request.",
+      };
     }
     throw {
       status: res.status >= 500 ? 503 : 400,
@@ -233,30 +242,51 @@ async function performVehicleCheck(registrationNumber: string): Promise<{
     logApiCheckError(motErr, "MOT");
   }
 
-  const { candidates: specCandidates, suggestedId: suggestedSpecId } = getSpecCandidates({
-    make: vehicle.make,
-    motModel: motHistory?.[0]?.model,
-    yearOfManufacture: vehicle.yearOfManufacture,
-    monthOfFirstRegistration: vehicle.monthOfFirstRegistration,
-    motRegistrationDate: motHistory?.[0]?.registrationDate,
-    engineCapacityCc: vehicle.engineCapacity,
-    fuelType: vehicle.fuelType,
-    co2Emissions: vehicle.co2Emissions,
-    revenueWeightKg: vehicle.revenueWeight,
-  });
+  const { candidates: specCandidates, suggestedId: suggestedSpecId } = (() => {
+    try {
+      return getSpecCandidates({
+        make: vehicle.make,
+        motModel: motHistory?.[0]?.model,
+        yearOfManufacture: vehicle.yearOfManufacture,
+        monthOfFirstRegistration: vehicle.monthOfFirstRegistration,
+        motRegistrationDate: motHistory?.[0]?.registrationDate,
+        engineCapacityCc: vehicle.engineCapacity,
+        fuelType: vehicle.fuelType,
+        co2Emissions: vehicle.co2Emissions,
+        revenueWeightKg: vehicle.revenueWeight,
+      });
+    } catch (error) {
+      logApiCheckError(error, "specifications");
+      return { candidates: [], suggestedId: null };
+    }
+  })();
 
-  return { vehicle, motHistory, specCandidates, suggestedSpecId };
+  const suggested =
+    specCandidates.find((spec) => spec.id === suggestedSpecId) ??
+    specCandidates[0];
+  return {
+    vehicle,
+    motHistory,
+    specCandidates: performanceUnlocked ? specCandidates : [],
+    suggestedSpecId: performanceUnlocked ? suggestedSpecId : null,
+    performanceUnlocked,
+    ulezEstimate: ulezSummary(vehicle, suggested?.euroStandard),
+  };
 }
 
 function rateLimitResponse(request: NextRequest): NextResponse | null {
-  const { allowed, retryAfterSec } = checkRateLimit(`api/check:${getClientIp(request)}`);
+  const { allowed, retryAfterSec } = checkRateLimit(
+    `api/check:${getClientIp(request)}`,
+  );
   if (allowed) return null;
   return NextResponse.json(
     { error: "Too many requests. Please try again later." },
     {
       status: 429,
-      headers: retryAfterSec ? { "Retry-After": String(retryAfterSec) } : undefined,
-    }
+      headers: retryAfterSec
+        ? { "Retry-After": String(retryAfterSec) }
+        : undefined,
+    },
   );
 }
 
@@ -270,7 +300,7 @@ export async function GET(request: NextRequest) {
   if (!vrn) {
     return NextResponse.json(
       { error: "Missing registration. Use ?registration=AB12CDE" },
-      { status: 400 }
+      { status: 400 },
     );
   }
 
@@ -278,17 +308,23 @@ export async function GET(request: NextRequest) {
   if (registrationNumber.length < 2 || registrationNumber.length > 8) {
     return NextResponse.json(
       { error: "Invalid UK registration format." },
-      { status: 400 }
+      { status: 400 },
     );
   }
 
   try {
     const result = await performVehicleCheck(registrationNumber);
-    return NextResponse.json(result);
+    return NextResponse.json(
+      { ...result, retrievedAt: new Date().toISOString() },
+      { headers: { "Cache-Control": "no-store" } },
+    );
   } catch (err: unknown) {
     logApiCheckError(err, "GET");
     const e = err as { status?: number; message?: string };
-    const payload: { error: string; diagnostic?: { message: string; stack?: string } } = {
+    const payload: {
+      error: string;
+      diagnostic?: { message: string; stack?: string };
+    } = {
       error: e.message ?? "Something went wrong.",
     };
     if (isDebug()) payload.diagnostic = getDiagnostic(err);
@@ -307,7 +343,7 @@ export async function POST(request: NextRequest) {
     if (!rawVrn || typeof rawVrn !== "string") {
       return NextResponse.json(
         { error: "Please provide a registration number (e.g. AB12 CDE)." },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -316,7 +352,7 @@ export async function POST(request: NextRequest) {
     if (registrationNumber.length < 2 || registrationNumber.length > 8) {
       return NextResponse.json(
         { error: "Invalid UK registration format." },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -334,35 +370,24 @@ export async function POST(request: NextRequest) {
           specCandidates: result.specCandidates,
           suggestedSpecId: result.suggestedSpecId,
         },
-        { status: 503 }
+        { status: 503 },
       );
     }
 
-    return NextResponse.json(result);
+    return NextResponse.json(
+      { ...result, retrievedAt: new Date().toISOString() },
+      { headers: { "Cache-Control": "no-store" } },
+    );
   } catch (err: unknown) {
     logApiCheckError(err, "POST");
     const e = err as { status?: number; message?: string };
-    const payload: { error: string; diagnostic?: { message: string; stack?: string } } = {
+    const payload: {
+      error: string;
+      diagnostic?: { message: string; stack?: string };
+    } = {
       error: e.message ?? "Something went wrong. Please try again.",
     };
     if (isDebug()) payload.diagnostic = getDiagnostic(err);
     return NextResponse.json(payload, { status: e.status ?? 500 });
   }
-}
-
-function getMockVehicleData(registrationNumber: string): VehicleData {
-  return {
-    registrationNumber,
-    make: "EXAMPLE",
-    colour: "SILVER",
-    fuelType: "PETROL",
-    co2Emissions: 142,
-    engineCapacity: 1598,
-    yearOfManufacture: 2018,
-    monthOfFirstRegistration: "2018-06",
-    motStatus: "Valid",
-    taxStatus: "Taxed",
-    taxDueDate: "2025-06-01",
-    markedForExport: false,
-  };
 }

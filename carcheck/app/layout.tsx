@@ -1,42 +1,40 @@
 import type { Metadata, Viewport } from "next";
-import { Montserrat } from "next/font/google";
+import { Inter, Outfit } from "next/font/google";
 import { SiteHeader } from "./components/SiteHeader";
+import { SiteFooter } from "./components/SiteFooter";
 import { UmamiAnalytics } from "./components/UmamiAnalytics";
 import "./globals.css";
 
-const montserrat = Montserrat({
+const inter = Inter({
   subsets: ["latin"],
   display: "swap",
-  variable: "--font-montserrat",
-  weight: ["400", "500", "600", "700"],
+  variable: "--font-inter",
 });
-
+const outfit = Outfit({
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-outfit",
+});
 export const metadata: Metadata = {
-  title: "RevVeal | UK Car Check & Number Plate Lookup",
-  description: "Check UK vehicle details by number plate. Get make, colour, MOT and tax status from the DVLA.",
+  title: { default: "RevVeal | Reveal your car's history", template: "%s | RevVeal" },
+  description:
+    "Check a UK registration for free MOT history, mileage records and tax status. See what is included in the planned £5.99 incl. VAT full report.",
 };
-
-export const viewport: Viewport = {
-  width: "device-width",
-  initialScale: 1,
-  maximumScale: 5,
-};
-
+export const viewport: Viewport = { width: "device-width", initialScale: 1 };
 export default function RootLayout({
   children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+}: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html
-      lang="en"
-      className={`overflow-x-hidden bg-white text-foreground ${montserrat.variable}`}
-      style={{ colorScheme: "light" }}
-    >
-      <body className="antialiased overflow-x-hidden min-h-screen flex flex-col bg-white text-foreground font-sans">
-        <div className="grain-overlay" aria-hidden />
+    <html lang="en-GB" className={`${inter.variable} ${outfit.variable}`}>
+      <body>
+        <a href="#main-content" className="skip-link">
+          Skip to content
+        </a>
         <SiteHeader />
-        <main className="relative z-10 flex-1">{children}</main>
+        <main id="main-content" className="site-main" tabIndex={-1}>
+          {children}
+        </main>
+        <SiteFooter />
         <UmamiAnalytics />
       </body>
     </html>

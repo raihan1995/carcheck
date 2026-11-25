@@ -1,102 +1,65 @@
-# RevVeal — UK Car Check
+# RevVeal — UK vehicle checks
 
-A UK number plate lookup site. Enter a registration to see vehicle details (make, colour, fuel type, MOT and tax status, ULEZ, road tax, mileage insights, and optional performance specs) from the DVLA Vehicle Enquiry Service and MOT History API.
-
-**Changelog & UI versions:** see [CHANGELOG.md](./CHANGELOG.md) — includes **UI revamp 4.5** (white + orange, current), **UI revamp 4.0** (dark editorial), **UI revamp 3.0** (dark) and **UI revamp 2.0** (light) with git commands to revert.
+A Next.js application for UK registration lookups. The free check combines available DVLA vehicle and tax information with DVSA MOT history and mileage records. The planned full report costs £5.99 incl. VAT; paid data and checkout are not connected yet.
 
 ## Run locally
 
-Use Node.js 24.22.3 or a newer 24.x release (the supported runtime is declared in `package.json`).
+Use Node.js 24.22.3 or a newer 24.x release.
 
-```bash
-npm install
-cp .env.example .env
-# Add DVLA/MOT keys and Supabase URL + publishable key (see .env.example)
-npm run dev
-```
+1. Run npm ci in this directory.
+2. Copy .env.example to .env.local and configure DVLA, MOT and Supabase values.
+3. Run the schema in supabase/schema.sql in your Supabase project if the account tables are not already set up.
+4. Run npm run dev and open http://localhost:3000.
 
-Open [http://localhost:3000](http://localhost:3000).
+On Windows PowerShell, npm.cmd can be used if the npm PowerShell shim is blocked by execution policy.
 
-## Accounts (login / register)
+## Design previews
 
-- **Register** (`/register`) — email, password (min 10 chars, 1 capital, 1 special), confirm password. Name is optional and can be added later in Settings.
-- **Login** (`/login`) — email and password; forgot password sends a Supabase reset email.
-- **Dashboard** (`/dashboard`) — My reports, My receipts, Settings (profile, email, password).
-- Auth and user data use **Supabase** (`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` in `.env` or `.env.local`).
-- Run `supabase/schema.sql` in the Supabase SQL Editor once to create `profiles` and `vehicle_reports` tables.
+- / — homepage and free registration search.
+- /vehicle/SAMPLE — illustrative free report, with MOT timeline and mileage chart.
+- /report/SAMPLE — illustrative full report and browser Save as PDF.
+- /preview/dashboard — dashboard layout without authentication or private account data.
+- /pricing, /faq, /comparison and /guides — supporting pages.
 
-## Real vehicle data
+The design system, route map, source boundaries and remaining content are documented in [docs/DESIGN.md](./docs/DESIGN.md).
 
-The app uses two APIs:
+## Accounts and storage
 
-- **DVLA Vehicle Enquiry Service (VES)** — vehicle details (make, colour, tax, MOT status). Set `DVLA_API_KEY` in `.env`.
-- **MOT History API** — full MOT test history (pass/fail, advisories, mileage). Base URL: `https://history.mot.api.gov.uk`. Set `MOT_CLIENT_ID`, `MOT_CLIENT_SECRET`, `MOT_API_KEY`, `MOT_TOKEN_URL` (and optionally `MOT_SCOPE_URL`) in `.env`.
+Supabase handles email/password, Google and email-link authentication, profiles, and existing purchased reports. Configure the auth redirect allow-list to include the app origin and /auth/callback. No paid report can be purchased in this version.
 
-1. Copy `.env.example` to `.env` and add your keys (from your DVLA/DVSA approval emails).
-2. Restart the dev server. Results appear on `/vehicle/[registration]`.
+The dashboard includes Home, My cars, Reports, Reminders, Activity, Logbook, Tax alerts and Settings. Saved cars, recent checks and reminder dates are explicitly browser-local; they are not synchronised across accounts or devices. Reminder dates can be exported to a calendar. Automatic tax/V5C monitoring and message delivery are not connected.
 
-## Car specs & model lines (local data)
+The owned /report/[id] route reads a completed Supabase report snapshot, rather than running a fresh lookup. Report sections accept status (clear, attention or not_checked), summary, source and updatedAt. Unavailable sections are shown as not checked.
 
-Performance specs (BHP, torque, gearbox, dimensions, etc.) come from a preprocessed **UK-Cars** catalogue. **Model lines** (generation + body family, e.g. A3 Sportback vs Saloon) come from a separate Honest John–style list and narrow matching before trim selection.
+## Vehicle data
 
-### Data files
+- DVLA Vehicle Enquiry Service: set DVLA_API_KEY.
+- DVSA MOT History API: set MOT_CLIENT_ID, MOT_CLIENT_SECRET, MOT_API_KEY, MOT_TOKEN_URL and, if required, MOT_SCOPE_URL.
+- Vehicle Performance: requires a signed-in account; catalogue candidates are withheld by the API until the user is verified. data/make-specs-index.json and data/model-lines-index.json are required for matching. Matching is advisory; the exact derivative is not confirmed by a registration lookup.
 
-| File | Role |
-|------|------|
-| `data/UK-Cars.csv` | Source catalogue (local; not in git). Teoalida / Parkers-style UK specs. |
-| `data/make-specs-index.json` | Built specs index (~90 MB). **Required at runtime** for performance lookup. |
-| `data/model-lines/source/car-reviews-2026.txt` | Source model-line list (make → model + year ranges). |
-| `data/model-lines-index.json` | Built model-line index (~500 KB). **Required at runtime** for generation/body filtering. |
+The API returns a retrieval timestamp; original source update timestamps are not supplied. MOT and tax status use the provider's status fields. Unavailable MOT or catalogue data does not erase the available DVLA record. Missing DVLA configuration returns an unavailable response; only the explicit SAMPLE registration returns illustrative data.
 
-### Preprocess commands
+## Catalogue preparation
 
-```bash
-# 1. UK-Cars CSV → make-specs-index.json (run when UK-Cars.csv changes)
-npm run preprocess-uk-cars
+Runtime JSON indexes are committed. Source files are local and ignored by Git.
 
-# 2. Model-line txt → model-lines-index.json (run when source txt or specs index changes)
-npm run preprocess-model-lines
-```
+- data/UK-Cars.csv: source specifications.
+- data/model-lines/source/car-reviews-2026.txt: model-line source.
+- npm run preprocess-uk-cars: rebuild the specifications index when its CSV changes.
+- npm run preprocess-model-lines: rebuild model lines after either source or the specifications index changes.
 
-**When to regenerate**
+The older preprocess-cars and preprocess-specs scripts are retained for historical use. Do not regenerate the runtime indexes for ordinary UI changes.
 
-| Situation | Command |
-|-----------|---------|
-| Normal dev / vehicle lookups | Nothing — use existing JSON files. |
-| You update `data/UK-Cars.csv` | `npm run preprocess-uk-cars` then `npm run preprocess-model-lines` |
-| You edit `data/model-lines/source/car-reviews-2026.txt` | `npm run preprocess-model-lines` |
-| Fresh clone without the built JSON files | Both commands (and place `UK-Cars.csv` first). |
-| You only change matcher/UI code | No preprocess needed. |
+## Checks
 
-`preprocess-model-lines` attaches **CSV series hints** from `make-specs-index.json`, so run it again after rebuilding the specs index.
+- npm test: regression cases for source statuses, hybrid emissions classification, mileage units/date parsing and safe auth redirects.
+- npm run build: production build and TypeScript validation.
+- npm run lint: ESLint, including legacy components retained in this checkout.
 
-Legacy scripts (`preprocess-cars`, `preprocess-specs`) are unused; the active pipeline is `preprocess-uk-cars` + `preprocess-model-lines`.
+Browser checks cover desktop/mobile layouts, automated accessibility, validation, sample rendering, mocked provider failure/retry, browser-local saves and anonymous route guards. Real sign-in, paid providers and notification delivery require their services and accounts.
 
-### Matching flow (summary)
+## Before publication
 
-1. DVLA + MOT → make, model, year, fuel, cc, CO₂, etc.
-2. **Model lines** — filter by make, MOT model, year, fuel (e.g. drop wrong generation or e-tron for petrol).
-3. **UK-Cars index** — fuel → MOT model → year/production window → cc → CO₂ → score → suggested trim.
+Confirm the legal entity, address, VAT details and support/security contacts; review the draft legal pages. Set NEXT_PUBLIC_SUPPORT_EMAIL to a real public contact address. Connect payments, paid data, synchronised storage and notifications before describing them as active services. No fabricated customer reviews, business credentials or partner logos are included.
 
-Transmission and exact trim are still limited when DVLA/MOT do not provide gearbox or derivative data.
-
-## UI versions (quick reference)
-
-| Version | Theme | Revert baseline |
-|---------|--------|-----------------|
-| **UI 4.5** | White — Auto Trader–style `#ffffff`, original orange `#f59e0b`, editorial hero, PNG header logo | `main` (see CHANGELOG) |
-| **UI 4.0 "Garage Atelier"** | Dark editorial — warm ink `#0b0a08`, brass `#c9a35a` accent, hairlines, serif display | `git checkout d23cbe6` |
-| **UI 3.0** | Dark — `#0a0a0f` background, elevated cards, amber accents | `git checkout fe634f5` for last UI 3.0 |
-| **UI 2.0** | Light — white/slate gradients, Plus Jakarta Sans | `git checkout 052b5b1` for last pushed light UI |
-
-Full feature list and revert commands: [CHANGELOG.md](./CHANGELOG.md).
-
-## Tech
-
-- Next.js 16 (App Router)
-- Tailwind CSS v4 (CSS variables in `app/globals.css`)
-- TypeScript
-- **UI 4.5** — White marketplace theme; original orange accent; Fraunces / Space Grotesk / JetBrains Mono; editorial hero; PNG header logo
-- **UI 4.0** — Dark editorial; brass accent, hairline rules, grain texture
-- **UI 3.0** — Dark theme, design tokens (`background`, `card`, `surface`, `muted`, amber accent)
-- **UI 2.0** — Plus Jakarta Sans, light gradients, elevated white cards
+Historical interface versions are recorded in [CHANGELOG.md](./CHANGELOG.md).

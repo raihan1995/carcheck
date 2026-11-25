@@ -1,170 +1,81 @@
----
-name: Precision Automotive Intelligence
-colors:
-  surface: '#f7f9fb'
-  surface-dim: '#d8dadc'
-  surface-bright: '#f7f9fb'
-  surface-container-lowest: '#ffffff'
-  surface-container-low: '#f2f4f6'
-  surface-container: '#eceef0'
-  surface-container-high: '#e6e8ea'
-  surface-container-highest: '#e0e3e5'
-  on-surface: '#191c1e'
-  on-surface-variant: '#45464d'
-  inverse-surface: '#2d3133'
-  inverse-on-surface: '#eff1f3'
-  outline: '#76777d'
-  outline-variant: '#c6c6cd'
-  surface-tint: '#565e74'
-  primary: '#000000'
-  on-primary: '#ffffff'
-  primary-container: '#131b2e'
-  on-primary-container: '#7c839b'
-  inverse-primary: '#bec6e0'
-  secondary: '#0058be'
-  on-secondary: '#ffffff'
-  secondary-container: '#2170e4'
-  on-secondary-container: '#fefcff'
-  tertiary: '#000000'
-  on-tertiary: '#ffffff'
-  tertiary-container: '#271901'
-  on-tertiary-container: '#98805d'
-  error: '#ba1a1a'
-  on-error: '#ffffff'
-  error-container: '#ffdad6'
-  on-error-container: '#93000a'
-  primary-fixed: '#dae2fd'
-  primary-fixed-dim: '#bec6e0'
-  on-primary-fixed: '#131b2e'
-  on-primary-fixed-variant: '#3f465c'
-  secondary-fixed: '#d8e2ff'
-  secondary-fixed-dim: '#adc6ff'
-  on-secondary-fixed: '#001a42'
-  on-secondary-fixed-variant: '#004395'
-  tertiary-fixed: '#fcdeb5'
-  tertiary-fixed-dim: '#dec29a'
-  on-tertiary-fixed: '#271901'
-  on-tertiary-fixed-variant: '#574425'
-  background: '#f7f9fb'
-  on-background: '#191c1e'
-  surface-variant: '#e0e3e5'
-  status-success: '#10B981'
-  status-error: '#EF4444'
-  status-warning: '#F59E0B'
-  slate-gray: '#64748B'
-  border-subtle: '#E2E8F0'
-typography:
-  headline-lg:
-    fontFamily: Inter
-    fontSize: 28px
-    fontWeight: '700'
-    lineHeight: 34px
-    letterSpacing: -0.02em
-  headline-lg-mobile:
-    fontFamily: Inter
-    fontSize: 22px
-    fontWeight: '700'
-    lineHeight: 28px
-    letterSpacing: -0.02em
-  status-badge:
-    fontFamily: Inter
-    fontSize: 12px
-    fontWeight: '800'
-    lineHeight: 16px
-    letterSpacing: 0.05em
-  data-value:
-    fontFamily: Inter
-    fontSize: 18px
-    fontWeight: '600'
-    lineHeight: 24px
-  data-label:
-    fontFamily: Inter
-    fontSize: 12px
-    fontWeight: '500'
-    lineHeight: 16px
-  body-md:
-    fontFamily: Inter
-    fontSize: 16px
-    fontWeight: '400'
-    lineHeight: 24px
-  body-sm:
-    fontFamily: Inter
-    fontSize: 14px
-    fontWeight: '400'
-    lineHeight: 20px
-  mono-label:
-    fontFamily: Courier Prime
-    fontSize: 13px
-    fontWeight: '400'
-    lineHeight: 16px
-rounded:
-  sm: 0.25rem
-  DEFAULT: 0.5rem
-  md: 0.75rem
-  lg: 1rem
-  xl: 1.5rem
-  full: 9999px
-spacing:
-  margin-page: 1rem
-  gutter-row: 0.75rem
-  stack-section: 1.5rem
-  card-padding: 1.25rem
----
+# RevVeal design system — revamp 5.1
 
-## Brand & Style
+The site retains the RevVeal brand and its rev/reveal wordplay: “RevVeal your car's history.” The supplied screenshots are layout references, not a request to rename the website. The design uses white and off-white surfaces, navy text, burnt orange actions and consistent yellow registration plates. Outfit is used for headings and Inter for body text. The hero uses a transparent burnt-orange car illustration through Next Image, integrated with the page through subtle motion and orange contours.
 
-The design system is engineered for the high-trust automotive data sector, balancing the technical rigor of a fintech platform with the sleek, aerodynamic aesthetics of modern car design. The target audience includes used-car buyers, automotive professionals, and enthusiasts who require immediate, authoritative vehicle history.
+## Shared foundations
 
-The visual style is **Corporate / Modern** with a focus on data density and clarity. It utilizes a layered surface approach to organize complex technical information into digestible modules. High-contrast status indicators and a structured grid evoke a sense of precision and mechanical reliability. The interface should feel fast, utilitarian, and indisputable.
+Tokens live at the top of app/globals.css. The base palette uses ink, muted, line, background, surface, accent, accent-dark and plate, plus green, amber and red semantic colours with light tints. Type sizes are 14, 16, 20, 28, 40 and 56px, with smaller secondary metadata. Cards use a 10px radius and 1px borders; controls use 8px corners. Content width is 1200px with responsive gutters. Decorative warm tint is used in the homepage sample report area and behind the hero car; result panels also use semantic colours.
 
-## Colors
+The shared SVG Icon component uses one outline system with a 1.75px stroke. RegistrationPlate and RegistrationSearch share PlateBand: the original blue band with a vector Union Jack and GB identifier, including compact plates. Searches navigate to the result route once; they do not request the same report twice. Focus indicators, a skip link, reduced-motion support and native FAQ disclosures are included.
 
-The palette is anchored by a deep navy primary, providing a prestigious "Dark Mode" feel even in light configurations. This serves as the foundation for high-contrast typography. 
+Homepage recent checks use plain bordered registration text beneath the “Recent checks” label, rather than plate graphics. The extra sample-report link and helper line beneath the main registration search have been removed.
 
-- **Primary (#0F172A):** Used for navigation bars, primary headings, and high-emphasis containers.
-- **Secondary (#3B82F6):** Reserved for actionable elements, CTAs, and active states to guide the eye through the data flow.
-- **Background (#F8FAFC):** A clean, cool-toned gray that prevents eye strain during long reading sessions of technical specs.
-- **Semantic Colors:** Green and Red are used strictly for legal vehicle status (Tax, MOT, Category checks). Use these alongside clear iconography to ensure accessibility.
+## Vehicle visuals retained in 5.1
 
-## Typography
+MOT status, vehicle tax and London ULEZ estimate use solid green/red backgrounds for known positive/negative outcomes. Unknown information and SORN are amber; no unavailable result is presented as a pass. MOT history uses green pass and red fail panels, amber minor/advisory defects and red major/dangerous defects, with a visible key, explicit labels and matching sidebar counts. A provider's dangerous flag takes precedence over its defect type.
 
-This design system prioritizes **Data Hierarchy**. The font of choice is Inter, selected for its tall x-height and exceptional legibility on mobile screens. 
+The bottom of “MOT at a glance” includes the MOT summary: total tests, passes, failures, rounded percentage passed, passed/total ratio and an accessible progress bar. Counts include each recorded test and retest. Unavailable history uses dashes, while an empty history shows zero counts without inventing a pass rate. Results outside PASSED/FAILED are identified separately.
 
-Key typographic principles:
-- **Upper-case labeling:** Small labels for data categories (e.g., "ENGINE CAPACITY") should be uppercase with slightly increased letter-spacing to distinguish them from the dynamic values.
-- **Bold Statuses:** Use heavy weights for pass/fail statuses to ensure they are the first thing a user sees.
-- **Monospaced Accents:** Utilize a secondary monospaced font sparingly for VIN numbers or registration plates to provide a technical, "scanned" feel.
+The Mileage information chart retains the horizontal bars, latest odometer per year, reading changes and summary figures. All original valid readings are checked for decreases, even where several tests occur in one year. Dates are sorted chronologically and recognised kilometre readings are converted to miles. Changes refer to the preceding recorded year; gaps are not described as a single year's driving.
 
-## Layout & Spacing
+CO₂ emission figures retain the seven stepped colour bands, from green to red, with an outlined active row and a visible “Your car” label. The graph uses DVLA's recorded g/km, including zero; unavailable or invalid figures show an empty state. Grouped traditional A–M ranges are for visual comparison, not a tax or ULEZ assessment; the graph links to GOV.UK guidance.
 
-The layout follows a **Fixed-Width Mobile-First** approach. Content is organized into a single-column stack of data modules. 
+## Pages
 
-- **Grid:** Use a 4-column grid for internal card layouts (e.g., splitting "Taxed" and "MOT" status side-by-side).
-- **Rhythm:** A 4px baseline grid ensures tight, technical alignment. Vertical spacing between different data categories should be generous (24px) to prevent the "wall of text" effect typical of technical documents.
-- **Reflow:** On larger tablets, data cards should reflow into a 2-column masonry grid rather than stretching full-width.
+- / — registration search, trust points, feature comparison, sample and FAQ.
+- /vehicle/SAMPLE — illustrative free report; real registrations use the same layout.
+- /report/SAMPLE — illustrative paid-report layout and browser Save as PDF.
+- /report/[id] — an owned completed report snapshot from Supabase; missing sections are never interpreted as a clear check.
+- /dashboard — account home, local garage counts, real account report count, recent checks and quick actions.
+- /dashboard/cars, /dashboard/reminders, /dashboard/activity — browser-local saved cars, dates with calendar export, and check history.
+- /dashboard/logbook, /dashboard/tax-alerts — saved-car lists with monitoring explicitly marked as not connected.
+- /dashboard/reports, /dashboard/receipts, /dashboard/settings — account report retrieval, payments and profile settings.
+- /preview/dashboard — public design preview; it does not authenticate or load private account reports.
+- /pricing, /faq, /comparison, /guides and individual guide pages.
+- /privacy, /terms, /security and /contact — information layouts with explicit placeholders where details are unknown.
 
-## Elevation & Depth
+## Data and trust
 
-This design system uses **Tonal Layers** rather than heavy shadows to maintain a clean, modern aesthetic. 
+The existing DVLA, MOT and catalogue integration is retained. Responses include retrieval time; the interface distinguishes it from the source's own update time, which is not supplied. Official MOT/tax status fields take precedence over date guesses. Mileage units are normalised for comparisons, while original units remain visible.
 
-- **Level 0:** Background (#F8FAFC).
-- **Level 1:** Content cards use white (#FFFFFF) backgrounds with a 1px border (#E2E8F0). No shadow.
-- **Level 2:** Active or "High-Trust" modules (like the main vehicle summary) use a very soft, subtle ambient shadow (4px blur, 2% opacity) to float slightly above the canvas.
-- **Interaction:** Buttons use a solid fill; upon press, they should shift to a darker tonal value rather than changing elevation.
+London ULEZ estimate retains the previous DVLA Euro → suggested catalogue Euro → registration-date fallback order. Petrol/diesel/motorcycle thresholds are Euro 4/6/3; registration fallbacks are January 2006 / September 2015 / July 2007. Earlier diesels without a Euro record stay unknown. Hybrid vehicles are assessed by their combustion engine. Each panel says “Compliant”, “Not compliant” or “Unknown”, uses green/red/amber and includes an underlined “Verify on TfL” link. Catalogue and date-based estimates are labelled with their basis; TfL confirms the actual outcome, including exceptions. References: [cars](https://tfl.gov.uk/modes/driving/ultra-low-emission-zone/cars) and [motorcycles](https://tfl.gov.uk/modes/driving/ultra-low-emission-zone/motorcycles-mopeds-and-more).
 
-## Shapes
+Vehicle Performance requires sign-in. GET and POST vehicle-check responses verify the Supabase user before returning catalogue candidates; anonymous or unverified sessions receive an empty candidate list, no suggested ID and performanceUnlocked set to false. The public ULEZ estimate is calculated on the server using the suggested catalogue Euro standard before those candidates are withheld. The page shows a sign-in prompt with a return path to the same vehicle, including for the sample. Signed-in users can choose a possible catalogue variant; it is still not a confirmed specification for that registration.
 
-The shape language is inspired by automotive surfacing—intentional, smooth, but structured. 
+Paid checks and checkout are not implemented or advertised as active. The requested planned price is £5.99 incl. VAT. No payments can be taken. Sample outcomes are explicitly illustrative. Printing uses the browser print dialog; this is not a server-generated or emailed PDF service.
 
-- **Cards & Inputs:** Use the 8px (0.5rem) default radius to mirror the soft-cornered aesthetics of modern car interiors and dashboard displays.
-- **Status Badges:** Use "Pill-shaped" (999px) rounding for status indicators (e.g., "Valid") to distinguish them from interactive buttons.
-- **Interactive Elements:** Primary CTAs should maintain the consistent 8px radius to feel integrated into the layout.
+Saved cars, recent checks and reminder dates use this browser's local storage. They do not synchronise between accounts or devices. Calendar entries can be downloaded, but RevVeal does not send notifications. Existing purchased reports and profile details continue to use Supabase.
 
-## Components
+## Content and services still required
 
-- **Buttons:** Primary buttons use a solid Electric Blue (#3B82F6) fill with white text. Secondary buttons use a transparent background with a 1px navy border.
-- **Status Badges:** Compact labels with a light tinted background (e.g., light green background with dark green text) for MOT and Tax status.
-- **Data Rows:** Use a horizontal layout with the label on the left (Slate Gray) and the value on the right (Navy, Bold). A thin 1px divider should separate rows within a card.
-- **Input Fields:** Search bars for VRM (Vehicle Registration Mark) should be oversized with a high-contrast border and a prominent "Check" button inside the field.
-- **MOT History Timeline:** A vertical stepper component showing MOT dates, results, and mileage. Use a red dot for failures and a green dot for passes.
-- **Technical Spec Tables:** High-contrast tables with alternating row colors (White and #F8FAFC) for readability of dense mechanical data.
+- Confirm the legal entity, address, VAT details, privacy terms, retention rules and support/security contacts. Draft pages are marked [PLACEHOLDER] and excluded from indexing.
+- Set NEXT_PUBLIC_SUPPORT_EMAIL to a confirmed public support address.
+- Connect paid vehicle-data sources, payment checkout/webhooks and a defined provider result contract before opening paid reports. Stored report sections currently accept status (clear/attention/not_checked), summary, source and updatedAt.
+- Connect account-synchronised garage storage and actual reminder/monitoring delivery.
+- Connect provider valuation, keeper/plate history and a generated/emailed PDF service if required.
+- The RevVeal wordmark is intentionally typographic; a final supplied logo can replace it.
+
+## Hero illustration and motion
+
+The homepage uses the generated transparent asset `public/img/hero-car-5-1.png`, created with the built-in image generation tool. It is a generic burnt-orange car illustration, not an image of a searched vehicle. The original stock photograph remains available in `public/img/home-hero.jpg`.
+
+`HeroVehicle` adds gentle car drift, pointer parallax, animated orange contours and a reveal sweep. A brighter scan beam and trailing inspection band cross the car over a shared nine-second cycle. Each sweep randomly chooses one to three two-word-or-shorter labels from `lib/hero-scan.ts`, avoiding labels from the previous sweep and duplicate car areas. The 24-label pool covers leaks, emissions, brakes, steering, suspension, tyres, lights, glass, wipers, corrosion and exhausts. Oil leak is anchored to the engine bay. Location-specific timing reveals each marker as the beam passes, and predefined layout combinations keep labels separated on mobile. Markers follow the car canvas and remain decorative examples, not registration lookup results; they are hidden from assistive technology. The visible “Illustrative scan” label has been removed.
+
+The first selection happens after the image loads; subsequent selections use the beam's animation-iteration event, not a separate timer. This preserves the findings while paused or offscreen and avoids server/client randomisation mismatches. Focusing the registration search increases the visual emphasis. A keyboard-accessible pause/resume button controls all effects; offscreen animation is paused, and reduced-motion preferences disable movement and hide the unnecessary motion control. The former photo caption and the small line above the headline have been removed. The hero headline scales up to 76px on desktop and uses a larger mobile size. Label topics follow [DVSA MOT checks](https://www.gov.uk/government/publications/car-parts-checked-at-an-mot/car-parts-checked-at-an-mot) and the [fluid-leak/emissions inspection manual](https://www.gov.uk/guidance/mot-inspection-manual-for-private-passenger-and-light-commercial-vehicles/8-nuisance).
+
+Full generation prompt:
+
+```text
+Use case: stylized-concept.
+Asset type: transparent car hero illustration for the existing RevVeal UK vehicle-history website.
+Primary request: create a premium, polished 3D automotive illustration that feels lively and fits a burnt-orange, midnight-navy and white brand.
+Subject: one unbranded modern sporty fastback car, metallic burnt-orange paint, deep graphite windows, graphite alloy wheels and restrained realistic detailing. Front three-quarter view, nose pointing toward the left, complete vehicle including all wheels visible. Slightly elevated camera. Realistic attractive proportions and crisp silhouette; refined CGI product illustration, not a toy or cartoon.
+Lighting: soft high-key studio lighting, warm reflections along the orange body, clean dark wheel detail. Very subtle neutral contact shadow beneath the tyres.
+Composition: landscape approximately 3:2, car centered and occupying most of the canvas, about 8 percent transparent margin around it. The car should integrate into a white web page and appear grounded.
+Background: genuinely transparent alpha. Car and a soft contact shadow only.
+Constraints: no scenery, road, pedestal, floor plane, sky, UI, floating badges, typography, watermarks, branding, emblems or manufacturer logos. If a front plate is present, it must be a blank, narrow white UK-style rectangle with no characters. Do not crop the car. Do not bake any coloured backdrop, glow, motion streaks or decorative shapes into the image; those will be animated in HTML/CSS.
+```
+
+## Verification
+
+Run npm test for status, mileage/date parsing, redirect and saved-car compatibility regression cases; npm run build for the production build. Browser QA uses an installed Edge browser at desktop and mobile sizes and should exercise the search, sample, error, save and navigation states without querying real vehicle providers or creating real accounts.

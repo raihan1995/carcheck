@@ -7,7 +7,7 @@ import { createClient } from "@/lib/supabase/server";
 import { LoginForm } from "./LoginForm";
 
 export const metadata = {
-  title: "Login | RevVeal",
+  title: "Login",
   description: "Sign in to your RevVeal account.",
 };
 
@@ -18,7 +18,7 @@ export default async function LoginPage() {
   } = await supabase.auth.getUser();
 
   if (user) {
-    redirect("/dashboard/reports");
+    redirect("/dashboard");
   }
 
   return (

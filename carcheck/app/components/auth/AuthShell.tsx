@@ -1,53 +1,45 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
-
-import { RevVealLogo } from "../RevVealLogo";
-
-type AuthShellProps = {
+import { Icon } from "../ui/Icon";
+export function AuthShell({
+  title,
+  subtitle,
+  children,
+}: {
   title: string;
   subtitle?: string;
   children: ReactNode;
-};
-
-export function AuthShell({ title, subtitle, children }: AuthShellProps) {
+}) {
   return (
-    <div className="grid min-h-[calc(100vh-4rem)] lg:grid-cols-2 bg-white">
-      {/* Editorial brand panel */}
-      <aside className="relative hidden overflow-hidden border-r border-hairline px-12 py-16 lg:flex lg:flex-col lg:justify-between">
-        <div
-          className="contour pointer-events-none absolute -left-32 bottom-0 h-[560px] w-[560px] opacity-60"
-          style={{ ["--r" as string]: "280px", ["--cx" as string]: "0%", ["--cy" as string]: "100%" }}
-          aria-hidden
-        />
-        <Link href="/" className="relative inline-flex">
-          <RevVealLogo variant="compact" />
-        </Link>
-        <div className="relative max-w-sm">
-          <p className="kicker text-accent-text">Members</p>
-          <p className="text-title mt-5 text-4xl">
-            Every check you run, <span className="italic text-accent-text">kept</span> for keeps.
+    <div className="container">
+      <div className="auth-layout">
+        <aside className="auth-aside">
+          <div>
+            <Icon name="car" size={32} />
+            <h2>
+              Every car has a past.
+              <br />RevVeal its story.
+            </h2>
+            <p>
+              Check the records, keep useful registrations and organise the
+              dates that matter.
+            </p>
+          </div>
+          <p className="small">
+            Independent UK vehicle information.
+            <br />
+            Not affiliated with the DVLA or DVSA.
           </p>
-          <p className="mt-4 text-sm leading-relaxed text-muted">
-            A free account saves your reports and receipts, and unlocks performance data on
-            every vehicle you look up.
-          </p>
-        </div>
-        <p className="relative kicker text-muted/60">RevVeal — UK Vehicle Records</p>
-      </aside>
-
-      {/* Form panel */}
-      <div className="flex flex-col justify-center px-5 py-12 sm:px-10 lg:px-16">
-        <div className="mx-auto w-full max-w-md">
-          <p className="kicker text-accent-text">Account</p>
-          <h1 className="text-title mt-4 text-4xl sm:text-5xl">{title}</h1>
-          {subtitle && <p className="mt-3 text-muted-strong">{subtitle}</p>}
-          <div className="mt-10">{children}</div>
-          <p className="mt-10 border-t border-hairline pt-6">
-            <Link href="/" className="link-underline text-sm text-muted hover:text-accent-text">
-              ← Back to home
-            </Link>
-          </p>
-        </div>
+        </aside>
+        <section className="auth-panel">
+          <span className="eyebrow">RevVeal account</span>
+          <h1>{title}</h1>
+          {subtitle && <p className="auth-subtitle">{subtitle}</p>}
+          {children}
+          <div className="auth-back">
+            <Link href="/">Back to vehicle checks</Link>
+          </div>
+        </section>
       </div>
     </div>
   );

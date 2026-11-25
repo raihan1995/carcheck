@@ -10,6 +10,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "test": "node --test tests/*.test.cjs",
     "preprocess-cars": "node scripts/preprocess-car-data.mjs",
     "preprocess-specs": "node scripts/preprocess-make-specs.mjs",
     "preprocess-uk-cars": "node scripts/preprocess-uk-cars.mjs",

@@ -9,6 +9,8 @@ import type { Profile } from "@/lib/supabase/types";
 
 export function SettingsForm() {
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
+  const [loadAttempt, setLoadAttempt] = useState(0);
   const [firstName, setFirstName] = useState("");
   const [surname, setSurname] = useState("");
   const [email, setEmail] = useState("");
@@ -25,28 +27,43 @@ export function SettingsForm() {
   const [savingPassword, setSavingPassword] = useState(false);
 
   useEffect(() => {
-    async function load() {
-      const supabase = createClient();
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (!user) return;
-
-      setEmail(user.email ?? "");
-
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("first_name, surname")
-        .eq("id", user.id)
-        .maybeSingle();
-
-      const p = profile as Pick<Profile, "first_name" | "surname"> | null;
-      setFirstName(p?.first_name ?? (user.user_metadata?.first_name as string) ?? "");
-      setSurname(p?.surname ?? (user.user_metadata?.surname as string) ?? "");
-      setLoading(false);
-    }
-    load();
-  }, []);
+    let active = true;
+    void Promise.resolve()
+      .then(async () => {
+        setLoading(true);
+        setLoadError("");
+        const supabase = createClient();
+        const {
+          data: { user },
+          error: authError,
+        } = await supabase.auth.getUser();
+        if (authError || !user)
+          throw new Error("Please sign in again to load your settings.");
+        const { data: profile, error } = await supabase
+          .from("profiles")
+          .select("first_name,surname")
+          .eq("id", user.id)
+          .maybeSingle();
+        if (error) throw error;
+        if (!active) return;
+        const p = profile as Pick<Profile, "first_name" | "surname"> | null;
+        setEmail(user.email ?? "");
+        setFirstName(p?.first_name ?? user.user_metadata?.first_name ?? "");
+        setSurname(p?.surname ?? user.user_metadata?.surname ?? "");
+      })
+      .catch(() => {
+        if (active)
+          setLoadError(
+            "Your settings could not be loaded. Please try again or sign in again.",
+          );
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [loadAttempt]);
 
   async function handleProfileSubmit(e: FormEvent) {
     e.preventDefault();
@@ -58,18 +75,29 @@ export function SettingsForm() {
       const {
         data: { user },
       } = await supabase.auth.getUser();
-      if (!user) return;
+      if (!user) {
+        setProfileError("Please sign in again before saving.");
+        return;
+      }
 
-      const { error } = await supabase
+      const { data: updated, error } = await supabase
         .from("profiles")
         .update({
           first_name: firstName.trim(),
           surname: surname.trim(),
         })
-        .eq("id", user.id);
+        .eq("id", user.id)
+        .select("id")
+        .maybeSingle();
 
       if (error) {
         setProfileError(error.message);
+        return;
+      }
+      if (!updated) {
+        setProfileError(
+          "Your profile is not available yet. Please contact support.",
+        );
         return;
       }
       setProfileMessage("Profile updated.");
@@ -87,7 +115,9 @@ export function SettingsForm() {
     setSavingEmail(true);
     try {
       const supabase = createClient();
-      const { error } = await supabase.auth.updateUser({ email: email.trim().toLowerCase() });
+      const { error } = await supabase.auth.updateUser({
+        email: email.trim().toLowerCase(),
+      });
       if (error) {
         setEmailError(error.message);
         return;
@@ -118,7 +148,9 @@ export function SettingsForm() {
     setSavingPassword(true);
     try {
       const supabase = createClient();
-      const { error } = await supabase.auth.updateUser({ password: newPassword });
+      const { error } = await supabase.auth.updateUser({
+        password: newPassword,
+      });
       if (error) {
         setPasswordError(error.message);
         return;
@@ -133,8 +165,25 @@ export function SettingsForm() {
     }
   }
 
+  if (loadError)
+    return (
+      <div role="alert">
+        <p className="form-error">{loadError}</p>
+        <button
+          className="button button-secondary"
+          onClick={() => setLoadAttempt((a) => a + 1)}
+        >
+          Try again
+        </button>
+      </div>
+    );
+
   if (loading) {
-    return <p className="text-muted text-sm">Loading settings…</p>;
+    return (
+      <p role="status" className="text-muted text-sm">
+        Loading settings…
+      </p>
+    );
   }
 
   return (
@@ -162,18 +211,29 @@ export function SettingsForm() {
           disabled={savingProfile}
           hint="Optional"
         />
-        {profileError && <p className="text-sm text-red-400">{profileError}</p>}
-        {profileMessage && <p className="text-sm text-emerald-400">{profileMessage}</p>}
+        {profileError && (
+          <p role="alert" className="form-error">
+            {profileError}
+          </p>
+        )}
+        {profileMessage && (
+          <p role="status" className="form-success">
+            {profileMessage}
+          </p>
+        )}
         <button
           type="submit"
           disabled={savingProfile}
-          className="min-h-[44px] px-6 rounded-md border border-accent-text/50 text-sm font-medium text-accent-text hover:bg-accent hover:text-white disabled:opacity-60 transition-colors"
+          className="button button-secondary"
         >
           {savingProfile ? "Saving…" : "Save profile"}
         </button>
       </form>
 
-      <form onSubmit={handleEmailSubmit} className="space-y-4 pt-8 border-t border-hairline">
+      <form
+        onSubmit={handleEmailSubmit}
+        className="space-y-4 pt-8 border-t border-hairline"
+      >
         <h2 className="kicker text-accent-text">Email</h2>
         <AuthField
           id="settings-email"
@@ -184,18 +244,29 @@ export function SettingsForm() {
           autoComplete="email"
           disabled={savingEmail}
         />
-        {emailError && <p className="text-sm text-red-400">{emailError}</p>}
-        {emailMessage && <p className="text-sm text-emerald-400">{emailMessage}</p>}
+        {emailError && (
+          <p role="alert" className="form-error">
+            {emailError}
+          </p>
+        )}
+        {emailMessage && (
+          <p role="status" className="form-success">
+            {emailMessage}
+          </p>
+        )}
         <button
           type="submit"
           disabled={savingEmail}
-          className="min-h-[44px] px-6 rounded-md border border-accent-text/50 text-sm font-medium text-accent-text hover:bg-accent hover:text-white disabled:opacity-60 transition-colors"
+          className="button button-secondary"
         >
           {savingEmail ? "Saving…" : "Update email"}
         </button>
       </form>
 
-      <form onSubmit={handlePasswordSubmit} className="space-y-4 pt-8 border-t border-hairline">
+      <form
+        onSubmit={handlePasswordSubmit}
+        className="space-y-4 pt-8 border-t border-hairline"
+      >
         <h2 className="kicker text-accent-text">Password</h2>
         <AuthField
           id="settings-password"
@@ -216,12 +287,20 @@ export function SettingsForm() {
           autoComplete="new-password"
           disabled={savingPassword}
         />
-        {passwordError && <p className="text-sm text-red-400">{passwordError}</p>}
-        {passwordMessage && <p className="text-sm text-emerald-400">{passwordMessage}</p>}
+        {passwordError && (
+          <p role="alert" className="form-error">
+            {passwordError}
+          </p>
+        )}
+        {passwordMessage && (
+          <p role="status" className="form-success">
+            {passwordMessage}
+          </p>
+        )}
         <button
           type="submit"
           disabled={savingPassword}
-          className="min-h-[44px] px-6 rounded-md border border-accent-text/50 text-sm font-medium text-accent-text hover:bg-accent hover:text-white disabled:opacity-60 transition-colors"
+          className="button button-secondary"
         >
           {savingPassword ? "Saving…" : "Update password"}
         </button>

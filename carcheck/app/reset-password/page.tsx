@@ -28,7 +28,10 @@ export default function ResetPasswordPage() {
       setHasSession(Boolean(user));
       setReady(true);
     }
-    checkSession();
+    checkSession().catch(() => {
+      setHasSession(false);
+      setReady(true);
+    });
   }, []);
 
   async function handleSubmit(e: FormEvent) {
@@ -37,7 +40,8 @@ export default function ResetPasswordPage() {
     const errors: Record<string, string> = {};
     const passwordError = validatePassword(password);
     if (passwordError) errors.password = passwordError;
-    if (password !== confirmPassword) errors.confirmPassword = "Passwords do not match.";
+    if (password !== confirmPassword)
+      errors.confirmPassword = "Passwords do not match.";
     if (Object.keys(errors).length > 0) {
       setFieldErrors(errors);
       return;
@@ -47,7 +51,9 @@ export default function ResetPasswordPage() {
 
     try {
       const supabase = createClient();
-      const { error: updateError } = await supabase.auth.updateUser({ password });
+      const { error: updateError } = await supabase.auth.updateUser({
+        password,
+      });
       if (updateError) {
         setError(updateError.message);
         return;
@@ -71,10 +77,16 @@ export default function ResetPasswordPage() {
 
   if (!hasSession) {
     return (
-      <AuthShell title="Reset password" subtitle="This reset link is invalid or has expired.">
+      <AuthShell
+        title="Reset password"
+        subtitle="This reset link is invalid or has expired."
+      >
         <p className="text-muted text-sm">
           Request a new link from the{" "}
-          <Link href="/forgot-password" className="link-underline text-accent-text font-medium">
+          <Link
+            href="/forgot-password"
+            className="link-underline text-accent-text font-medium"
+          >
             forgot password
           </Link>{" "}
           page.
@@ -84,7 +96,10 @@ export default function ResetPasswordPage() {
   }
 
   return (
-    <AuthShell title="Reset password" subtitle="Choose a new password for your account.">
+    <AuthShell
+      title="Reset password"
+      subtitle="Choose a new password for your account."
+    >
       <form onSubmit={handleSubmit} className="space-y-4">
         <AuthField
           id="password"

@@ -7,7 +7,7 @@ import { createClient } from "@/lib/supabase/server";
 import { RegisterForm } from "./RegisterForm";
 
 export const metadata = {
-  title: "Register | RevVeal",
+  title: "Register",
   description: "Create a free RevVeal account.",
 };
 
@@ -18,13 +18,16 @@ export default async function RegisterPage() {
   } = await supabase.auth.getUser();
 
   if (user) {
-    redirect("/dashboard/reports");
+    redirect("/dashboard");
   }
 
   return (
     <Suspense
       fallback={
-        <AuthShell title="Create account" subtitle="Sign up for a free RevVeal account.">
+        <AuthShell
+          title="Create account"
+          subtitle="Sign up for a free RevVeal account."
+        >
           <p className="text-muted text-sm">Loading…</p>
         </AuthShell>
       }

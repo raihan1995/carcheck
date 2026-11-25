@@ -1,238 +1,175 @@
 "use client";
-
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
-
+import { useEffect, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { Brand } from "./Brand";
+import { Icon } from "./ui/Icon";
 
-import { RevVealLogo } from "./RevVealLogo";
-
-type HeaderUser = {
-  firstName: string;
-  surname: string;
-};
-
-const SAMPLE_REPORT_PATH = "/vehicle/SAMPLE";
-
-const navLinks = [
-  { href: "/", label: "Home" },
-  { href: "/contact", label: "Contact us" },
-  { href: SAMPLE_REPORT_PATH, label: "Sample" },
+const links = [
+  { href: "/", label: "Vehicle check" },
+  { href: "/vehicle/SAMPLE", label: "Sample report" },
+  { href: "/pricing", label: "Pricing" },
+  { href: "/guides", label: "Guides" },
 ];
-
-function isDashboardPath(pathname: string): boolean {
-  return pathname === "/dashboard" || pathname.startsWith("/dashboard/");
-}
-
 export function SiteHeader() {
   const pathname = usePathname();
   const router = useRouter();
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [user, setUser] = useState<HeaderUser | null>(null);
-  const [loggingOut, setLoggingOut] = useState(false);
-
-  const loadSession = useCallback(async () => {
-    try {
-      const supabase = createClient();
-      const {
-        data: { user: authUser },
-      } = await supabase.auth.getUser();
-
-      if (!authUser) {
-        setUser(null);
-        return;
-      }
-
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("first_name, surname")
-        .eq("id", authUser.id)
-        .maybeSingle();
-
-      setUser({
-        firstName:
-          profile?.first_name ??
-          (authUser.user_metadata?.first_name as string | undefined) ??
-          "Account",
-        surname:
-          profile?.surname ?? (authUser.user_metadata?.surname as string | undefined) ?? "",
-      });
-    } catch {
-      setUser(null);
-    }
-  }, []);
-
+  const [open, setOpen] = useState(false);
+  const [name, setName] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const toggle = useRef<HTMLButtonElement>(null);
   useEffect(() => {
-    loadSession();
-  }, [loadSession, pathname]);
-
-  async function handleLogout() {
-    setLoggingOut(true);
+    let active = true;
+    let unsubscribe: (() => void) | undefined;
+    void Promise.resolve()
+      .then(async () => {
+        const client = createClient();
+        const load = async () => {
+          const {
+            data: { user },
+          } = await client.auth.getUser();
+          if (active)
+            setName(
+              user ? user.user_metadata?.first_name || "My account" : null,
+            );
+        };
+        await load();
+        const {
+          data: { subscription },
+        } = client.auth.onAuthStateChange(() => {
+          window.setTimeout(() => {
+            if (active) void load();
+          }, 0);
+        });
+        unsubscribe = () => subscription.unsubscribe();
+        if (!active) unsubscribe();
+      })
+      .catch(() => {
+        if (active) setName(null);
+      });
+    return () => {
+      active = false;
+      unsubscribe?.();
+    };
+  }, []);
+  async function logout() {
+    setBusy(true);
+    setError("");
     try {
-      const supabase = createClient();
-      await supabase.auth.signOut();
-      setUser(null);
-      setMenuOpen(false);
+      const { error } = await createClient().auth.signOut();
+      if (error) throw error;
+      setName(null);
+      setOpen(false);
       router.push("/");
       router.refresh();
+    } catch {
+      setError("We could not sign you out. Please try again.");
     } finally {
-      setLoggingOut(false);
+      setBusy(false);
     }
   }
-
-  function isNavActive(href: string): boolean {
-    if (href === SAMPLE_REPORT_PATH) {
-      return pathname === SAMPLE_REPORT_PATH || pathname === "/vehicle/sample";
-    }
-    return pathname === href;
-  }
-
-  function navLinkClass(href: string) {
-    return `link-underline py-1 text-sm transition-colors ${
-      isNavActive(href)
-        ? "text-accent-text"
-        : "text-muted hover:text-foreground"
-    }`;
-  }
-
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-hairline bg-white/95 backdrop-blur-md">
-      <div className="mx-auto flex h-16 sm:h-[4.5rem] max-w-7xl items-center justify-between px-4 sm:px-8">
-        <Link
-          href="/"
-          title="Home"
-          className="flex items-center shrink-0 text-foreground focus:outline-none focus-visible:ring-1 focus-visible:ring-accent-text rounded-sm min-h-[44px]"
-        >
-          <RevVealLogo variant="compact" />
+    <header
+      className="site-header"
+      onKeyDown={(e) => {
+        if (e.key === "Escape") {
+          setOpen(false);
+          toggle.current?.focus();
+        }
+      }}
+    >
+      <div className="container header-inner">
+        <Link href="/" className="brand-link" aria-label="RevVeal home">
+          <Brand />
         </Link>
-
-        <nav className="hidden md:flex md:items-center md:gap-8">
-          {navLinks.map(({ href, label }) => (
-            <Link key={href} href={href} className={navLinkClass(href)}>
-              {label}
+        <nav className="desktop-nav" aria-label="Main navigation">
+          {links.map((link) => (
+            <Link
+              key={link.href}
+              href={link.href}
+              aria-current={pathname === link.href ? "page" : undefined}
+            >
+              {link.label}
             </Link>
           ))}
-          <span className="h-5 w-px bg-hairline" aria-hidden />
-          {user ? (
+        </nav>
+        <div className="header-account">
+          {name ? (
             <>
-              <Link
-                href="/dashboard/reports"
-                className={`link-underline py-1 text-sm transition-colors ${
-                  isDashboardPath(pathname) ? "text-accent-text" : "text-muted hover:text-foreground"
-                }`}
-              >
-                <span className="hidden lg:inline">Hi, {user.firstName}</span>
-                <span className="lg:hidden">Account</span>
+              <Link href="/dashboard" className="button button-secondary">
+                <Icon name="user" size={18} />
+                {name}
               </Link>
               <button
-                type="button"
-                onClick={handleLogout}
-                disabled={loggingOut}
-                className="link-underline py-1 text-sm text-muted hover:text-foreground transition-colors disabled:opacity-60"
+                className="button button-ghost icon-button"
+                aria-label="Sign out"
+                onClick={logout}
+                disabled={busy}
               >
-                {loggingOut ? "Logging out…" : "Log out"}
+                <Icon name="logout" />
               </button>
             </>
           ) : (
             <>
-              <Link href="/login" className={navLinkClass("/login")}>
-                Login
-              </Link>
-              <Link
-                href="/register"
-                className="rounded-full border border-accent-text/50 px-5 py-2 text-sm font-medium text-accent-text hover:bg-accent hover:text-white transition-colors"
-              >
-                Register
+              <Link href="/login">Sign in</Link>
+              <Link href="/register" className="button button-primary">
+                Create account
               </Link>
             </>
           )}
-        </nav>
-
+        </div>
         <button
+          className="button button-secondary icon-button mobile-toggle"
+          ref={toggle}
           type="button"
-          onClick={() => setMenuOpen((o) => !o)}
-          className="flex h-10 w-10 md:hidden items-center justify-center rounded-sm text-muted hover:text-foreground focus:outline-none focus-visible:ring-1 focus-visible:ring-accent-text"
-          aria-expanded={menuOpen}
-          aria-label="Toggle menu"
+          aria-label={open ? "Close navigation" : "Open navigation"}
+          aria-expanded={open}
+          aria-controls="mobile-navigation"
+          onClick={() => setOpen(!open)}
         >
-          {menuOpen ? (
-            <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          ) : (
-            <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
-            </svg>
-          )}
+          <Icon name={open ? "close" : "menu"} />
         </button>
       </div>
-
-      {menuOpen && (
-        <>
-          <div
-            className="fixed inset-0 top-16 sm:top-[4.5rem] z-40 bg-white/80 backdrop-blur-sm md:hidden"
-            aria-hidden
-            onClick={() => setMenuOpen(false)}
-          />
-          <div className="absolute left-0 right-0 top-full z-50 border-y border-hairline bg-white md:hidden">
-            <nav className="flex flex-col px-5 py-3">
-              {navLinks.map(({ href, label }, i) => (
-                <Link
-                  key={href}
-                  href={href}
-                  onClick={() => setMenuOpen(false)}
-                  className={`flex items-baseline gap-3 py-3.5 text-lg font-semibold ${
-                    isNavActive(href) ? "text-accent-text" : "text-foreground/90"
-                  }`}
-                >
-                  <span className="section-index text-xs text-muted/60">
-                    {String(i + 1).padStart(2, "0")}
-                  </span>
-                  {label}
-                </Link>
-              ))}
-              {user ? (
-                <>
-                  <Link
-                    href="/dashboard/reports"
-                    onClick={() => setMenuOpen(false)}
-                    className={`py-3.5 text-lg font-semibold border-t border-hairline mt-1 ${
-                      isDashboardPath(pathname) ? "text-accent-text" : "text-foreground/90"
-                    }`}
-                  >
-                    {user.firstName} {user.surname} — Dashboard
-                  </Link>
-                  <button
-                    type="button"
-                    onClick={handleLogout}
-                    disabled={loggingOut}
-                    className="py-3.5 text-lg font-semibold text-left text-muted disabled:opacity-60"
-                  >
-                    {loggingOut ? "Logging out…" : "Log out"}
-                  </button>
-                </>
-              ) : (
-                <div className="mt-2 flex flex-col gap-3 border-t border-hairline pt-4">
-                  <Link
-                    href="/login"
-                    onClick={() => setMenuOpen(false)}
-                    className="py-2 text-lg font-semibold text-foreground/90"
-                  >
-                    Login
-                  </Link>
-                  <Link
-                    href="/register"
-                    onClick={() => setMenuOpen(false)}
-                    className="rounded-full border border-accent-text/50 px-5 py-3 text-center text-base font-medium text-accent-text"
-                  >
-                    Register
-                  </Link>
-                </div>
-              )}
-            </nav>
-          </div>
-        </>
+      {open && (
+        <nav
+          id="mobile-navigation"
+          className="container mobile-nav"
+          aria-label="Mobile navigation"
+        >
+          {[
+            ...links,
+            {
+              href: name ? "/dashboard" : "/login",
+              label: name ? "My account" : "Sign in",
+            },
+            ...(!name ? [{ href: "/register", label: "Create account" }] : []),
+          ].map((link) => (
+            <Link
+              key={link.href}
+              href={link.href}
+              onClick={() => setOpen(false)}
+              aria-current={pathname === link.href ? "page" : undefined}
+            >
+              {link.label}
+            </Link>
+          ))}
+          {name && (
+            <button
+              className="button button-ghost"
+              onClick={logout}
+              disabled={busy}
+            >
+              Sign out
+            </button>
+          )}
+        </nav>
+      )}
+      {error && (
+        <p role="alert" className="container header-error small">
+          {error}
+        </p>
       )}
     </header>
   );

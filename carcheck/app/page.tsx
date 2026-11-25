@@ -1,219 +1,163 @@
-"use client";
-
-import { useState, useEffect, FormEvent } from "react";
-import { useRouter } from "next/navigation";
-
-import { PlateBand } from "./components/PlateBand";
-
-function normalizeRegistration(vrn: string): string {
-  return vrn.replace(/\s+/g, "").toUpperCase().replace(/[^A-Z0-9]/g, "");
-}
-
+import Link from "next/link";
+import { HeroVehicle } from "./components/HeroVehicle";
+import { RegistrationSearch } from "./components/RegistrationSearch";
+import { RecentChecks } from "./components/RecentChecks";
+import { RegistrationPlate } from "./components/RegistrationPlate";
+import { Icon, type IconName } from "./components/ui/Icon";
+import { FeatureComparison } from "./components/FeatureComparison";
+import { FaqList } from "./components/FaqList";
+const trust: { icon: IconName; title: string; detail: string }[] = [
+  {
+    icon: "shield",
+    title: "Official records",
+    detail: "Free data from DVLA & DVSA",
+  },
+  {
+    icon: "file",
+    title: "A copy to keep",
+    detail: "PDF in the planned full report",
+  },
+  { icon: "lock", title: "Secure checkout", detail: "Payments in preparation" },
+  {
+    icon: "check",
+    title: "£5.99 incl. VAT",
+    detail: "One-time full report price",
+  },
+];
 export default function Home() {
-  const [plate, setPlate] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const router = useRouter();
-
-  const [recentRegs, setRecentRegs] = useState<string[]>([]);
-  const RECENT_KEY = "revveal_recent_regs";
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    try {
-      const stored = window.localStorage.getItem(RECENT_KEY);
-      if (!stored) return;
-      const parsed = JSON.parse(stored);
-      if (Array.isArray(parsed)) {
-        const cleaned = parsed
-          .map((v) => (typeof v === "string" ? normalizeRegistration(v) : ""))
-          .filter(Boolean);
-        setRecentRegs(cleaned.slice(0, 5));
-      }
-    } catch {
-      // Ignore malformed localStorage
-    }
-  }, []);
-
-  function updateRecentRegs(reg: string) {
-    const normalized = normalizeRegistration(reg);
-    if (!normalized) return;
-    setRecentRegs((prev) => {
-      const next = [normalized, ...prev.filter((r) => r !== normalized)].slice(0, 5);
-      if (typeof window !== "undefined") {
-        try {
-          window.localStorage.setItem(RECENT_KEY, JSON.stringify(next));
-        } catch {
-          // Ignore quota / privacy errors
-        }
-      }
-      return next;
-    });
-  }
-
-  function handleRecentClick(reg: string) {
-    const normalized = normalizeRegistration(reg);
-    if (!normalized) return;
-    setPlate(normalized);
-    router.push(`/vehicle/${encodeURIComponent(normalized)}`);
-  }
-
-  async function handleSubmit(e: FormEvent) {
-    e.preventDefault();
-    const vrn = plate.trim();
-    if (!vrn) {
-      setError("Enter a registration number");
-      return;
-    }
-    setError(null);
-    setLoading(true);
-    try {
-      const res = await fetch("/api/check", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ registrationNumber: vrn }),
-      });
-      const data = await res.json();
-
-      if (!res.ok) {
-        if (data.demo && data.vehicle) {
-          const reg = normalizeRegistration(vrn);
-          updateRecentRegs(reg);
-          router.push(`/vehicle/${encodeURIComponent(reg)}`);
-          return;
-        }
-        setError(data.error || "Check failed");
-        return;
-      }
-      const reg = data.vehicle?.registrationNumber ?? normalizeRegistration(vrn);
-      updateRecentRegs(reg);
-      router.push(`/vehicle/${encodeURIComponent(reg)}`);
-    } catch {
-      setError("Network error. Please try again.");
-    } finally {
-      setLoading(false);
-    }
-  }
-
   return (
-    <div className="bg-white text-foreground">
-      {/* Editorial hero — asymmetric grid, hairlines, oversized plate input */}
-      <div className="relative mx-auto grid max-w-6xl gap-8 px-5 py-8 sm:gap-12 sm:px-8 sm:py-16 lg:grid-cols-[1.15fr_0.85fr] lg:gap-20 lg:py-20">
-        <div
-          className="contour pointer-events-none absolute -right-32 top-8 hidden h-[480px] w-[480px] lg:block"
-          style={{ ["--r" as string]: "240px" }}
-          aria-hidden
-        />
-
-        <div className="relative max-w-xl">
-          <p className="kicker text-accent-text max-sm:tracking-[0.12em]">01 — UK Number Plate Check</p>
-
-          <h1 className="text-title mt-4 sm:mt-6 text-4xl sm:text-5xl lg:text-[4rem] leading-[1.12] text-foreground">
-            <span className="text-foreground">Re</span>
-            <span className="text-accent-text">veal</span> a car&apos;s
-            <br />
-            <span className="italic text-foreground">whole</span> story.
-          </h1>
-
-          <p className="mt-4 sm:mt-6 max-w-md text-base sm:text-lg font-semibold leading-relaxed text-muted-strong">
-            Free UK Plate Check
-          </p>
-          <p className="mt-2 max-w-md text-base sm:text-lg leading-relaxed text-muted-strong">
-            Get comprehensive vehicle information instantly
-          </p>
-
-          <form onSubmit={handleSubmit} className="mt-8 sm:mt-10">
-            <label htmlFor="plate" className="block text-sm font-medium text-muted-strong">
-              Registration
-            </label>
-            <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-stretch sm:gap-0 border-b-0 sm:border-b-2 border-foreground/20 focus-within:border-accent-text transition-colors">
-              <div className="flex min-w-0 items-stretch border-b-2 border-foreground/20 focus-within:border-accent-text sm:flex-1 sm:border-b-0">
-                <PlateBand compact className="mb-2 mr-2 self-end sm:mr-3" />
-                <input
-                  id="plate"
-                  type="text"
-                  value={plate}
-                  onChange={(e) => setPlate(e.target.value.toUpperCase())}
-                  placeholder="AB12 CDE"
-                  className="flex-1 min-w-0 bg-transparent pb-3 font-plate text-xl sm:text-2xl lg:text-3xl tracking-[0.06em] sm:tracking-[0.08em] text-foreground placeholder-muted/50 focus:outline-none"
-                  disabled={loading}
-                  autoComplete="off"
-                  autoFocus
-                />
-              </div>
-              <button
-                type="submit"
-                disabled={loading}
-                className="group inline-flex w-full shrink-0 items-center justify-center gap-2 rounded-full bg-accent px-5 py-3 text-sm font-semibold text-white hover:bg-accent-hover disabled:opacity-50 touch-manipulation transition-colors sm:mb-2 sm:ml-3 sm:w-auto sm:self-end sm:py-2"
-              >
-                {loading ? "Checking…" : "Reveal"}
-                {!loading && (
-                  <svg
-                    className="h-4 w-4 transition-transform group-hover:translate-x-0.5"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                    strokeWidth={2}
-                  >
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 12h14M13 6l6 6-6 6" />
-                  </svg>
-                )}
-              </button>
-            </div>
-            {error && (
-              <p className="mt-3 text-sm text-red-600 font-medium" role="alert">
-                {error}
-              </p>
-            )}
-          </form>
-
-          {recentRegs.length > 0 && (
-            <section className="mt-10 pt-8 border-t border-hairline">
-              <p className="kicker text-muted">Recent checks</p>
-              <div className="mt-3 flex flex-wrap gap-2">
-                {recentRegs.map((reg) => (
-                  <button
-                    key={reg}
-                    type="button"
-                    onClick={() => handleRecentClick(reg)}
-                    className="inline-flex items-center border border-hairline bg-white px-3 py-1.5 font-plate text-xs sm:text-sm tracking-[0.15em] text-muted-strong hover:border-accent-text hover:text-accent-text transition-colors"
-                  >
-                    {reg}
-                  </button>
-                ))}
-              </div>
-            </section>
-          )}
-        </div>
-
-        <aside className="relative hidden md:block lg:pt-4">
-          <div className="border-t border-hairline pt-6 lg:border-t-0 lg:pt-0 lg:border-l lg:border-hairline lg:pl-10">
-            <p className="kicker text-muted">Inside every check</p>
-            <dl className="mt-5 divide-y divide-hairline">
-              {[
-                ["01", "Vehicle details", "Make, colour, fuel, year, engine"],
-                ["02", "MOT history", "Every test, advisory and mileage reading"],
-                ["03", "Tax & ULEZ", "Status, due dates and clean-air compliance"],
-                ["04", "Mileage insight", "Yearly averages and anomaly detection"],
-              ].map(([num, title, desc]) => (
-                <div key={num} className="flex gap-4 py-5">
-                  <span className="section-index pt-0.5 text-sm text-accent-text">{num}</span>
-                  <div>
-                    <dt className="text-lg font-semibold leading-snug text-foreground">{title}</dt>
-                    <dd className="mt-1.5 text-sm text-muted leading-relaxed">{desc}</dd>
-                  </div>
-                </div>
-              ))}
-            </dl>
+    <>
+      <section className="hero">
+        <div className="container hero-grid">
+          <div>
+            <h1>
+              <span>RevVeal</span> your
+              <br />
+              car&apos;s history.
+            </h1>
+            <p className="hero-description">
+              Every car has a past. Enter its registration to reveal the MOT
+              history, mileage records and tax status. Start with a free check.
+            </p>
+            <RegistrationSearch button="Check now" />
+            <p className="search-note">Free to check. No account needed.</p>
+            <RecentChecks />
           </div>
-        </aside>
+          <HeroVehicle />
+        </div>
+      </section>
+      <div className="trust-strip">
+        <div className="container trust-points">
+          {trust.map((item) => (
+            <div className="trust-item" key={item.title}>
+              <Icon name={item.icon} size={24} />
+              <div>
+                <strong>{item.title}</strong>
+                <p>{item.detail}</p>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
-
-      <footer className="border-t border-hairline bg-white">
-        <p className="mx-auto max-w-6xl px-5 sm:px-8 py-8 text-xs text-muted leading-relaxed">
-          Every check covers MOT history and status, road tax, mileage records, ULEZ compliance, and current DVLA registration data.
-        </p>
-      </footer>
-    </div>
+      <section className="section" id="report-contents">
+        <div className="container comparison-layout">
+          <div className="comparison-aside">
+            <span className="eyebrow">Know what is included</span>
+            <h2>
+              The essentials.
+              <br />
+              And the fuller picture.
+            </h2>
+            <p>
+              The free check brings the MOT, mileage and tax records together.
+              Separate paid checks can help you look further into a car’s past.
+            </p>
+            <p>
+              Full report: <strong>£5.99 incl. VAT.</strong>
+              <br />
+              One payment. No subscription.
+            </p>
+            <Link href="/pricing" className="text-link">
+              View report details
+            </Link>
+            <p className="availability-note">
+              Full reports are in preparation. Free checks are available now.
+            </p>
+          </div>
+          <FeatureComparison />
+        </div>
+      </section>
+      <section className="sample-band section">
+        <div className="container sample-band-inner">
+          <div>
+            <span className="eyebrow">Read it before you need it</span>
+            <h2>
+              A report you can
+              <br />
+              make sense of.
+            </h2>
+            <p className="muted">
+              Clear test results. Mileage in order. Advisories written out in
+              full. Take a look at an example before checking a car of your own.
+            </p>
+            <Link href="/vehicle/SAMPLE" className="button button-primary">
+              View sample report
+            </Link>
+          </div>
+          <div className="report-preview">
+            <div className="report-preview-top">
+              <RegistrationPlate registration="SAMPLE" />
+              <span className="badge">Illustrative report</span>
+            </div>
+            <div className="preview-row">
+              <span>MOT history</span>
+              <span>
+                <Icon name="check" size={16} />
+                Test records
+              </span>
+            </div>
+            <div className="preview-row">
+              <span>Recorded mileage</span>
+              <span>
+                <Icon name="check" size={16} />
+                Timeline included
+              </span>
+            </div>
+            <div className="preview-row">
+              <span>Tax status</span>
+              <span>
+                <Icon name="check" size={16} />
+                DVLA information
+              </span>
+            </div>
+            <div className="preview-row">
+              <span>Finance & write-off</span>
+              <span className="preview-locked">
+                <Icon name="lock" size={16} />
+                Separate paid checks
+              </span>
+            </div>
+            <p className="small muted" style={{ margin: "24px 0 0" }}>
+              Sample data only. No real vehicle is being checked.
+            </p>
+          </div>
+        </div>
+      </section>
+      <section className="section">
+        <div className="container faq-layout">
+          <div>
+            <span className="eyebrow">Before you check</span>
+            <h2>A few useful answers.</h2>
+            <p className="muted">
+              What the records tell you, and what they do not.
+            </p>
+            <Link href="/faq" className="text-link">
+              All questions & answers
+            </Link>
+          </div>
+          <FaqList limit={4} />
+        </div>
+      </section>
+    </>
   );
 }

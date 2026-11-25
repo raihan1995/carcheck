@@ -1,95 +1,75 @@
 "use client";
-
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { FormEvent, useState } from "react";
-
+import { useState, type FormEvent } from "react";
 import { AuthDivider } from "@/app/components/auth/AuthDivider";
 import { AuthField } from "@/app/components/auth/AuthField";
 import { AuthShell } from "@/app/components/auth/AuthShell";
-import { AuthGoogleButton, AuthMagicLinkButton } from "@/app/components/auth/AuthSocial";
+import {
+  AuthGoogleButton,
+  AuthMagicLinkButton,
+} from "@/app/components/auth/AuthSocial";
 import { safeRedirectPath } from "@/lib/auth/redirect";
 import { createClient } from "@/lib/supabase/client";
-
 export function LoginForm() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const nextPath = searchParams.get("next");
-  const authError = searchParams.get("error");
+  const router = useRouter(),
+    params = useSearchParams();
+  const next = safeRedirectPath(params.get("next"));
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState<string | null>(
-    authError === "auth_callback" ? "Sign-in link expired or invalid. Try again." : null
+  const [error, setError] = useState(
+    params.get("error") === "auth_callback"
+      ? "Your sign-in link has expired or is invalid. Please try again."
+      : "",
   );
-  const [success, setSuccess] = useState<string | null>(null);
+  const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
-
-  const registerHref = nextPath
-    ? `/register?next=${encodeURIComponent(nextPath)}`
-    : "/register";
-
-  function clearMessages() {
-    setError(null);
-    setSuccess(null);
+  function clear() {
+    setError("");
+    setSuccess("");
   }
-
-  async function handleSubmit(e: FormEvent) {
+  async function submit(e: FormEvent) {
     e.preventDefault();
-    clearMessages();
+    clear();
     setLoading(true);
     try {
-      const supabase = createClient();
-      const { error: signInError } = await supabase.auth.signInWithPassword({
+      const { error } = await createClient().auth.signInWithPassword({
         email: email.trim().toLowerCase(),
         password,
       });
-      if (signInError) {
-        setError("Invalid email or password.");
+      if (error) {
+        setError("The email or password was not recognised. Please try again.");
         return;
       }
-      router.push(safeRedirectPath(nextPath));
+      router.push(next);
       router.refresh();
     } catch {
-      setError("Network error. Please try again.");
+      setError("We could not reach the sign-in service. Please try again.");
     } finally {
       setLoading(false);
     }
   }
-
   return (
-    <AuthShell title="Login" subtitle="Sign in to your RevVeal account.">
-      <div className="space-y-6">
+    <AuthShell title="Welcome back." subtitle="Sign in to your RevVeal account.">
+      <form onSubmit={submit} className="stack" aria-busy={loading}>
         <AuthGoogleButton
-          nextPath={nextPath}
+          nextPath={next}
           disabled={loading}
           onError={setError}
-          onClearMessages={clearMessages}
+          onClearMessages={clear}
         />
-
-        <AuthDivider />
-
-        <AuthField
-          id="email"
-          label="Email address"
-          type="email"
-          value={email}
-          onChange={setEmail}
-          autoComplete="email"
-          disabled={loading}
-        />
-
-        <AuthMagicLinkButton
-          email={email}
-          nextPath={nextPath}
-          disabled={loading}
-          onError={setError}
-          onSuccess={setSuccess}
-          onClearMessages={clearMessages}
-        />
-
-        <AuthDivider label="or use password" />
-
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <AuthDivider label="or sign in with email" />
+        <div>
+          <AuthField
+            id="email"
+            label="Email address"
+            type="email"
+            value={email}
+            onChange={setEmail}
+            autoComplete="email"
+            disabled={loading}
+            required
+          />
           <AuthField
             id="password"
             label="Password"
@@ -98,37 +78,47 @@ export function LoginForm() {
             onChange={setPassword}
             autoComplete="current-password"
             disabled={loading}
+            required
           />
-          <p className="text-right -mt-2">
-            <Link href="/forgot-password" className="link-underline text-sm text-accent-text font-medium">
-              Forgot password?
-            </Link>
+          <p className="small" style={{ textAlign: "right", margin: 0 }}>
+            <Link href="/forgot-password">Forgot your password?</Link>
           </p>
-          {error && (
-            <p className="text-sm text-red-400 font-medium" role="alert">
-              {error}
-            </p>
-          )}
-          {success && (
-            <p className="text-sm text-emerald-400 font-medium" role="status">
-              {success}
-            </p>
-          )}
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full min-h-[48px] rounded-md bg-accent text-white font-medium hover:bg-accent-hover disabled:opacity-60 transition-colors"
+        </div>
+        {error && (
+          <p className="form-error" role="alert">
+            {error}
+          </p>
+        )}
+        {success && (
+          <p className="form-success" role="status">
+            {success}
+          </p>
+        )}
+        <button
+          className="button button-primary"
+          disabled={loading}
+          type="submit"
+        >
+          {loading ? "Signing in…" : "Sign in"}
+        </button>
+        <AuthMagicLinkButton
+          email={email}
+          nextPath={next}
+          disabled={loading}
+          onError={setError}
+          onSuccess={setSuccess}
+          onClearMessages={clear}
+        />
+        <p className="small muted" style={{ margin: 0 }}>
+          New to RevVeal?{" "}
+          <Link
+            href={`/register?next=${encodeURIComponent(next)}`}
+            className="text-link"
           >
-            {loading ? "Signing in…" : "Log in with password"}
-          </button>
-          <p className="text-center text-sm text-muted pt-2">
-            Haven&apos;t got a free account yet?{" "}
-            <Link href={registerHref} className="link-underline text-accent-text font-medium">
-              Register
-            </Link>
-          </p>
-        </form>
-      </div>
+            Create an account
+          </Link>
+        </p>
+      </form>
     </AuthShell>
   );
 }

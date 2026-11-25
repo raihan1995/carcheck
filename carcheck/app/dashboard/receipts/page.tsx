@@ -1,79 +1,89 @@
+import Link from "next/link";
+import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import type { VehicleReport } from "@/lib/supabase/types";
-
-export const metadata = {
-  title: "My receipts | RevVeal",
-};
-
-function formatPlate(reg: string): string {
-  return reg.replace(/\s+/g, "").toUpperCase();
-}
-
-function formatMoney(pence: number | null, currency: string | null): string {
-  if (pence == null) return "—";
-  const amount = (pence / 100).toFixed(2);
-  const symbol = (currency ?? "gbp").toLowerCase() === "gbp" ? "£" : "";
-  return `${symbol}${amount}`;
-}
-
+import { RegistrationPlate } from "@/app/components/RegistrationPlate";
+import { ReloadButton } from "@/app/components/ReloadButton";
+import { Icon } from "@/app/components/ui/Icon";
+import { formatDate } from "@/lib/vehicle-summary";
+export const metadata = { title: "Payment history" };
 export default async function ReceiptsPage() {
-  const supabase = await createClient();
+  const client = await createClient();
   const {
     data: { user },
-  } = await supabase.auth.getUser();
-
-  const { data: reports } = await supabase
+  } = await client.auth.getUser();
+  if (!user) redirect("/login?next=/dashboard/receipts");
+  const { data: reports, error } = await client
     .from("vehicle_reports")
-    .select("id, registration, purchased_at, amount_pence, currency, status, stripe_checkout_session_id")
-    .eq("user_id", user!.id)
+    .select("id,registration,purchased_at,amount_pence,currency,status")
+    .eq("user_id", user.id)
     .order("purchased_at", { ascending: false });
-
-  const rows = (reports ?? []) as Pick<
-    VehicleReport,
-    | "id"
-    | "registration"
-    | "purchased_at"
-    | "amount_pence"
-    | "currency"
-    | "status"
-    | "stripe_checkout_session_id"
-  >[];
-
   return (
-    <section>
-      <h2 className="text-2xl font-semibold">My receipts</h2>
-      <p className="mt-2 text-sm text-muted-strong">Payment history for your full vehicle reports.</p>
-
-      {rows.length === 0 ? (
-        <div className="mt-8 border-y border-hairline py-12 text-center">
-          <p className="text-muted text-sm">No receipts yet.</p>
+    <>
+      <div className="dashboard-heading">
+        <div>
+          <h1>Payment history</h1>
+          <p>Payments recorded against your account reports.</p>
         </div>
-      ) : (
-        <ul className="mt-6 divide-y divide-hairline border-y border-hairline">
-          {rows.map((row) => (
-            <li key={row.id} className="py-5">
-              <div className="flex flex-wrap items-start justify-between gap-2">
+        <Link href="/dashboard/reports" className="button button-secondary">
+          Your reports
+        </Link>
+      </div>
+      {error ? (
+        <div className="card empty-state">
+          <Icon name="info" size={28} />
+          <h2>Payments could not be loaded</h2>
+          <p role="alert">
+            Please try again. We could not retrieve your report payments.
+          </p>
+          <ReloadButton />
+        </div>
+      ) : reports?.length ? (
+        <ul className="vehicle-list">
+          {reports.map((report) => (
+            <li key={report.id} className="card card-body">
+              <div
+                className="button-row"
+                style={{ justifyContent: "space-between" }}
+              >
                 <div>
-                  <p className="font-medium text-foreground">
-                    Full report — {formatPlate(row.registration)}
-                  </p>
-                  <p className="kicker text-muted mt-1">
-                    {new Date(row.purchased_at).toLocaleDateString("en-GB", {
-                      day: "numeric",
-                      month: "short",
-                      year: "numeric",
-                    })}
+                  <RegistrationPlate
+                    registration={report.registration}
+                    compact
+                  />
+                  <p className="small muted" style={{ margin: "12px 0 0" }}>
+                    {formatDate(report.purchased_at)} · {report.status}
                   </p>
                 </div>
-                <p className="text-data text-lg text-foreground">
-                  {formatMoney(row.amount_pence, row.currency)}
-                </p>
+                <div style={{ textAlign: "right" }}>
+                  <strong>
+                    {report.amount_pence == null
+                      ? "Amount not supplied"
+                      : new Intl.NumberFormat("en-GB", {
+                          style: "currency",
+                          currency: report.currency || "GBP",
+                        }).format(report.amount_pence / 100)}
+                  </strong>
+                  <p className="small muted" style={{ margin: 0 }}>
+                    Amount paid · VAT breakdown not supplied
+                  </p>
+                </div>
               </div>
-              <p className="mt-2 text-xs text-muted capitalize">Status: {row.status}</p>
             </li>
           ))}
         </ul>
+      ) : (
+        <div className="card empty-state">
+          <Icon name="file" size={28} />
+          <h2>No payments recorded</h2>
+          <p>
+            Checkout is not available yet. No payment is needed for a free
+            check.
+          </p>
+          <Link className="button button-secondary" href="/">
+            Check a vehicle
+          </Link>
+        </div>
       )}
-    </section>
+    </>
   );
 }

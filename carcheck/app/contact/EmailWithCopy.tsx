@@ -2,13 +2,14 @@
 
 import { useCallback, useState } from "react";
 
-const EMAIL = "support@revveal.co.uk";
+const EMAIL = process.env.NEXT_PUBLIC_SUPPORT_EMAIL;
 
 export function EmailWithCopy() {
   const [copied, setCopied] = useState(false);
 
   const copy = useCallback(async () => {
     try {
+      if (!EMAIL) return;
       await navigator.clipboard.writeText(EMAIL);
       setCopied(true);
       window.setTimeout(() => setCopied(false), 2000);
@@ -16,6 +17,13 @@ export function EmailWithCopy() {
       setCopied(false);
     }
   }, []);
+
+  if (!EMAIL)
+    return (
+      <p className="muted small">
+        [PLACEHOLDER] Confirm the support email before publication.
+      </p>
+    );
 
   return (
     <div className="mt-4 flex flex-wrap items-center gap-3 sm:gap-5">
@@ -33,14 +41,31 @@ export function EmailWithCopy() {
       >
         {copied ? (
           <>
-            <svg className="w-4 h-4 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden>
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+            <svg
+              className="w-4 h-4 text-emerald-400"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              aria-hidden
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M5 13l4 4L19 7"
+              />
             </svg>
             Copied
           </>
         ) : (
           <>
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden>
+            <svg
+              className="w-4 h-4"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              aria-hidden
+            >
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"

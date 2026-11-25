@@ -1,80 +1,73 @@
 import Link from "next/link";
-
+import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import type { VehicleReport } from "@/lib/supabase/types";
-
-export const metadata = {
-  title: "My reports | RevVeal",
-};
-
-function formatPlate(reg: string): string {
-  return reg.replace(/\s+/g, "").toUpperCase();
-}
-
+import { RegistrationPlate } from "@/app/components/RegistrationPlate";
+import { ReloadButton } from "@/app/components/ReloadButton";
+import { Icon } from "@/app/components/ui/Icon";
+import { formatDate } from "@/lib/vehicle-summary";
+export const metadata = { title: "Your reports" };
 export default async function ReportsPage() {
-  const supabase = await createClient();
+  const client = await createClient();
   const {
     data: { user },
-  } = await supabase.auth.getUser();
-
-  const { data: reports } = await supabase
+  } = await client.auth.getUser();
+  if (!user) redirect("/login?next=/dashboard/reports");
+  const { data: reports, error } = await client
     .from("vehicle_reports")
     .select("id, registration, purchased_at, status")
-    .eq("user_id", user!.id)
+    .eq("user_id", user.id)
     .order("purchased_at", { ascending: false });
-
-  const rows = (reports ?? []) as Pick<VehicleReport, "id" | "registration" | "purchased_at" | "status">[];
-
   return (
-    <section>
-      <h2 className="text-2xl font-semibold">My reports</h2>
-      <p className="mt-2 text-sm text-muted-strong">
-        Full vehicle reports you&apos;ve purchased — saved on your account permanently.
-      </p>
-
-      {rows.length === 0 ? (
-        <div className="mt-8 border-y border-hairline py-12 text-center">
-          <p className="text-muted text-sm">No purchased reports yet.</p>
-          <Link
-            href="/"
-            className="link-underline mt-3 inline-flex text-sm font-medium text-accent-text"
-          >
-            Check a vehicle
-          </Link>
+    <>
+      <div className="dashboard-heading">
+        <div>
+          <h1>Your reports</h1>
+          <p>Purchased reports associated with your account.</p>
         </div>
-      ) : (
-        <ul className="mt-6 divide-y divide-hairline border-y border-hairline">
-          {rows.map((report) => (
-            <li
-              key={report.id}
-              className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 py-5"
-            >
-              <div>
-                <p className="font-plate text-lg font-bold tracking-[0.12em] text-foreground">
-                  {formatPlate(report.registration)}
-                </p>
-                <p className="kicker text-muted mt-1">
-                  Purchased{" "}
-                  {new Date(report.purchased_at).toLocaleDateString("en-GB", {
-                    day: "numeric",
-                    month: "short",
-                    year: "numeric",
-                  })}
-                </p>
-              </div>
-              <Link
-                href={`/vehicle/${encodeURIComponent(formatPlate(report.registration))}`}
-                className="link-underline inline-flex items-center gap-2 self-start text-sm font-medium text-accent-text sm:self-auto"
-              >
-                View report
-                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 12h14M13 6l6 6-6 6" />
-                </svg>
+        <Link className="button button-secondary" href="/dashboard/receipts">
+          Payment history
+        </Link>
+      </div>
+      {error ? (
+        <div className="card empty-state">
+          <Icon name="info" size={28} />
+          <h2>Reports could not be loaded</h2>
+          <p role="alert">
+            Please try again. Your account may need its report storage
+            configured.
+          </p>
+          <ReloadButton />
+        </div>
+      ) : reports?.length ? (
+        <ul className="vehicle-list">
+          {reports.map((report) => (
+            <li className="card vehicle-list-row" key={report.id}>
+              <Link href={`/report/${report.id}`}>
+                <RegistrationPlate registration={report.registration} compact />
+                <span>
+                  <strong>Full report</strong>
+                  <small>
+                    {formatDate(report.purchased_at)} · {report.status}
+                  </small>
+                </span>
               </Link>
+              <Icon name="chevron" size={18} />
             </li>
           ))}
         </ul>
+      ) : (
+        <div className="card empty-state">
+          <Icon name="file" size={28} />
+          <h2>No purchased reports yet</h2>
+          <p>
+            Paid reports and checkout are in preparation. You can view the
+            sample in the meantime.
+          </p>
+          <Link href="/report/SAMPLE" className="button button-secondary">
+            View full report sample
+          </Link>
+        </div>
       )}
-    </section>
+    </>
   );
 }

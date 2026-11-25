@@ -1,9 +1,17 @@
 export function safeRedirectPath(
   path: string | null | undefined,
-  fallback = "/dashboard/reports"
+  fallback = "/dashboard",
 ): string {
-  if (!path || !path.startsWith("/") || path.startsWith("//")) return fallback;
-  return path;
+  if (!path || !path.startsWith("/") || /[\\\u0000-\u0020]/.test(path))
+    return fallback;
+  try {
+    const base = "https://revveal.invalid";
+    const target = new URL(path, base);
+    if (target.origin !== base) return fallback;
+    return target.pathname + target.search + target.hash;
+  } catch {
+    return fallback;
+  }
 }
 
 /** Canonical app origin for auth redirects (set NEXT_PUBLIC_APP_URL on Vercel). */
@@ -16,7 +24,7 @@ export function getAuthOrigin(): string {
 
 export function buildAuthCallbackUrl(
   nextPath: string | null | undefined,
-  origin?: string
+  origin?: string,
 ): string {
   const base = origin ?? getAuthOrigin();
   const next = safeRedirectPath(nextPath);
